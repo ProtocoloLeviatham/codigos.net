@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Log</title>
+    <style>
+        /* Estética "Hacking" */
+        body {
+            background-color: #0d0208; /* Negro/Púrpura muy oscuro */
+            color: #00ff00; /* Verde neón */
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 15px;
+            border: 1px solid #00ff00;
+            box-shadow: 0 0 15px #00ff00;
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 1px dashed #00ff00;
+            padding-bottom: 10px;
+        }
+
+        /* Título con efecto de "escritura" */
+        #main-title {
+            font-size: 2.5em;
+            text-shadow: 0 0 5px #00ff00;
+            min-height: 50px; /* Espacio para el efecto de escritura */
+        }
+
+        h2, h3 {
+            color: #00ff00;
+            border-bottom: 1px solid #00ff00;
+            padding-bottom: 5px;
+        }
+
+        /* Contenedor de "publicaciones" */
+        main {
+            margin-top: 20px;
+        }
+
+        article {
+            background-color: #0a1a0a; /* Fondo oscuro para legibilidad */
+            border: 1px solid #004d00;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        /* Bloques de código */
+        pre {
+            background-color: #000;
+            color: #f0f0f0;
+            border: 1px solid #00ff00;
+            padding: 10px;
+            overflow-x: auto; /* Para que el código no se salga */
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        code {
+            font-family: inherit;
+        }
+
+        /* Imágenes */
+        img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #00ff00;
+            margin-top: 10px;
+        }
+
+        /* Pie de página con las reglas */
+        footer {
+            margin-top: 20px;
+            border-top: 1px dashed #00ff00;
+            padding-top: 10px;
+            font-size: 0.8em;
+            text-align: center;
+        }
+
+        footer h3 {
+            color: #ff0000; /* Rojo para advertencias */
+            border: none;
+        }
+
+        footer p {
+            color: #aaa;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1 id="main-title"></h1> </header>
+
+        <main>
+            <h2>// Últimos Archivos //</h2>
+
+            <article>
+                <h3>Análisis de un script de Python simple</h3>
+                <p>Este es un ejemplo de cómo mostrar código. El siguiente script escanea puertos abiertos en una IP local. Útil para auditorías de red básicas.</p>
+                
+                <pre><code>
+import socket
+
+def scan_port(port):
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(0.1)
+        if s.connect_ex(('127.0.0.1', port)) == 0:
+            print(f"[+] Puerto {port} abierto")
+        s.close()
+    except Exception as e:
+        pass
+
+for port in range(1, 1025):
+    scan_port(port)
+                </code></pre>
+
+                <p>Aquí puedes añadir una imagen explicativa del proceso. Para que la imagen "Imagen1.png" funcione, debes subir ese archivo al mismo directorio de tu repositorio en GitHub.</p>
+                
+                <img src="Imagen1.png" alt="Diagrama de red de ejemplo">
+
+            </article>
+
+            <article>
+                <h3>Concepto: Inyección SQL</h3>
+                <p>Una breve descripción de lo que es una inyección SQL y por qué es peligrosa. El propósito de esta sección es educativo, para entender la vulnerabilidad y cómo prevenirla (usando sentencias preparadas).</p>
+                <pre><code>' OR '1'='1</code></pre>
+            </article>
+
+        </main>
+
+        <footer>
+            <h3>[ REGLAS Y PROTOCOLO ]</h3>
+            <p><strong>Aviso Importante:</strong> Todo el contenido compartido en este sitio es estrictamente para **fines educativos y de investigación** en ciberseguridad.</p>
+            <p>El administrador de este sitio no se hace responsable del mal uso de la información o las herramientas aquí presentadas. Cualquier acción realizada con esta información es responsabilidad exclusiva del usuario.</p>
+            <p>El uso de este conocimiento para atacar sistemas sin permiso explícito es ilegal y no ético.</p>
+            <p>// El conocimiento es libre, úsalo con responsabilidad //</p>
+        </footer>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

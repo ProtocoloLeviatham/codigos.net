@@ -22,32 +22,29 @@ document.addEventListener('DOMContentLoaded', function() {
     const canvas = document.getElementById('matrixCanvas');
     const ctx = canvas.getContext('2d');
 
-    // Configuración inicial del Canvas
-    const binary = '01'; // Binario puro
+    const binary = '01'; // Solo binario puro
     const font_size = 18;
-    
+    let drops = []; 
+
     // Función para ajustar el tamaño y las gotas
     function resizeCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
         const columns = canvas.width / font_size;
         
-        // Mantener o inicializar las gotas
-        if (drops.length === 0) {
-            for (let x = 0; x < columns; x++) {
-                drops[x] = 1;
-            }
-        } else {
-            drops.length = columns; // Ajustar el tamaño si la ventana cambia
+        // Reinicializar las gotas si la orientación/tamaño cambian drásticamente
+        drops = [];
+        for (let x = 0; x < columns; x++) {
+            drops[x] = 1;
         }
     }
 
-    let drops = [];
     resizeCanvas(); // Llamada inicial
+    window.addEventListener('resize', resizeCanvas); // Adaptar al cambio de tamaño
 
     function drawMatrix() {
-        // Rastro de las gotas (0.05 es bajo, genera un buen rastro)
-        ctx.fillStyle = 'rgba(13, 2, 8, 0.05)';
+        // Fondo semitransparente oscuro para el rastro
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)'; 
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         ctx.fillStyle = '#00ff00';
@@ -65,8 +62,8 @@ document.addEventListener('DOMContentLoaded', function() {
             drops[i]++;
         }
     }
-
-    window.addEventListener('resize', resizeCanvas); // Adaptar al cambio de tamaño
     
-    setInterval(drawMatrix, 50); // Velocidad ajustada
+    // Usamos requestAnimationFrame para mejor rendimiento, pero setInterval es más sencillo
+    // en este contexto, lo mantendremos en 50ms para un buen equilibrio.
+    setInterval(drawMatrix, 50); 
 });

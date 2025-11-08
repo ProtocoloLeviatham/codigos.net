@@ -30,7 +30,7 @@
             padding-top: 50px; 
             overflow-x: hidden;
             text-shadow: 0 0 1px var(--main-color);
-            line-height: 1.6; /* Mayor espaciado entre líneas */
+            line-height: 1.7; /* Más espacio entre líneas para mejor lectura */
         }
 
         /* Animaciones */
@@ -53,9 +53,9 @@
         /* Contenedor Principal: Centrado y Opaco */
         .container {
             width: 95%;
-            max-width: 1100px; /* Aumentamos el ancho máximo */
+            max-width: 1100px; 
             margin: 10px auto;
-            padding: 30px; /* Mayor padding interno */
+            padding: 30px; 
             position: relative;
             z-index: 10;
             background-color: rgba(0, 0, 0, 0.95);
@@ -72,7 +72,7 @@
             box-shadow: 0 0 15px var(--highlight-color);
         }
         nav ul { list-style: none; padding: 0; margin: 0; display: flex; justify-content: center; flex-wrap: wrap; }
-        nav li { margin: 0 12px; } /* Más espacio entre elementos del menú */
+        nav li { margin: 0 12px; } 
         nav a {
             color: var(--main-color); text-decoration: none; padding: 5px 10px; display: block; transition: all 0.2s;
             border: 1px solid transparent; 
@@ -82,8 +82,7 @@
             text-shadow: 0 0 5px var(--highlight-color); border: 1px solid var(--highlight-color);
         }
 
-        /* Cabecera y Logo */
-        header { padding-bottom: 10px; margin-bottom: 30px; border-bottom: 1px dashed var(--main-color); }
+        /* Logo */
         #logo-display {
             font-size: 0.8em; line-height: 1.2; white-space: pre; color: #4CAF50; padding: 10px;
             border: 1px dashed #004d00; display: inline-block; box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
@@ -97,19 +96,20 @@
         /* Títulos de Sección */
         h2 {
             color: var(--highlight-color); border-bottom: 1px dashed var(--highlight-color); padding-bottom: 8px;
-            margin-top: 50px; /* Más espacio superior */
+            margin-top: 50px; 
             text-shadow: 0 0 5px var(--highlight-color);
         }
 
         /* Artículos (Posts) */
         article {
             background-color: rgba(0, 20, 0, 0.2);
-            border-left: 5px solid var(--highlight-color); /* Borde más grueso */
-            padding: 20px 25px; /* Más espacio interno */
-            margin-bottom: 40px; /* Más espacio entre artículos */
+            border-left: 5px solid var(--highlight-color); 
+            padding: 25px 30px; 
+            margin-bottom: 40px; 
             transition: all 0.2s ease-in-out;
             border-top: 1px solid rgba(0, 255, 255, 0.2);
             box-shadow: inset 0 0 5px rgba(0, 255, 255, 0.1);
+            min-height: 100px; 
         }
         article:hover { border-left-color: #ffff00; box-shadow: inset 0 0 10px rgba(255, 255, 0, 0.2); }
         
@@ -118,8 +118,9 @@
             background-color: #1a1a1a; 
             color: #ffffff; /* Color de código: Blanco Brillante */
             border: 1px solid var(--main-color);
-            padding: 15px 20px; /* Más padding en los lados */
-            margin-top: 20px;
+            padding: 20px; 
+            overflow-x: auto;
+            margin-top: 25px;
             position: relative;
         }
         pre::before {
@@ -131,18 +132,8 @@
         }
         pre code { display: block; padding-top: 15px; }
 
-        /* Imágenes */
-        img {
-            max-width: 90%; /* Ajuste para un buen tamaño */
-            height: auto;
-            border: 2px solid var(--highlight-color);
-            margin-top: 20px; /* Más espacio superior */
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
-        }
-
+        /* Imágenes: Eliminadas de Artículos y Creaciones, pero NO de Colaboradores */
+        
         /* Sección Especial: Creaciones y Favoritos */
         #creador-section {
             background-color: #0a0a0a; border: 3px double var(--error-color); 
@@ -152,11 +143,12 @@
         #creador-section h2 { color: var(--error-color); border-bottom: 2px solid var(--error-color); }
         #creador-section .empty-slot {
             background-color: rgba(255, 0, 0, 0.1); border: 1px dashed var(--error-color);
-            padding: 30px; /* Más espacio interno */
+            padding: 40px; 
             margin: 25px auto;
-            max-width: 80%; /* Más anchos */
+            max-width: 90%; 
             color: #ffaaaa; font-style: italic; box-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
             text-align: left;
+            min-height: 150px; 
         }
         .empty-slot h3 { color: #ff9999; }
 
@@ -180,11 +172,11 @@
             margin-top: 30px;
         }
         .collab-item {
-            width: 150px;
+            width: 150px; /* Tamaño del contenedor */
             text-align: center;
         }
         .collab-img-container {
-            width: 120px;
+            width: 120px; /* Tamaño del círculo */
             height: 120px;
             border-radius: 50%;
             overflow: hidden;
@@ -213,6 +205,12 @@
             text-shadow: 0 0 5px rgba(0, 170, 255, 0.5);
             font-size: 0.9em;
         }
+        .telegram-info {
+            color: var(--highlight-color);
+            margin-top: 30px;
+            padding: 15px;
+            border: 1px dashed var(--highlight-color);
+        }
 
         /* Pie de página (Protocolo) */
         footer {
@@ -229,7 +227,9 @@
             .container { padding: 15px; }
             #logo-display { font-size: 0.6em; padding: 5px; }
             pre::before { font-size: 0.7em; padding: 1px 5px; }
-            .collab-grid { gap: 20px; }
+            .collab-grid { gap: 20px; } /* Ajuste de gap para móvil */
+            .collab-item { width: 100px; } /* Hacer los items más pequeños en móvil */
+            .collab-img-container { width: 80px; height: 80px; } /* Círculos más pequeños en móvil */
         }
 
     </style>
@@ -244,7 +244,8 @@
             <li><a href="#defensivo">[ 0x02 ] Defensivo</a></li>
             <li><a href="#historico">[ 0x03 ] Archivo</a></li>
             <li><a href="#creador">[ 0x04 ] Creaciones</a></li>
-            <li><a href="#colaboradores">[ 0x05 ] Colaboradores</a></li> <li><a href="#protocolo">[ 0x06 ] Protocolo</a></li>
+            <li><a href="#colaboradores">[ 0x05 ] Colaboradores</a></li>
+            <li><a href="#protocolo">[ 0x06 ] Protocolo</a></li>
         </ul>
     </nav>
 
@@ -281,7 +282,6 @@
 # Escaneo agresivo (OS y Versión) de un rango de IPs
 nmap -A -T4 192.168.1.0/24
                 </code></pre>
-                <img src="Imagen_Nmap.png" alt="Captura de pantalla de un escaneo Nmap." style="max-width: 70%;">
                 <p>Este escaneo puede generar mucho tráfico de red, úsalo con precaución y solo en entornos autorizados.</p>
             </article>
 
@@ -368,12 +368,12 @@ hydra -L users.txt -P passwords.txt ssh://192.168.1.100
         <section id="creador">
             <div id="creador-section">
                 <h2>// 0x04 CREACIONES & FAVORITOS DEL CREADOR //</h2>
+                <p style="color: #ffaaaa;">(Mínimo 250 caracteres por slot. La zona de código PRE es opcional en estos slots.)</p>
                 
                 <div class="empty-slot">
                     <h3>[ Ranura 01 ] TU PROYECTO PRINCIPAL</h3>
-                    <p>**ESPACIO PARA EDITAR:** Aquí puedes describir tu creación principal o tu herramienta favorita.</p>
-                    <pre><code># Tu código o comando principal aquí.</code></pre>
-                    <img src="Imagen_Proyecto_01.png" alt="Imagen de tu Proyecto 01." style="max-width: 70%;">
+                    <p>**ESPACIO PARA EDITAR:** Aquí puedes describir tu creación principal o tu herramienta favorita con detalle. Necesitarás al menos 250 caracteres para llenar este espacio cómodamente. La estructura ya permite una gran cantidad de texto.</p>
+                    <pre><code># Tu código o comando principal aquí. (Opcional)</code></pre>
                 </div>
 
                 <div class="empty-slot"><h3>[ Ranura 02 ]</h3><p>**ESPACIO PARA EDITAR**</p></div>
@@ -422,15 +422,20 @@ hydra -L users.txt -P passwords.txt ssh://192.168.1.100
                     </div>
                     
                 </div>
+                
+                <p class="telegram-info">
+                    **¡ATENCIÓN!** Envien sus capturas al grupo de Telegram para confirmar su uso en esta web.
+                </p>
+
             </div>
         </section>
 
         <section id="protocolo">
             <footer>
                 <h3>[ 0x06 PROTOCOLO DE CONCIENCIA CYBERNÉTICA ]</h3>
-                <p><strong>Clasificación: ALTO SECRETO // Solo para Fines Educativos //</strong></p>
-                <p>Este repositorio digital ha sido creado para la **difusión responsable de conocimiento** en el campo de la ciberseguridad, el hacking ético y la investigación de vulnerabilidades. Los materiales aquí expuestos están diseñados para fomentar la comprensión y la protección de sistemas, no para su explotación maliciosa. **LEVIATHAM no se hace responsable por el mal uso de la información.**</p>
-                <p>Se espera que los visitantes actúen con **integridad, ética y respeto** por la ley y la propiedad digital.</p>
+                <p><strong>Clasificación: ALTO SECRETO // Versión 2.0.1 (Actualizada 2025)</strong></p>
+                <p>Este repositorio digital ha sido creado para la **difusión responsable de conocimiento** en el campo de la ciberseguridad, el hacking ético y la investigación de vulnerabilidades. Los materiales aquí expuestos están diseñados para fomentar la comprensión y la protección de sistemas, no para su explotación maliciosa. **LEVIATHAM no se hace responsable por el mal uso de la información ni por el incumplimiento de las leyes locales.**</p>
+                <p>Todo el contenido está sujeto a los **Términos y Condiciones de Industrias Lazarus**. El acceso y uso de esta plataforma implica la aceptación plena de nuestros lineamientos éticos y legales.</p>
                 <p>// El conocimiento es una herramienta: su impacto depende de las manos que lo empuñen //</p>
             </footer>
         </section>
@@ -440,5 +445,3 @@ hydra -L users.txt -P passwords.txt ssh://192.168.1.100
     <script src="script.js"></script>
 </body>
 </html>
-
-

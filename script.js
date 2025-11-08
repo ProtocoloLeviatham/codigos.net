@@ -1,44 +1,35 @@
 document.addEventListener('DOMContentLoaded', function() {
     
-    // --- Efecto de Escritura en el Título ---
-    const titleText = "> Cyber Log // Interceptando la Realidad // _";
+    // --- 1. Efecto de Escritura en el Título (Prompt) ---
+    const titleText = "Iniciando secuencia de comandos. Acceso concedido...";
     const titleElement = document.getElementById('main-title');
     let i = 0;
 
     function typeWriter() {
         if (i < titleText.length) {
+            // Añade la clase 'prompt' para que el texto aparezca con el estilo del prompt
             titleElement.innerHTML += titleText.charAt(i);
             i++;
-            setTimeout(typeWriter, 90); // Velocidad de escritura
+            setTimeout(typeWriter, 50); // Velocidad rápida
         } else {
             // Añade un cursor parpadeante al final
             titleElement.innerHTML += '<span style="animation: blink 1s step-end infinite;">_</span>';
         }
     }
+    
+    typeWriter();
 
-    // Añade el CSS para el parpadeo del cursor (si no está ya en el HTML)
-    const style = document.createElement('style');
-    style.innerHTML += `
-        @keyframes blink {
-            from, to { opacity: 0 }
-            50% { opacity: 1 }
-        }
-    `;
-    document.head.appendChild(style);
-
-    typeWriter(); // Inicia el efecto de escritura
-
-    // --- Efecto de Lluvia de Código Binario (Matrix) ---
+    // --- 2. Efecto de Lluvia de Código Binario (Matrix 01) ---
     const canvas = document.getElementById('matrixCanvas');
     const ctx = canvas.getContext('2d');
 
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    const binary = '01'; // Caracteres para la lluvia
-    const font_size = 16;
-    const columns = canvas.width / font_size; // Número de columnas
-    const drops = []; // Array para almacenar la posición 'y' de cada columna
+    const binary = '01'; // Solo binario puro, como solicitaste
+    const font_size = 18;
+    const columns = canvas.width / font_size;
+    const drops = []; 
 
     // Inicializar 'y' para cada columna
     for (let x = 0; x < columns; x++) {
@@ -46,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function drawMatrix() {
-        // Fondo semitransparente para el efecto de rastro
+        // Fondo semitransparente oscuro
         ctx.fillStyle = 'rgba(13, 2, 8, 0.05)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -54,18 +45,15 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.font = `${font_size}px monospace`;
 
         for (let i = 0; i < drops.length; i++) {
-            // Un caracter binario aleatorio de '01'
+            // Caracter binario aleatorio '0' o '1'
             const text = binary.charAt(Math.floor(Math.random() * binary.length));
-            // Dibuja el caracter en la posición (x, y)
             ctx.fillText(text, i * font_size, drops[i] * font_size);
 
-            // Reinicia la columna si ha llegado al final
-            // o de forma aleatoria para un efecto más "orgánico"
-            if (drops[i] * font_size > canvas.height && Math.random() > 0.975) {
+            // Reinicia la columna con cierta probabilidad
+            if (drops[i] * font_size > canvas.height && Math.random() > 0.98) {
                 drops[i] = 0;
             }
 
-            // Incrementa la posición 'y'
             drops[i]++;
         }
     }
@@ -74,23 +62,18 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('resize', () => {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        // Recalcular columnas y resetear drops
         const newColumns = canvas.width / font_size;
-        drops.length = newColumns; // Ajustar tamaño del array
+        drops.length = newColumns; 
         for (let x = 0; x < newColumns; x++) {
-            if (drops[x] === undefined) { // Si hay nuevas columnas, inicializarlas
+            if (drops[x] === undefined) { 
                 drops[x] = 1;
             }
         }
     });
 
-    // Ejecuta la animación cada 33ms (aproximadamente 30 FPS)
-    setInterval(drawMatrix, 33);
+    // Ejecuta la animación
+    setInterval(drawMatrix, 50); // Velocidad ajustada para un buen rendimiento
 
 });
-    document.head.appendChild(style);
 
-    // Inicia el efecto
-    typeWriter();
 
-});

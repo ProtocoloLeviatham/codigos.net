@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>I.A.C.D.I. - Mapeador Pro V3 (Frente)</title>
+    <title>I.A.C.D.I. - Mapeador Pro V3 (Dorso)</title>
     <style>
         :root { --bg: #0f172a; --panel: #1e293b; --accent: #3b82f6; --success: #10b981; --text: #f8fafc; --text-muted: #94a3b8; }
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
@@ -43,7 +43,7 @@
 
     <div id="sidebar">
         <div class="sidebar-header">
-            <h2>Mapeador V3 (Frente)</h2>
+            <h2>Mapeador V3 (Dorso)</h2>
             <p style="margin:0; font-size: 0.8rem; color: var(--text-muted);">Herramienta de Precisión Quirúrgica</p>
         </div>
 
@@ -78,17 +78,14 @@
     </div>
 
     <script>
+        // --- NUEVA SECUENCIA PARA EL DORSO ---
         const secuenciaCampos = [
-            "Apellido / Surname",
-            "Nombre / Name",
-            "Sexo / Sex",
-            "Nacionalidad / Nationality",
-            "Ejemplar",
-            "Fecha de nacimiento / Date of birth",
-            "Fecha de emisión / Date of issue",
-            "Fecha de vencimiento / Date of expiry",
-            "Trámite Nº / Of. ident.",
-            "Número inferior (DNI)"
+            "DOMICILIO",
+            "LUGAR DE NACIMIENTO",
+            "IDARG1",
+            "IDARG 2",
+            "IDARG3",
+            "CUIL"
         ];
 
         const imageLoader = document.getElementById('imageLoader');
@@ -337,4 +334,3 @@
     </script>
 </body>
 </html>
-

@@ -3,447 +3,227 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leviatham Codigos</title>
-    <link rel="icon" type="image/png" href="favicon.png">
-    <meta name="description" content="Plataforma de investigación y recursos en ciberseguridad, hacking ético y análisis de sistemas.">
-    <meta name="keywords" content="ciberseguridad, hacking, seguridad informática, análisis de vulnerabilidades, exploits, payloads, pentesting, CTF, programación, código">
-    <meta name="author" content="KaliHunter32">
-    <meta property="og:title" content="LEVIATHAM // Terminal de Acceso //">
-    <meta property="og:type" content="website">
-
+    <title>I.A.C.D.I. - Mapeador Secuencial Automático</title>
     <style>
-        /* Variables y Configuración General */
-        :root {
-            --bg-color: #000000;
-            --main-color: #00ff00; /* Verde neón */
-            --highlight-color: #00ffff; /* Cian */
-            --shadow-color: rgba(0, 255, 0, 0.7);
-            --error-color: #ff0000;
-            --font-family: 'Consolas', 'Courier New', Courier, monospace;
-            --collab-color: #00aaff; /* Azul para colaboradores */
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--main-color);
-            font-family: var(--font-family);
-            margin: 0;
-            padding-top: 50px; 
-            overflow-x: hidden;
-            text-shadow: 0 0 1px var(--main-color);
-            line-height: 1.7; /* Más espacio entre líneas para mejor lectura */
-        }
-
-        /* Animaciones */
-        @keyframes blink { from, to { opacity: 0 } 50% { opacity: 1 } }
-        @keyframes led-flash {
-            0%, 100% { background-color: var(--main-color); box-shadow: 0 0 5px var(--main-color); }
-            50% { background-color: transparent; box-shadow: none; }
-        }
-        @keyframes scan-line {
-            0% { background-position: 0% 0; }
-            100% { background-position: 0% 100%; }
-        }
-
-        /* Canvas (Lluvia Matrix) */
-        #matrixCanvas {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            z-index: 0; pointer-events: none; opacity: 0.15;
-        }
-
-        /* Contenedor Principal: Centrado y Opaco */
-        .container {
-            width: 95%;
-            max-width: 1100px; 
-            margin: 10px auto;
-            padding: 30px; 
-            position: relative;
-            z-index: 10;
-            background-color: rgba(0, 0, 0, 0.95);
-            border-left: 1px solid var(--main-color);
-            border-right: 1px solid var(--main-color);
-            min-height: calc(100vh - 60px);
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
-        }
-
-        /* --- Barra de Navegación Fija (Menú) --- */
-        nav {
-            position: fixed; top: 0; left: 0; width: 100%; background-color: rgba(0, 0, 0, 0.98);
-            border-bottom: 2px solid var(--highlight-color); padding: 5px 0; z-index: 100; text-align: center;
-            box-shadow: 0 0 15px var(--highlight-color);
-        }
-        nav ul { list-style: none; padding: 0; margin: 0; display: flex; justify-content: center; flex-wrap: wrap; }
-        nav li { margin: 0 12px; } 
-        nav a {
-            color: var(--main-color); text-decoration: none; padding: 5px 10px; display: block; transition: all 0.2s;
-            border: 1px solid transparent; 
-        }
-        nav a:hover {
-            color: var(--highlight-color); background-color: rgba(0, 255, 255, 0.1);
-            text-shadow: 0 0 5px var(--highlight-color); border: 1px solid var(--highlight-color);
-        }
-
-        /* Logo */
-        #logo-display {
-            font-size: 0.8em; line-height: 1.2; white-space: pre; color: #4CAF50; padding: 10px;
-            border: 1px dashed #004d00; display: inline-block; box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
-            margin-bottom: 20px; margin-top: 10px; background-color: rgba(0, 10, 0, 0.3);
-        }
-        .status-led {
-            height: 10px; width: 10px; background-color: var(--main-color); border-radius: 50%;
-            display: inline-block; margin-right: 5px; animation: led-flash 1s infinite; vertical-align: middle;
-        }
-
-        /* Títulos de Sección */
-        h2 {
-            color: var(--highlight-color); border-bottom: 1px dashed var(--highlight-color); padding-bottom: 8px;
-            margin-top: 50px; 
-            text-shadow: 0 0 5px var(--highlight-color);
-        }
-
-        /* Artículos (Posts) */
-        article {
-            background-color: rgba(0, 20, 0, 0.2);
-            border-left: 5px solid var(--highlight-color); 
-            padding: 25px 30px; 
-            margin-bottom: 40px; 
-            transition: all 0.2s ease-in-out;
-            border-top: 1px solid rgba(0, 255, 255, 0.2);
-            box-shadow: inset 0 0 5px rgba(0, 255, 255, 0.1);
-            min-height: 100px; 
-        }
-        article:hover { border-left-color: #ffff00; box-shadow: inset 0 0 10px rgba(255, 255, 0, 0.2); }
+        :root { --bg: #0f172a; --panel: #1e293b; --accent: #3b82f6; --success: #10b981; --text: #f8fafc; --text-muted: #94a3b8; }
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
         
-        /* Bloque de Código: Colores Mejorados */
-        pre {
-            background-color: #1a1a1a; 
-            color: #ffffff; /* Color de código: Blanco Brillante */
-            border: 1px solid var(--main-color);
-            padding: 20px; 
-            overflow-x: auto;
-            margin-top: 25px;
-            position: relative;
-        }
-        pre::before {
-            content: " [ kali@shell:~ ] ";
-            position: absolute; top: -1px; left: 0; background-color: #006400; 
-            color: #ffff00; /* Color de la barra de título: Amarillo */
-            font-weight: bold; padding: 2px 10px; font-size: 0.8em;
-            border-right: 1px solid var(--main-color);
-        }
-        pre code { display: block; padding-top: 15px; }
-
-        /* Imágenes: Eliminadas de Artículos y Creaciones, pero NO de Colaboradores */
+        #sidebar { width: 380px; background-color: var(--panel); border-right: 1px solid #334155; display: flex; flex-direction: column; overflow: hidden; }
+        .sidebar-header { padding: 20px 20px 10px; border-bottom: 1px solid #334155; }
+        h2 { color: var(--accent); font-size: 1.2rem; margin: 0 0 10px 0; letter-spacing: 0.5px; }
         
-        /* Sección Especial: Creaciones y Favoritos */
-        #creador-section {
-            background-color: #0a0a0a; border: 3px double var(--error-color); 
-            box-shadow: 0 0 25px var(--error-color); padding: 25px; margin-top: 60px; margin-bottom: 60px;
-            text-align: center; position: relative; overflow: hidden;
-        }
-        #creador-section h2 { color: var(--error-color); border-bottom: 2px solid var(--error-color); }
-        #creador-section .empty-slot {
-            background-color: rgba(255, 0, 0, 0.1); border: 1px dashed var(--error-color);
-            padding: 40px; 
-            margin: 25px auto;
-            max-width: 90%; 
-            color: #ffaaaa; font-style: italic; box-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
-            text-align: left;
-            min-height: 150px; 
-        }
-        .empty-slot h3 { color: #ff9999; }
+        .controls { padding: 15px 20px; display: flex; gap: 10px; border-bottom: 1px solid #334155; }
+        button, .file-upload { flex: 1; background: var(--accent); color: white; border: none; padding: 10px; font-weight: bold; cursor: pointer; border-radius: 6px; text-align: center; font-size: 0.85rem; transition: background 0.2s; }
+        button:hover, .file-upload:hover { background: #2563eb; }
+        button.danger { background: #ef4444; }
+        button.danger:hover { background: #dc2626; }
+        input[type="file"] { display: none; }
 
-        /* --- Colaboradores --- */
-        #collab-section {
-            text-align: center;
-            padding: 40px 0;
-            margin-top: 40px;
-            border-top: 1px dashed var(--collab-color);
-        }
-        #collab-section h2 {
-            border-bottom: 1px solid var(--collab-color);
-            color: var(--collab-color);
-            text-shadow: 0 0 8px var(--collab-color);
-        }
-        .collab-grid {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            flex-wrap: wrap;
-            margin-top: 30px;
-        }
-        .collab-item {
-            width: 150px; /* Tamaño del contenedor */
-            text-align: center;
-        }
-        .collab-img-container {
-            width: 120px; /* Tamaño del círculo */
-            height: 120px;
-            border-radius: 50%;
-            overflow: hidden;
-            border: 4px solid var(--collab-color);
-            box-shadow: 0 0 25px var(--collab-color); /* Efecto de luz superior/iluminación */
-            margin: 0 auto 10px auto;
-            position: relative;
-            background-color: #000;
-        }
-        .collab-img-container:hover {
-            box-shadow: 0 0 35px var(--collab-color), inset 0 0 10px var(--collab-color);
-            transform: scale(1.05);
-            transition: all 0.3s;
-        }
-        .collab-img-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover; /* Ajusta la imagen sin sobresalir del círculo */
-            margin: 0;
-            border: none;
-            box-shadow: none;
-        }
-        .collab-item p {
-            color: var(--collab-color);
-            margin: 5px 0 0 0;
-            text-shadow: 0 0 5px rgba(0, 170, 255, 0.5);
-            font-size: 0.9em;
-        }
-        .telegram-info {
-            color: var(--highlight-color);
-            margin-top: 30px;
-            padding: 15px;
-            border: 1px dashed var(--highlight-color);
-        }
-
-        /* Pie de página (Protocolo) */
-        footer {
-            border-top: 1px dashed var(--error-color); padding-top: 20px; margin-top: 50px;
-            font-size: 0.85em; text-align: center; color: #aaa;
-        }
-        footer h3 { color: var(--error-color); border-bottom: 1px solid var(--error-color); }
+        #field-list { flex: 1; overflow-y: auto; padding: 10px 20px; list-style: none; margin: 0; }
+        .field-item { padding: 10px; margin-bottom: 5px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; font-size: 0.85rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; transition: all 0.2s; }
+        .field-item.active { background: rgba(59, 130, 246, 0.2); border-color: var(--accent); color: white; border-left: 4px solid var(--accent); transform: translateX(5px); font-weight: bold; }
+        .field-item.done { border-color: var(--success); color: var(--success); }
         
-        /* Ajustes para Móviles (Responsive) */
-        @media (max-width: 600px) {
-            body { padding-top: 80px; } 
-            nav ul { flex-direction: column; }
-            nav li { margin: 5px 0; }
-            .container { padding: 15px; }
-            #logo-display { font-size: 0.6em; padding: 5px; }
-            pre::before { font-size: 0.7em; padding: 1px 5px; }
-            .collab-grid { gap: 20px; } /* Ajuste de gap para móvil */
-            .collab-item { width: 100px; } /* Hacer los items más pequeños en móvil */
-            .collab-img-container { width: 80px; height: 80px; } /* Círculos más pequeños en móvil */
-        }
+        .json-container { height: 200px; border-top: 1px solid #334155; display: flex; flex-direction: column; }
+        .json-header { padding: 5px 20px; background: #0f172a; font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; }
+        .json-header span { cursor: pointer; color: var(--accent); }
+        #json-output { flex: 1; background: #000; color: var(--success); border: none; padding: 10px 20px; font-family: 'Consolas', monospace; font-size: 0.8rem; resize: none; outline: none; }
 
+        #workspace { flex: 1; overflow: auto; display: flex; justify-content: center; align-items: flex-start; padding: 20px; background-image: radial-gradient(#334155 1px, transparent 1px); background-size: 20px 20px; }
+        canvas { background-color: transparent; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); cursor: crosshair; max-width: 100%; border-radius: 4px; }
+        
+        .status-badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 10px; background: #334155; }
+        .done .status-badge { background: rgba(16, 185, 129, 0.2); }
     </style>
 </head>
 <body>
 
-    <canvas id="matrixCanvas"></canvas> 
-    
-    <nav>
-        <ul>
-            <li><a href="#recursos">[ 0x01 ] Recursos</a></li>
-            <li><a href="#defensivo">[ 0x02 ] Defensivo</a></li>
-            <li><a href="#historico">[ 0x03 ] Archivo</a></li>
-            <li><a href="#creador">[ 0x04 ] Creaciones</a></li>
-            <li><a href="#colaboradores">[ 0x05 ] Colaboradores</a></li>
-            <li><a href="#protocolo">[ 0x06 ] Protocolo</a></li>
-        </ul>
-    </nav>
-
-    <div class="container">
-        <header>
-            <div id="logo-display">
-                [ Iniciando Codificación ]
-                <pre>
-                    .'.. /|
-                   / |  //
-                 _.'./.'./
-                ( LEVIATHAM )
-                 \_`\_`\_/
-                   / / /
-                  | | |
-                  \_/
-                </pre>
-                <div class="status-line">
-                    [ <span class="status-led"></span> Status: Online ]
-                </div>
-                [ Imdustrias Lazarus ] | [ KaliHunter32 ]
-            </div>
-            
-            <h1 id="main-title" class="prompt"></h1> 
-        </header>
-
-        <section id="recursos">
-            <h2>// 0x01 RECURSOS EN LÍNEA: Herramientas Kali Linux //</h2>
-            
-            <article>
-                <h3>[ RECONOCIMIENTO ] Nmap: Escaneo Completo de Servicios y OS</h3>
-                <p>Nmap es el estándar para el descubrimiento de redes y auditorías de seguridad. El comando `-A` habilita la detección del sistema operativo y las versiones de los servicios, `-T4` acelera el escaneo. Siempre con permiso.</p>
-                <pre><code>
-# Escaneo agresivo (OS y Versión) de un rango de IPs
-nmap -A -T4 192.168.1.0/24
-                </code></pre>
-                <p>Este escaneo puede generar mucho tráfico de red, úsalo con precaución y solo en entornos autorizados.</p>
-            </article>
-
-            <article>
-                <h3>[ OSINT ] theHarvester: Recolección de Correos y Subdominios</h3>
-                <p>theHarvester es una herramienta de OSINT que busca direcciones de correo electrónico, subdominios, nombres de host, y más de fuentes públicas como Google, Bing, LinkedIn y Shodan. Es un excelente punto de partida para la fase de reconocimiento.</p>
-                <pre><code>
-# Buscar correos y subdominios para 'ejemplo.com' desde Google y Baidu
-theharvester -d ejemplo.com -l 500 -b google,baidu
-                </code></pre>
-            </article>
-
-            <article>
-                <h3>[ ANÁLISIS WEB ] Nikto: Escáner de Vulnerabilidades Web</h3>
-                <p>Nikto es un escáner de vulnerabilidades de servidores web de código abierto. Realiza pruebas completas contra servidores web para múltiples elementos, incluyendo archivos potencialmente peligrosos, verificaciones de versiones obsoletas, y problemas específicos de servidores.</p>
-                <pre><code>
-# Escaneo básico contra un objetivo web
-nikto -h http://target.com
-                </code></pre>
-            </article>
-            
-        </section>
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <h2>Configuración de Plantilla</h2>
+            <p style="margin:0; font-size: 0.8rem; color: var(--text-muted);">Sigue el orden de la lista y haz clic en la imagen.</p>
+        </div>
         
-        <section id="defensivo">
-            <h2>// 0x02 SEGURIDAD DEFENSIVA: Hardening y Prevención //</h2>
-            
-            <article>
-                <h3>[ HARDENING ] Deshabilitar SSH Root Login y Auth por Contraseña</h3>
-                <p>Para securizar un servidor SSH, es fundamental deshabilitar el acceso directo como `root` y la autenticación por contraseña, forzando el uso de claves SSH. Edita el archivo `/etc/ssh/sshd_config`.</p>
-                <pre><code>
-# Archivo: /etc/ssh/sshd_config
-PermitRootLogin no
-PasswordAuthentication no
-                </code></pre>
-            </article>
+        <div class="controls">
+            <label class="file-upload">
+                <input type="file" id="imageLoader" accept="image/*">
+                📁 Cargar Imagen
+            </label>
+            <button id="resetBtn" class="danger">⟲ Reiniciar</button>
+        </div>
 
-            <article>
-                <h3>[ FIREWALL ] Reglas Básicas con UFW (Uncomplicated Firewall)</h3>
-                <p>UFW es una interfaz para `iptables` que simplifica la configuración del firewall en Linux. Aquí, reglas para permitir SSH (puerto 22) y denegar todo lo demás por defecto.</p>
-                <pre><code>
-# Denegar todas las conexiones entrantes por defecto
-sudo ufw default deny incoming
-# Permitir todas las conexiones salientes por defecto
-sudo ufw default allow outgoing
-
-# Permitir SSH (puerto 22)
-sudo ufw allow ssh
-                </code></pre>
-            </article>
-            
-        </section>
-
-        <section id="historico">
-            <h2>// 0x03 ARCHIVO HISTÓRICO: Explotación y Conocimiento //</h2>
-            
-            <article>
-                <h3>[ SQLI ] SQLMap: Inyección SQL Automatizada</h3>
-                <p>SQLMap es una herramienta de código abierto que automatiza el proceso de detección y explotación de vulnerabilidades de inyección SQL. Soporta una amplia gama de sistemas de bases de datos y técnicas de inyección.</p>
-                <pre><code>
-# Escaneo básico de un parámetro vulnerable
-sqlmap -u "http://target.com/vuln_page.php?id=1" --dbs
-                </code></pre>
-            </article>
-
-            <article>
-                <h3>[ FUERZA BRUTA ] Hydra: Ataques de Contraseñas a Servicios</h3>
-                <p>Hydra es una herramienta de ataque de fuerza bruta rápida y flexible, capaz de atacar más de 50 protocolos incluyendo FTP, SSH, Telnet, HTTP, SMB, y muchos más.</p>
-                <pre><code>
-# Fuerza bruta a SSH con lista de usuarios y contraseñas
-hydra -L users.txt -P passwords.txt ssh://192.168.1.100
-                </code></pre>
-            </article>
-
-            <article>
-                <h3>[ XSS ] Cross-Site Scripting (Reflejado)</h3>
-                <p>XSS permite a un atacante inyectar scripts maliciosos en páginas web que luego son ejecutados por otros usuarios. Un payload simple para XSS reflejado:</p>
-                <pre><code>
-&lt;script&gt;alert('XSS Exitoso por KaliHunter32');&lt;/script&gt;
-                </code></pre>
-            </article>
-            
-        </section>
-
-        <section id="creador">
-            <div id="creador-section">
-                <h2>// 0x04 CREACIONES & FAVORITOS DEL CREADOR //</h2>
-                <p style="color: #ffaaaa;">(Mínimo 250 caracteres por slot. La zona de código PRE es opcional en estos slots.)</p>
-                
-                <div class="empty-slot">
-                    <h3>[ Ranura 01 ] TU PROYECTO PRINCIPAL</h3>
-                    <p>**ESPACIO PARA EDITAR:** Aquí puedes describir tu creación principal o tu herramienta favorita con detalle. Necesitarás al menos 250 caracteres para llenar este espacio cómodamente. La estructura ya permite una gran cantidad de texto.</p>
-                    <pre><code># Tu código o comando principal aquí. (Opcional)</code></pre>
-                </div>
-
-                <div class="empty-slot"><h3>[ Ranura 02 ]</h3><p>**ESPACIO PARA EDITAR**</p></div>
-                <div class="empty-slot"><h3>[ Ranura 03 ]</h3><p>**ESPACIO PARA EDITAR**</p></div>
-                <div class="empty-slot"><h3>[ Ranura 04 ]</h3><p>**ESPACIO PARA EDITAR**</p></div>
-                <div class="empty-slot"><h3>[ Ranura 05 ]</h3><p>**ESPACIO PARA EDITAR**</p></div>
-                <div class="empty-slot"><h3>[ Ranura 06 ]</h3><p>**ESPACIO PARA EDITAR**</p></div>
-                <div class="empty-slot"><h3>[ Ranura 07 ]</h3><p>**ESPACIO PARA EDITAR**</p></div>
-                <div class="empty-slot"><h3>[ Ranura 08 ]</h3><p>**ESPACIO PARA EDITAR**</p></div>
-                <div class="empty-slot"><h3>[ Ranura 09 ]</h3><p>**ESPACIO PARA EDITAR**</p></div>
-                <div class="empty-slot"><h3>[ Ranura 10 ]</h3><p>**ESPACIO PARA EDITAR**</p></div>
-                <div class="empty-slot"><h3>[ Ranura 11 ]</h3><p>**ESPACIO PARA EDITAR**</p></div>
-                <div class="empty-slot"><h3>[ Ranura 12 ]</h3><p>**ESPACIO PARA EDITAR**</p></div>
-                <div class="empty-slot"><h3>[ Ranura 13 ]</h3><p>**ESPACIO PARA EDITAR**</p></div>
-                <div class="empty-slot"><h3>[ Ranura 14 ]</h3><p>**ESPACIO PARA EDITAR**</p></div>
-                <div class="empty-slot"><h3>[ Ranura 15 ]</h3><p>**ESPACIO PARA EDITAR**</p></div>
-                
+        <ul id="field-list">
+            </ul>
+        
+        <div class="json-container">
+            <div class="json-header">
+                <b>Salida JSON</b>
+                <span id="copyBtn">📋 Copiar</span>
             </div>
-        </section>
-
-        <section id="colaboradores">
-            <div id="collab-section">
-                <h2>// 0x05 COLABORADORES CLAVE //</h2>
-                <p style="color: var(--collab-color);">Nuestras alianzas en la esfera digital.</p>
-                <div class="collab-grid">
-                    
-                    <div class="collab-item">
-                        <div class="collab-img-container">
-                            <img src="Colaborador_A.jpg" alt="Imagen del Colaborador A">
-                        </div>
-                        <p>Nombre_Colaborador_A</p>
-                    </div>
-
-                    <div class="collab-item">
-                        <div class="collab-img-container">
-                            <img src="Colaborador_B.jpg" alt="Imagen del Colaborador B">
-                        </div>
-                        <p>Nombre_Colaborador_B</p>
-                    </div>
-
-                    <div class="collab-item">
-                        <div class="collab-img-container">
-                            <img src="Colaborador_C.jpg" alt="Imagen del Colaborador C">
-                        </div>
-                        <p>Nombre_Colaborador_C</p>
-                    </div>
-                    
-                </div>
-                
-                <p class="telegram-info">
-                    **¡ATENCIÓN!** Envien sus capturas al grupo de Telegram para confirmar su uso en esta web.
-                </p>
-
-            </div>
-        </section>
-
-        <section id="protocolo">
-            <footer>
-                <h3>[ 0x06 PROTOCOLO DE CONCIENCIA CYBERNÉTICA ]</h3>
-                <p><strong>Clasificación: ALTO SECRETO // Versión 2.0.1 (Actualizada 2025)</strong></p>
-                <p>Este repositorio digital ha sido creado para la **difusión responsable de conocimiento** en el campo de la ciberseguridad, el hacking ético y la investigación de vulnerabilidades. Los materiales aquí expuestos están diseñados para fomentar la comprensión y la protección de sistemas, no para su explotación maliciosa. **LEVIATHAM no se hace responsable por el mal uso de la información ni por el incumplimiento de las leyes locales.**</p>
-                <p>Todo el contenido está sujeto a los **Términos y Condiciones de Industrias Lazarus**. El acceso y uso de esta plataforma implica la aceptación plena de nuestros lineamientos éticos y legales.</p>
-                <p>// El conocimiento es una herramienta: su impacto depende de las manos que lo empuñen //</p>
-            </footer>
-        </section>
-
+            <textarea id="json-output" readonly>{}</textarea>
+        </div>
     </div>
 
-    <script src="script.js"></script>
+    <div id="workspace">
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <script>
+        // Secuencia exacta solicitada
+        const secuenciaCampos = [
+            "Apellido / Surname",
+            "Nombre / Name",
+            "Sexo / Sex",
+            "Nacionalidad / Nationality",
+            "Ejemplar",
+            "Fecha de nacimiento / Date of birth",
+            "Fecha de emisión / Date of issue",
+            "Fecha de vencimiento / Date of expiry",
+            "Trámite Nº / Of. ident.",
+            "Número inferior (CUIL)",
+            "Firma Identificado / Signature"
+        ];
+
+        const imageLoader = document.getElementById('imageLoader');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const jsonOutput = document.getElementById('json-output');
+        const fieldList = document.getElementById('field-list');
+        
+        let img = new Image();
+        let mappedData = {};
+        let currentIndex = 0;
+
+        // Inicializar UI de la lista
+        function renderFieldList() {
+            fieldList.innerHTML = '';
+            secuenciaCampos.forEach((campo, index) => {
+                const li = document.createElement('li');
+                li.className = 'field-item';
+                if (index === currentIndex) li.classList.add('active');
+                if (index < currentIndex) li.classList.add('done');
+                
+                const status = index < currentIndex ? '✓' : (index === currentIndex ? 'Actual' : 'Espera');
+                li.innerHTML = `<span>${campo}</span> <span class="status-badge">${status}</span>`;
+                fieldList.appendChild(li);
+            });
+            
+            // Auto-scroll al elemento activo
+            const activeEl = document.querySelector('.field-item.active');
+            if(activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        renderFieldList();
+
+        // Cargar imagen
+        imageLoader.addEventListener('change', function(e) {
+            if(!e.target.files[0]) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                img.onload = function() {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    redraw();
+                }
+                img.src = event.target.result;
+            }
+            reader.readAsDataURL(e.target.files[0]);
+        });
+
+        // Registrar clic y auto-avanzar
+        canvas.addEventListener('mousedown', function(e) {
+            if (!img.src) {
+                alert("Primero debes cargar una imagen.");
+                return;
+            }
+            if (currentIndex >= secuenciaCampos.length) {
+                alert("¡Secuencia completada! Ya puedes copiar el JSON.");
+                return;
+            }
+
+            const rect = canvas.getBoundingClientRect();
+            // Escala para precisión matemática respecto al tamaño real de la imagen vs visualización
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            const x = Math.round((e.clientX - rect.left) * scaleX);
+            const y = Math.round((e.clientY - rect.top) * scaleY);
+
+            // Obtener el campo actual de la secuencia
+            const currentField = secuenciaCampos[currentIndex];
+            
+            // Guardar datos
+            mappedData[currentField] = { x: x, y: y };
+            
+            // Avanzar
+            currentIndex++;
+            
+            updateJSON();
+            renderFieldList();
+            redraw();
+        });
+
+        // Dibujar imagen y marcadores (Vista Previa Mejorada)
+        function redraw() {
+            if (!img.src) return;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+
+            for (const [key, coords] of Object.entries(mappedData)) {
+                // Dibujar punto de anclaje
+                ctx.beginPath();
+                ctx.arc(coords.x, coords.y, 4, 0, 2 * Math.PI, false);
+                ctx.fillStyle = '#3b82f6'; // Punto azul
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#fff';
+                ctx.stroke();
+
+                // Calcular ancho del texto para el fondo
+                ctx.font = 'bold 16px Arial';
+                const metrics = ctx.measureText(key);
+                const textWidth = metrics.width;
+
+                // Dibujar fondo oscuro semitransparente para legibilidad
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.beginPath();
+                ctx.roundRect(coords.x + 8, coords.y - 12, textWidth + 10, 22, 4);
+                ctx.fill();
+
+                // Dibujar texto
+                ctx.fillStyle = '#10b981'; // Texto verde
+                ctx.fillText(key, coords.x + 13, coords.y + 4);
+            }
+        }
+
+        function updateJSON() {
+            jsonOutput.value = JSON.stringify(mappedData, null, 4);
+            // Auto-scroll json to bottom
+            jsonOutput.scrollTop = jsonOutput.scrollHeight;
+        }
+
+        // Reiniciar
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            if(confirm('¿Estás seguro de reiniciar todo el mapeo?')) {
+                mappedData = {};
+                currentIndex = 0;
+                updateJSON();
+                renderFieldList();
+                redraw();
+            }
+        });
+
+        // Copiar JSON
+        document.getElementById('copyBtn').addEventListener('click', () => {
+            if(Object.keys(mappedData).length === 0) return;
+            jsonOutput.select();
+            document.execCommand('copy');
+            
+            const btn = document.getElementById('copyBtn');
+            btn.innerText = '¡Copiado!';
+            setTimeout(() => btn.innerText = '📋 Copiar', 2000);
+        });
+    </script>
 </body>
 </html>
-

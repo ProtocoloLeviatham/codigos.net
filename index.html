@@ -3,15 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>I.A.C.D.I. - Mapeador de Coordenadas V2</title>
+    <title>I.A.C.D.I. - Mapeador Pro V3 (Frente)</title>
     <style>
         :root { --bg: #0f172a; --panel: #1e293b; --accent: #3b82f6; --success: #10b981; --text: #f8fafc; --text-muted: #94a3b8; }
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
         
-        #sidebar { width: 380px; background-color: var(--panel); border-right: 1px solid #334155; display: flex; flex-direction: column; overflow: hidden; }
+        #sidebar { width: 380px; background-color: var(--panel); border-right: 1px solid #334155; display: flex; flex-direction: column; overflow: hidden; z-index: 10; }
         .sidebar-header { padding: 20px 20px 10px; border-bottom: 1px solid #334155; }
         h2 { color: var(--accent); font-size: 1.2rem; margin: 0 0 5px 0; letter-spacing: 0.5px; }
         
+        .instructions { background: #0b1120; padding: 10px; margin: 10px 20px; border-radius: 6px; font-size: 0.75rem; color: #cbd5e1; border-left: 3px solid var(--accent); }
+        .instructions b { color: white; }
+
         .controls { padding: 15px 20px; display: flex; gap: 10px; border-bottom: 1px solid #334155; }
         button, .file-upload { flex: 1; background: var(--accent); color: white; border: none; padding: 10px; font-weight: bold; cursor: pointer; border-radius: 6px; text-align: center; font-size: 0.85rem; transition: background 0.2s; }
         button:hover, .file-upload:hover { background: #2563eb; }
@@ -21,16 +24,16 @@
 
         #field-list { flex: 1; overflow-y: auto; padding: 10px 20px; list-style: none; margin: 0; }
         .field-item { padding: 10px; margin-bottom: 5px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; font-size: 0.85rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; transition: all 0.2s; }
-        .field-item.active { background: rgba(59, 130, 246, 0.2); border-color: var(--accent); color: white; border-left: 4px solid var(--accent); transform: translateX(5px); font-weight: bold; }
+        .field-item.active { background: rgba(59, 130, 246, 0.2); border-color: var(--accent); color: white; border-left: 4px solid var(--accent); font-weight: bold; }
         .field-item.done { border-color: var(--success); color: var(--success); }
         
         .json-container { height: 200px; border-top: 1px solid #334155; display: flex; flex-direction: column; }
         .json-header { padding: 5px 20px; background: #0f172a; font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; }
-        .json-header span { cursor: pointer; color: var(--accent); }
+        .json-header span { cursor: pointer; color: var(--accent); font-weight: bold; }
         #json-output { flex: 1; background: #000; color: var(--success); border: none; padding: 10px 20px; font-family: 'Consolas', monospace; font-size: 0.8rem; resize: none; outline: none; }
 
-        #workspace { flex: 1; overflow: auto; display: flex; justify-content: center; align-items: flex-start; padding: 20px; background-image: radial-gradient(#334155 1px, transparent 1px); background-size: 20px 20px; }
-        canvas { background-color: transparent; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); cursor: crosshair; max-width: 100%; border-radius: 4px; }
+        #workspace { flex: 1; overflow: hidden; position: relative; background-image: radial-gradient(#334155 1px, transparent 1px); background-size: 20px 20px; cursor: crosshair; }
+        canvas { display: block; position: absolute; top: 0; left: 0; }
         
         .status-badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 10px; background: #334155; }
         .done .status-badge { background: rgba(16, 185, 129, 0.2); }
@@ -40,20 +43,26 @@
 
     <div id="sidebar">
         <div class="sidebar-header">
-            <h2>Mapeador I.A.C.D.I.</h2>
-            <p style="margin:0; font-size: 0.8rem; color: var(--text-muted);">Sigue el orden de la lista sobre la imagen.</p>
+            <h2>Mapeador V3 (Frente)</h2>
+            <p style="margin:0; font-size: 0.8rem; color: var(--text-muted);">Herramienta de Precisión Quirúrgica</p>
+        </div>
+
+        <div class="instructions">
+            <b>CONTROLES PRO:</b><br>
+            🔍 Rueda del Ratón: <i>Zoom Infinito</i><br>
+            ✋ SHIFT + Clic Izquierdo: <i>Mover Imagen</i><br>
+            🎯 Clic Izquierdo: <i>Fijar Coordenada</i>
         </div>
         
         <div class="controls">
             <label class="file-upload">
                 <input type="file" id="imageLoader" accept="image/*">
-                📁 Cargar Imagen
+                📁 Cargar
             </label>
             <button id="resetBtn" class="danger">⟲ Reiniciar</button>
         </div>
 
-        <ul id="field-list">
-            </ul>
+        <ul id="field-list"></ul>
         
         <div class="json-container">
             <div class="json-header">
@@ -69,17 +78,21 @@
     </div>
 
     <script>
-        // Nueva secuencia solicitada
         const secuenciaCampos = [
-            "DOMICILIO",
-            "LUGAR DE NACIMIENTO",
-            "IDARG1",
-            "IDARG 2",
-            "IDARG3",
-            "CUIL"
+            "Apellido / Surname",
+            "Nombre / Name",
+            "Sexo / Sex",
+            "Nacionalidad / Nationality",
+            "Ejemplar",
+            "Fecha de nacimiento / Date of birth",
+            "Fecha de emisión / Date of issue",
+            "Fecha de vencimiento / Date of expiry",
+            "Trámite Nº / Of. ident.",
+            "Número inferior (DNI)"
         ];
 
         const imageLoader = document.getElementById('imageLoader');
+        const workspace = document.getElementById('workspace');
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const jsonOutput = document.getElementById('json-output');
@@ -89,6 +102,27 @@
         let mappedData = {};
         let currentIndex = 0;
 
+        // Variables del motor de Zoom y Paneo
+        let scale = 1;
+        let offsetX = 0;
+        let offsetY = 0;
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        
+        // Variables del mouse
+        let mouseX = -1;
+        let mouseY = -1;
+
+        // Ajustar canvas a la ventana
+        function resizeCanvas() {
+            canvas.width = workspace.clientWidth;
+            canvas.height = workspace.clientHeight;
+            if(img.src) redraw();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        // Inicializar UI
         function renderFieldList() {
             fieldList.innerHTML = '';
             secuenciaCampos.forEach((campo, index) => {
@@ -101,20 +135,23 @@
                 li.innerHTML = `<span>${campo}</span> <span class="status-badge">${status}</span>`;
                 fieldList.appendChild(li);
             });
-            
             const activeEl = document.querySelector('.field-item.active');
-            if(activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            if(activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-
         renderFieldList();
 
+        // Cargar Imagen
         imageLoader.addEventListener('change', function(e) {
             if(!e.target.files[0]) return;
             const reader = new FileReader();
             reader.onload = function(event) {
                 img.onload = function() {
-                    canvas.width = img.width;
-                    canvas.height = img.height;
+                    resizeCanvas();
+                    // Centrar imagen y ajustar escala inicial
+                    scale = Math.min((canvas.width - 100) / img.width, (canvas.height - 100) / img.height);
+                    if (scale > 1) scale = 1; // No agrandar si es pequeña
+                    offsetX = (canvas.width - img.width * scale) / 2;
+                    offsetY = (canvas.height - img.height * scale) / 2;
                     redraw();
                 }
                 img.src = event.target.result;
@@ -122,57 +159,161 @@
             reader.readAsDataURL(e.target.files[0]);
         });
 
-        canvas.addEventListener('mousedown', function(e) {
-            if (!img.src) return alert("Carga la imagen primero.");
-            if (currentIndex >= secuenciaCampos.length) return alert("Mapeo completo.");
+        // ----------------------------------------------------
+        // MOTOR DE EVENTOS DE MOUSE (ZOOM, PAN, CLICK)
+        // ----------------------------------------------------
+        
+        // Zoom con Rueda
+        workspace.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            if (!img.src) return;
 
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-
-            const x = Math.round((e.clientX - rect.left) * scaleX);
-            const y = Math.round((e.clientY - rect.top) * scaleY);
-
-            const currentField = secuenciaCampos[currentIndex];
-            mappedData[currentField] = { x: x, y: y };
+            const zoomIntensity = 0.1;
+            const wheel = e.deltaY < 0 ? 1 : -1;
+            const zoomFactor = Math.exp(wheel * zoomIntensity);
             
-            currentIndex++;
-            updateJSON();
-            renderFieldList();
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Hacer zoom apuntando exactamente al cursor
+            offsetX = x - (x - offsetX) * zoomFactor;
+            offsetY = y - (y - offsetY) * zoomFactor;
+            scale *= zoomFactor;
+
             redraw();
         });
 
+        // Eventos de Mouse (Mover y Click)
+        workspace.addEventListener('mousedown', (e) => {
+            if (!img.src) return;
+            
+            // Si mantiene SHIFT o presiona botón derecho -> Modo Paneo
+            if (e.shiftKey || e.button === 2) {
+                isDragging = true;
+                dragStartX = e.clientX - offsetX;
+                dragStartY = e.clientY - offsetY;
+                workspace.style.cursor = 'grabbing';
+                return;
+            }
+
+            // Si es clic normal (izquierdo sin shift) -> MARCAR COORDENADA
+            if (currentIndex >= secuenciaCampos.length) return alert("Secuencia completa.");
+
+            // Calcular coordenada real de la imagen original quitando el zoom
+            const rect = canvas.getBoundingClientRect();
+            const realX = Math.round(((e.clientX - rect.left) - offsetX) / scale);
+            const realY = Math.round(((e.clientY - rect.top) - offsetY) / scale);
+
+            // Validar que el clic fue dentro de la imagen
+            if (realX >= 0 && realX <= img.width && realY >= 0 && realY <= img.height) {
+                const currentField = secuenciaCampos[currentIndex];
+                mappedData[currentField] = { x: realX, y: realY };
+                
+                currentIndex++;
+                updateJSON();
+                renderFieldList();
+                redraw();
+            }
+        });
+
+        workspace.addEventListener('mousemove', (e) => {
+            if (!img.src) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+
+            if (isDragging) {
+                offsetX = e.clientX - dragStartX;
+                offsetY = e.clientY - dragStartY;
+            }
+            redraw(); // Redibuja rápido para mover la mira (crosshair)
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+            workspace.style.cursor = 'crosshair';
+        });
+
+        // ----------------------------------------------------
+        // MOTOR DE DIBUJO (RENDER)
+        // ----------------------------------------------------
         function redraw() {
             if (!img.src) return;
+            
+            // Limpiar pantalla
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // --- CAPA 1: IMAGEN Y PUNTOS (Sometidos a Zoom/Paneo) ---
+            ctx.save();
+            ctx.translate(offsetX, offsetY);
+            ctx.scale(scale, scale);
+
+            // Dibujar la foto
             ctx.drawImage(img, 0, 0);
 
+            // Dibujar los puntos ya marcados
             for (const [key, coords] of Object.entries(mappedData)) {
+                // Ajustamos el tamaño del punto inversamente a la escala para que no se vea gigante al hacer zoom
+                const markerScale = 1 / scale; 
+                
                 ctx.beginPath();
-                ctx.arc(coords.x, coords.y, 5, 0, 2 * Math.PI, false);
+                ctx.arc(coords.x, coords.y, 4 * markerScale, 0, 2 * Math.PI, false);
                 ctx.fillStyle = '#3b82f6';
                 ctx.fill();
-                ctx.lineWidth = 2;
+                ctx.lineWidth = 2 * markerScale;
                 ctx.strokeStyle = '#fff';
                 ctx.stroke();
 
-                ctx.font = 'bold 15px Segoe UI';
+                ctx.font = `bold ${14 * markerScale}px Segoe UI`;
                 const metrics = ctx.measureText(key);
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-                ctx.fillRect(coords.x + 10, coords.y - 15, metrics.width + 10, 25);
-                
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(coords.x + (8 * markerScale), coords.y - (14 * markerScale), metrics.width + (10 * markerScale), 20 * markerScale);
                 ctx.fillStyle = '#10b981';
-                ctx.fillText(key, coords.x + 15, coords.y + 4);
+                ctx.fillText(key, coords.x + (12 * markerScale), coords.y + (2 * markerScale));
+            }
+            ctx.restore(); // Cerramos la capa de zoom
+
+            // --- CAPA 2: INTERFAZ Y MIRA TELESCÓPICA (Fijo en pantalla) ---
+            if (mouseX >= 0 && mouseY >= 0 && !isDragging) {
+                // Líneas Crosshair (Azul punteado)
+                ctx.beginPath();
+                ctx.moveTo(mouseX, 0);
+                ctx.lineTo(mouseX, canvas.height);
+                ctx.moveTo(0, mouseY);
+                ctx.lineTo(canvas.width, mouseY);
+                ctx.strokeStyle = 'rgba(59, 130, 246, 0.7)';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([4, 4]);
+                ctx.stroke();
+                ctx.setLineDash([]); // Restaurar línea sólida
+
+                // Coordenadas en Vivo de la Imagen Real
+                const realX = Math.round((mouseX - offsetX) / scale);
+                const realY = Math.round((mouseY - offsetY) / scale);
+                
+                // Mostrar tooltip solo si el mouse está sobre la imagen
+                if (realX >= 0 && realX <= img.width && realY >= 0 && realY <= img.height) {
+                    const tooltipText = `[X: ${realX} | Y: ${realY}]`;
+                    ctx.font = 'bold 12px Consolas';
+                    const txtWidth = ctx.measureText(tooltipText).width;
+                    ctx.fillStyle = 'rgba(0,0,0,0.85)';
+                    ctx.fillRect(mouseX + 15, mouseY + 15, txtWidth + 10, 20);
+                    ctx.fillStyle = '#3b82f6';
+                    ctx.fillText(tooltipText, mouseX + 20, mouseY + 29);
+                }
             }
         }
 
+        // Utilidades JSON
         function updateJSON() {
             jsonOutput.value = JSON.stringify(mappedData, null, 4);
             jsonOutput.scrollTop = jsonOutput.scrollHeight;
         }
 
         document.getElementById('resetBtn').addEventListener('click', () => {
-            if(confirm('¿Reiniciar coordenadas?')) {
+            if(confirm('¿Reiniciar mapeo? Se borrarán todas las coordenadas actuales.')) {
                 mappedData = {};
                 currentIndex = 0;
                 updateJSON();
@@ -189,6 +330,11 @@
             btn.innerText = '¡Copiado!';
             setTimeout(() => btn.innerText = '📋 Copiar', 2000);
         });
+        
+        // Evitar el menú contextual al usar clic derecho para panear
+        window.addEventListener('contextmenu', e => e.preventDefault());
+        resizeCanvas();
     </script>
 </body>
 </html>
+

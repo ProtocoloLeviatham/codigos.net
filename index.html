@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>I.A.C.D.I. - Mapeador y Calibrador V4 (Frente)</title>
+    <title>I.A.C.D.I. - Medidor de Áreas Pro (V5)</title>
     <style>
         :root { --bg: #0f172a; --panel: #1e293b; --accent: #3b82f6; --success: #10b981; --warning: #f59e0b; --text: #f8fafc; --text-muted: #94a3b8; }
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
         
-        #sidebar { width: 420px; background-color: var(--panel); border-right: 1px solid #334155; display: flex; flex-direction: column; overflow: hidden; z-index: 10; box-shadow: 2px 0 10px rgba(0,0,0,0.5); }
+        #sidebar { width: 400px; background-color: var(--panel); border-right: 1px solid #334155; display: flex; flex-direction: column; overflow: hidden; z-index: 10; box-shadow: 2px 0 10px rgba(0,0,0,0.5); }
         .sidebar-header { padding: 15px 20px; border-bottom: 1px solid #334155; background: #0b1120; }
         h2 { color: var(--accent); font-size: 1.2rem; margin: 0 0 5px 0; letter-spacing: 0.5px; }
         
-        .instructions { font-size: 0.75rem; color: #cbd5e1; margin-top: 5px; line-height: 1.4; }
+        .instructions { font-size: 0.75rem; color: #cbd5e1; margin-top: 5px; line-height: 1.4; background: rgba(59, 130, 246, 0.1); padding: 8px; border-radius: 4px; border-left: 3px solid var(--accent); }
         .instructions b { color: var(--warning); }
 
         .controls { padding: 15px 20px; display: flex; gap: 10px; border-bottom: 1px solid #334155; }
@@ -22,23 +22,16 @@
         button.danger:hover { background: #dc2626; }
         input[type="file"] { display: none; }
 
-        /* Calibrador Panel */
-        .calibrator-panel { padding: 15px 20px; background: rgba(59, 130, 246, 0.1); border-bottom: 1px solid #334155; }
-        .calibrator-header { font-size: 0.85rem; font-weight: bold; color: var(--accent); margin-bottom: 10px; display: flex; justify-content: space-between; }
-        .input-group { margin-bottom: 10px; }
-        .input-group label { display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; }
-        .input-group input[type="text"] { width: 100%; padding: 8px; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 4px; box-sizing: border-box; font-family: monospace; }
-        .slider-group { display: flex; align-items: center; gap: 10px; }
-        .slider-group input[type="range"] { flex: 1; }
-        .slider-value { font-size: 0.8rem; font-family: monospace; color: var(--success); width: 40px; text-align: right; }
-        .measure-readout { background: #000; padding: 8px; border-radius: 4px; font-family: 'Consolas', monospace; font-size: 0.8rem; color: var(--warning); text-align: center; border: 1px dashed var(--warning); }
-
         #field-list { flex: 1; overflow-y: auto; padding: 10px 20px; list-style: none; margin: 0; }
-        .field-item { padding: 10px; margin-bottom: 5px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; font-size: 0.85rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; transition: all 0.2s; cursor: pointer; }
-        .field-item.active { background: rgba(59, 130, 246, 0.2); border-color: var(--accent); color: white; border-left: 4px solid var(--accent); font-weight: bold; }
-        .field-item.done { border-color: var(--success); color: var(--success); }
+        .field-item { padding: 10px; margin-bottom: 5px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; font-size: 0.85rem; color: var(--text-muted); transition: all 0.2s; cursor: pointer; display: flex; flex-direction: column; gap: 5px;}
+        .field-item.active { background: rgba(59, 130, 246, 0.2); border-color: var(--accent); color: white; border-left: 4px solid var(--accent); }
+        .field-item.done { border-color: var(--success); }
         
-        .json-container { height: 150px; border-top: 1px solid #334155; display: flex; flex-direction: column; }
+        .field-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+        .field-data { font-family: monospace; font-size: 0.75rem; color: var(--warning); background: #000; padding: 4px; border-radius: 3px; display: none; }
+        .field-item.done .field-data { display: block; color: var(--success); border: 1px dashed var(--success);}
+
+        .json-container { height: 180px; border-top: 1px solid #334155; display: flex; flex-direction: column; }
         .json-header { padding: 5px 20px; background: #0f172a; font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; }
         .json-header span { cursor: pointer; color: var(--accent); font-weight: bold; }
         #json-output { flex: 1; background: #000; color: var(--success); border: none; padding: 10px 20px; font-family: 'Consolas', monospace; font-size: 0.75rem; resize: none; outline: none; }
@@ -46,20 +39,19 @@
         #workspace { flex: 1; overflow: hidden; position: relative; background-image: radial-gradient(#334155 1px, transparent 1px); background-size: 20px 20px; cursor: crosshair; }
         canvas { display: block; position: absolute; top: 0; left: 0; }
         
-        .status-badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 10px; background: #334155; }
-        .done .status-badge { background: rgba(16, 185, 129, 0.2); }
+        .status-badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 10px; background: #334155; color: white;}
+        .done .status-badge { background: rgba(16, 185, 129, 0.2); color: var(--success); }
     </style>
 </head>
 <body>
 
     <div id="sidebar">
         <div class="sidebar-header">
-            <h2>I.A.C.D.I. Mapeador V4</h2>
+            <h2>I.A.C.D.I. Medidor de Áreas</h2>
             <div class="instructions">
-                <b>CONTROLES DE ENTORNO:</b><br>
-                🔍 Rueda del Ratón: <i>Zoom Infinito</i><br>
-                ✋ SHIFT + Clic: <i>Arrastrar / Panear</i><br>
-                🎯 Clic Normal: <i>Fijar Coordenada</i>
+                <b>NUEVA HERRAMIENTA DE MEDICIÓN:</b><br>
+                1. 🖱️ <b>Clic y Arrastrar:</b> Dibuja un rectángulo sobre el campo para medir Ancho y Alto.<br>
+                2. 🔍 <b>Rueda:</b> Zoom | ✋ <b>SHIFT + Clic:</b> Mover
             </div>
         </div>
         
@@ -71,38 +63,11 @@
             <button id="resetBtn" class="danger">⟲ Reiniciar</button>
         </div>
 
-        <div class="calibrator-panel">
-            <div class="calibrator-header">
-                <span>📐 Calibrador Tipográfico en Vivo</span>
-            </div>
-            <div class="input-group">
-                <label>Texto de Prueba (Renderizado sobre la imagen):</label>
-                <input type="text" id="testText" value="GARCIA" placeholder="Ej: GARCIA">
-            </div>
-            <div class="input-group">
-                <label>Tamaño de Fuente (px):</label>
-                <div class="slider-group">
-                    <input type="range" id="fontSize" min="10" max="100" value="21">
-                    <span class="slider-value" id="fontSizeVal">21px</span>
-                </div>
-            </div>
-            <div class="input-group">
-                <label>Espaciado (Letter Spacing px):</label>
-                <div class="slider-group">
-                    <input type="range" id="letterSpacing" min="0" max="20" value="0">
-                    <span class="slider-value" id="letterSpacingVal">0px</span>
-                </div>
-            </div>
-            <div class="measure-readout" id="measureReadout">
-                Ancho Real: 0px
-            </div>
-        </div>
-
         <ul id="field-list"></ul>
         
         <div class="json-container">
             <div class="json-header">
-                <b>Salida JSON (Coordenadas)</b>
+                <b>Salida JSON (Coordenadas y Medidas)</b>
                 <span id="copyBtn">📋 Copiar</span>
             </div>
             <textarea id="json-output" readonly>{}</textarea>
@@ -114,18 +79,10 @@
     </div>
 
     <script>
-        // Secuencia exacta requerida
+        // Secuencia solicitada. (Puedes añadir más si lo necesitas)
         const secuenciaCampos = [
-            "Apellido / Surname",
-            "Nombre / Name",
-            "Sexo / Sex",
-            "Nacionalidad / Nationality",
-            "Ejemplar",
-            "Fecha de nacimiento / Date of birth",
-            "Fecha de emisión / Date of issue",
-            "Fecha de vencimiento / Date of expiry",
-            "Trámite Nº / Of. ident.",
-            "Número inferior (DNI)"
+            "DOMICILIO",
+            "LUGAR DE NACIMIENTO"
         ];
 
         const imageLoader = document.getElementById('imageLoader');
@@ -135,14 +92,6 @@
         const jsonOutput = document.getElementById('json-output');
         const fieldList = document.getElementById('field-list');
         
-        // Controles del calibrador
-        const testText = document.getElementById('testText');
-        const fontSize = document.getElementById('fontSize');
-        const fontSizeVal = document.getElementById('fontSizeVal');
-        const letterSpacing = document.getElementById('letterSpacing');
-        const letterSpacingVal = document.getElementById('letterSpacingVal');
-        const measureReadout = document.getElementById('measureReadout');
-
         let img = new Image();
         let mappedData = {};
         let currentIndex = 0;
@@ -151,11 +100,14 @@
         let scale = 1;
         let offsetX = 0;
         let offsetY = 0;
-        let isDragging = false;
-        let dragStartX = 0;
-        let dragStartY = 0;
-        let mouseX = -1;
-        let mouseY = -1;
+        let isDragging = false; // Para mover la imagen (Pan)
+        let isDrawingBox = false; // Para dibujar el rectángulo
+        
+        let dragStartX = 0, dragStartY = 0;
+        let boxStartX = 0, boxStartY = 0;
+        let boxCurrentX = 0, boxCurrentY = 0;
+        
+        let mouseX = -1, mouseY = -1;
 
         function resizeCanvas() {
             canvas.width = workspace.clientWidth;
@@ -170,18 +122,28 @@
                 const li = document.createElement('li');
                 li.className = 'field-item';
                 if (index === currentIndex) li.classList.add('active');
-                if (index < currentIndex) li.classList.add('done');
+                if (index < currentIndex || mappedData[campo]) li.classList.add('done');
                 
-                const status = index < currentIndex ? '✓' : (index === currentIndex ? 'Actual' : 'Espera');
-                li.innerHTML = `<span>${campo}</span> <span class="status-badge">${status}</span>`;
+                const status = (index < currentIndex || mappedData[campo]) ? '✓ Medido' : (index === currentIndex ? '▶ Actual' : 'Espera');
                 
-                // Permitir clickear elementos anteriores para recalibrarlos/verlos
+                let dataHtml = '';
+                if (mappedData[campo]) {
+                    const d = mappedData[campo];
+                    dataHtml = `<div class="field-data">X:${d.x} Y:${d.y} | Ancho:${d.w}px Alto:${d.h}px</div>`;
+                }
+
+                li.innerHTML = `
+                    <div class="field-header">
+                        <span>${campo}</span> 
+                        <span class="status-badge">${status}</span>
+                    </div>
+                    ${dataHtml}
+                `;
+                
                 li.addEventListener('click', () => {
-                    if (index <= Object.keys(mappedData).length) {
-                        currentIndex = index;
-                        renderFieldList();
-                        redraw();
-                    }
+                    currentIndex = index;
+                    renderFieldList();
+                    redraw();
                 });
 
                 fieldList.appendChild(li);
@@ -190,15 +152,6 @@
             if(activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
         renderFieldList();
-
-        // Eventos del Calibrador (Actualizan en vivo)
-        [testText, fontSize, letterSpacing].forEach(el => {
-            el.addEventListener('input', () => {
-                fontSizeVal.innerText = fontSize.value + 'px';
-                letterSpacingVal.innerText = letterSpacing.value + 'px';
-                redraw();
-            });
-        });
 
         // Cargar Imagen
         imageLoader.addEventListener('change', function(e) {
@@ -236,9 +189,22 @@
             redraw();
         });
 
-        // Click / Drag
+        // Obtener coordenada real de la imagen
+        function getRealCoords(e) {
+            const rect = canvas.getBoundingClientRect();
+            const rawX = e.clientX - rect.left;
+            const rawY = e.clientY - rect.top;
+            return {
+                x: Math.round((rawX - offsetX) / scale),
+                y: Math.round((rawY - offsetY) / scale)
+            };
+        }
+
+        // Eventos de Mouse
         workspace.addEventListener('mousedown', (e) => {
             if (!img.src) return;
+            
+            // Paneo de cámara (SHIFT o Clic Derecho)
             if (e.shiftKey || e.button === 2) {
                 isDragging = true;
                 dragStartX = e.clientX - offsetX;
@@ -247,20 +213,18 @@
                 return;
             }
 
-            if (currentIndex >= secuenciaCampos.length) return alert("Secuencia completa. Copia el JSON.");
+            // Dibujar Caja de Medición
+            if (currentIndex >= secuenciaCampos.length) return alert("Secuencia completa. Puedes revisar clickeando la lista.");
 
-            const rect = canvas.getBoundingClientRect();
-            const realX = Math.round(((e.clientX - rect.left) - offsetX) / scale);
-            const realY = Math.round(((e.clientY - rect.top) - offsetY) / scale);
-
-            if (realX >= 0 && realX <= img.width && realY >= 0 && realY <= img.height) {
-                const currentField = secuenciaCampos[currentIndex];
-                mappedData[currentField] = { x: realX, y: realY };
-                
-                currentIndex++;
-                updateJSON();
-                renderFieldList();
-                redraw();
+            const realCoords = getRealCoords(e);
+            
+            // Solo empezar si hacemos clic dentro de la imagen
+            if (realCoords.x >= 0 && realCoords.x <= img.width && realCoords.y >= 0 && realCoords.y <= img.height) {
+                isDrawingBox = true;
+                boxStartX = realCoords.x;
+                boxStartY = realCoords.y;
+                boxCurrentX = realCoords.x;
+                boxCurrentY = realCoords.y;
             }
         });
 
@@ -273,6 +237,10 @@
             if (isDragging) {
                 offsetX = e.clientX - dragStartX;
                 offsetY = e.clientY - dragStartY;
+            } else if (isDrawingBox) {
+                const realCoords = getRealCoords(e);
+                boxCurrentX = Math.max(0, Math.min(realCoords.x, img.width)); // Limitar a los bordes
+                boxCurrentY = Math.max(0, Math.min(realCoords.y, img.height));
             }
             redraw();
         });
@@ -280,6 +248,27 @@
         window.addEventListener('mouseup', () => {
             isDragging = false;
             workspace.style.cursor = 'crosshair';
+
+            if (isDrawingBox) {
+                isDrawingBox = false;
+                
+                const w = Math.abs(boxCurrentX - boxStartX);
+                const h = Math.abs(boxCurrentY - boxStartY);
+                
+                // Si el rectángulo es muy pequeño (clic accidental), lo ignoramos
+                if (w > 5 && h > 5) {
+                    const x = Math.min(boxStartX, boxCurrentX);
+                    const y = Math.min(boxStartY, boxCurrentY);
+                    
+                    const currentField = secuenciaCampos[currentIndex];
+                    mappedData[currentField] = { x, y, w, h };
+                    
+                    currentIndex++;
+                    updateJSON();
+                    renderFieldList();
+                }
+                redraw();
+            }
         });
 
         // Motor de Dibujo
@@ -288,88 +277,79 @@
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // CAPA 1: Imagen y Mapeo
+            // --- CAPA 1: IMAGEN Y CAJAS GUARDADAS ---
             ctx.save();
             ctx.translate(offsetX, offsetY);
             ctx.scale(scale, scale);
             ctx.drawImage(img, 0, 0);
 
-            // Dibujar puntos guardados
+            // Dibujar cajas ya mapeadas
             for (const [key, coords] of Object.entries(mappedData)) {
-                const markerScale = 1 / scale; 
-                ctx.beginPath();
-                ctx.arc(coords.x, coords.y, 4 * markerScale, 0, 2 * Math.PI, false);
-                ctx.fillStyle = '#3b82f6';
-                ctx.fill();
-                ctx.lineWidth = 2 * markerScale;
-                ctx.strokeStyle = '#fff';
-                ctx.stroke();
-            }
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.3)'; // Verde transparente
+                ctx.strokeStyle = '#10b981'; // Verde solido
+                ctx.lineWidth = 2 / scale;
+                ctx.fillRect(coords.x, coords.y, coords.w, coords.h);
+                ctx.strokeRect(coords.x, coords.y, coords.w, coords.h);
 
-            // CALIBRADOR TIPOGRÁFICO (Render en vivo)
-            // Si hay un punto actual o un texto de prueba, calcular
-            let drawX = mouseX >= 0 ? Math.round((mouseX - offsetX) / scale) : 0;
-            let drawY = mouseY >= 0 ? Math.round((mouseY - offsetY) / scale) : 0;
-
-            // Si el campo actual ya está mapeado (por hacer click en la lista), usar su coordenada
-            if (secuenciaCampos[currentIndex] && mappedData[secuenciaCampos[currentIndex]]) {
-                drawX = mappedData[secuenciaCampos[currentIndex]].x;
-                drawY = mappedData[secuenciaCampos[currentIndex]].y;
-            }
-
-            const tSize = fontSize.value;
-            const tSpacing = letterSpacing.value;
-            const tText = testText.value;
-
-            ctx.font = `bold ${tSize}px Arial, monospace`;
-            ctx.letterSpacing = `${tSpacing}px`;
-            ctx.textBaseline = 'bottom';
-            
-            const metrics = ctx.measureText(tText);
-            const textWidth = metrics.width;
-            
-            measureReadout.innerText = `Ancho Real: ${Math.round(textWidth)}px`;
-
-            // Dibujar el texto calibrador en rojo semi-transparente sobre la imagen
-            if (drawX > 0 && drawY > 0 && tText.trim() !== '') {
-                ctx.fillStyle = 'rgba(239, 68, 68, 0.8)'; // Rojo
-                ctx.fillText(tText, drawX, drawY);
+                // Etiqueta
+                ctx.font = `bold ${14 / scale}px Segoe UI`;
+                ctx.fillStyle = '#000';
+                const tagText = `${key} (${coords.w}x${coords.h})`;
+                const metrics = ctx.measureText(tagText);
+                ctx.fillRect(coords.x, coords.y - (18 / scale), metrics.width + (8 / scale), 18 / scale);
                 
-                // Línea de base para referencia
-                ctx.beginPath();
-                ctx.moveTo(drawX, drawY);
-                ctx.lineTo(drawX + textWidth, drawY);
-                ctx.strokeStyle = 'rgba(16, 185, 129, 0.8)'; // Verde
-                ctx.lineWidth = 1 / scale;
-                ctx.stroke();
+                ctx.fillStyle = '#10b981';
+                ctx.fillText(tagText, coords.x + (4 / scale), coords.y - (4 / scale));
             }
 
-            ctx.letterSpacing = '0px'; // Reset
+            // Dibujar caja en progreso (En vivo)
+            if (isDrawingBox) {
+                const rx = Math.min(boxStartX, boxCurrentX);
+                const ry = Math.min(boxStartY, boxCurrentY);
+                const rw = Math.abs(boxCurrentX - boxStartX);
+                const rh = Math.abs(boxCurrentY - boxStartY);
+
+                ctx.fillStyle = 'rgba(59, 130, 246, 0.4)'; // Azul transparente
+                ctx.strokeStyle = '#3b82f6';
+                ctx.lineWidth = 2 / scale;
+                ctx.fillRect(rx, ry, rw, rh);
+                ctx.strokeRect(rx, ry, rw, rh);
+            }
+            
             ctx.restore();
 
-            // CAPA 2: Mira Telescópica (Fijo en pantalla)
+            // --- CAPA 2: MIRA TELESCÓPICA Y DATOS EN VIVO (Fija en UI) ---
             if (mouseX >= 0 && mouseY >= 0 && !isDragging) {
+                // Crosshair
                 ctx.beginPath();
-                ctx.moveTo(mouseX, 0);
-                ctx.lineTo(mouseX, canvas.height);
-                ctx.moveTo(0, mouseY);
-                ctx.lineTo(canvas.width, mouseY);
-                ctx.strokeStyle = 'rgba(59, 130, 246, 0.7)';
+                ctx.moveTo(mouseX, 0); ctx.lineTo(mouseX, canvas.height);
+                ctx.moveTo(0, mouseY); ctx.lineTo(canvas.width, mouseY);
+                ctx.strokeStyle = 'rgba(59, 130, 246, 0.5)';
                 ctx.lineWidth = 1;
                 ctx.setLineDash([4, 4]);
                 ctx.stroke();
                 ctx.setLineDash([]);
 
-                const realX = Math.round((mouseX - offsetX) / scale);
-                const realY = Math.round((mouseY - offsetY) / scale);
-                
-                if (realX >= 0 && realX <= img.width && realY >= 0 && realY <= img.height) {
-                    const tooltipText = `[X:${realX} Y:${realY}]`;
+                // Tooltip en vivo
+                let tooltipText = "";
+                if (isDrawingBox) {
+                    const rw = Math.abs(boxCurrentX - boxStartX);
+                    const rh = Math.abs(boxCurrentY - boxStartY);
+                    tooltipText = `Ancho: ${rw}px | Alto: ${rh}px`;
+                } else {
+                    const rX = Math.round((mouseX - offsetX) / scale);
+                    const rY = Math.round((mouseY - offsetY) / scale);
+                    if (rX >= 0 && rX <= img.width && rY >= 0 && rY <= img.height) {
+                        tooltipText = `X:${rX} Y:${rY} (Clic y arrastra para medir)`;
+                    }
+                }
+
+                if (tooltipText) {
                     ctx.font = 'bold 12px Consolas';
                     const txtWidth = ctx.measureText(tooltipText).width;
-                    ctx.fillStyle = 'rgba(0,0,0,0.85)';
+                    ctx.fillStyle = isDrawingBox ? 'rgba(59, 130, 246, 0.9)' : 'rgba(0,0,0,0.85)';
                     ctx.fillRect(mouseX + 15, mouseY + 15, txtWidth + 10, 20);
-                    ctx.fillStyle = '#3b82f6';
+                    ctx.fillStyle = '#fff';
                     ctx.fillText(tooltipText, mouseX + 20, mouseY + 29);
                 }
             }
@@ -381,7 +361,7 @@
         }
 
         document.getElementById('resetBtn').addEventListener('click', () => {
-            if(confirm('¿Reiniciar mapeo? Se borrarán todas las coordenadas.')) {
+            if(confirm('¿Reiniciar mediciones? Se borrarán todos los cuadros.')) {
                 mappedData = {};
                 currentIndex = 0;
                 updateJSON();

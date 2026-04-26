@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>I.A.C.D.I. - Mapeador Secuencial Automático</title>
+    <title>I.A.C.D.I. - Mapeador de Coordenadas V2</title>
     <style>
         :root { --bg: #0f172a; --panel: #1e293b; --accent: #3b82f6; --success: #10b981; --text: #f8fafc; --text-muted: #94a3b8; }
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
         
         #sidebar { width: 380px; background-color: var(--panel); border-right: 1px solid #334155; display: flex; flex-direction: column; overflow: hidden; }
         .sidebar-header { padding: 20px 20px 10px; border-bottom: 1px solid #334155; }
-        h2 { color: var(--accent); font-size: 1.2rem; margin: 0 0 10px 0; letter-spacing: 0.5px; }
+        h2 { color: var(--accent); font-size: 1.2rem; margin: 0 0 5px 0; letter-spacing: 0.5px; }
         
         .controls { padding: 15px 20px; display: flex; gap: 10px; border-bottom: 1px solid #334155; }
         button, .file-upload { flex: 1; background: var(--accent); color: white; border: none; padding: 10px; font-weight: bold; cursor: pointer; border-radius: 6px; text-align: center; font-size: 0.85rem; transition: background 0.2s; }
@@ -40,8 +40,8 @@
 
     <div id="sidebar">
         <div class="sidebar-header">
-            <h2>Configuración de Plantilla</h2>
-            <p style="margin:0; font-size: 0.8rem; color: var(--text-muted);">Sigue el orden de la lista y haz clic en la imagen.</p>
+            <h2>Mapeador I.A.C.D.I.</h2>
+            <p style="margin:0; font-size: 0.8rem; color: var(--text-muted);">Sigue el orden de la lista sobre la imagen.</p>
         </div>
         
         <div class="controls">
@@ -69,19 +69,14 @@
     </div>
 
     <script>
-        // Secuencia exacta solicitada
+        // Nueva secuencia solicitada
         const secuenciaCampos = [
-            "Apellido / Surname",
-            "Nombre / Name",
-            "Sexo / Sex",
-            "Nacionalidad / Nationality",
-            "Ejemplar",
-            "Fecha de nacimiento / Date of birth",
-            "Fecha de emisión / Date of issue",
-            "Fecha de vencimiento / Date of expiry",
-            "Trámite Nº / Of. ident.",
-            "Número inferior (CUIL)",
-            "Firma Identificado / Signature"
+            "DOMICILIO",
+            "LUGAR DE NACIMIENTO",
+            "IDARG1",
+            "IDARG 2",
+            "IDARG3",
+            "CUIL"
         ];
 
         const imageLoader = document.getElementById('imageLoader');
@@ -94,7 +89,6 @@
         let mappedData = {};
         let currentIndex = 0;
 
-        // Inicializar UI de la lista
         function renderFieldList() {
             fieldList.innerHTML = '';
             secuenciaCampos.forEach((campo, index) => {
@@ -108,14 +102,12 @@
                 fieldList.appendChild(li);
             });
             
-            // Auto-scroll al elemento activo
             const activeEl = document.querySelector('.field-item.active');
             if(activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
         renderFieldList();
 
-        // Cargar imagen
         imageLoader.addEventListener('change', function(e) {
             if(!e.target.files[0]) return;
             const reader = new FileReader();
@@ -130,82 +122,57 @@
             reader.readAsDataURL(e.target.files[0]);
         });
 
-        // Registrar clic y auto-avanzar
         canvas.addEventListener('mousedown', function(e) {
-            if (!img.src) {
-                alert("Primero debes cargar una imagen.");
-                return;
-            }
-            if (currentIndex >= secuenciaCampos.length) {
-                alert("¡Secuencia completada! Ya puedes copiar el JSON.");
-                return;
-            }
+            if (!img.src) return alert("Carga la imagen primero.");
+            if (currentIndex >= secuenciaCampos.length) return alert("Mapeo completo.");
 
             const rect = canvas.getBoundingClientRect();
-            // Escala para precisión matemática respecto al tamaño real de la imagen vs visualización
             const scaleX = canvas.width / rect.width;
             const scaleY = canvas.height / rect.height;
 
             const x = Math.round((e.clientX - rect.left) * scaleX);
             const y = Math.round((e.clientY - rect.top) * scaleY);
 
-            // Obtener el campo actual de la secuencia
             const currentField = secuenciaCampos[currentIndex];
-            
-            // Guardar datos
             mappedData[currentField] = { x: x, y: y };
             
-            // Avanzar
             currentIndex++;
-            
             updateJSON();
             renderFieldList();
             redraw();
         });
 
-        // Dibujar imagen y marcadores (Vista Previa Mejorada)
         function redraw() {
             if (!img.src) return;
-            
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0);
 
             for (const [key, coords] of Object.entries(mappedData)) {
-                // Dibujar punto de anclaje
                 ctx.beginPath();
-                ctx.arc(coords.x, coords.y, 4, 0, 2 * Math.PI, false);
-                ctx.fillStyle = '#3b82f6'; // Punto azul
+                ctx.arc(coords.x, coords.y, 5, 0, 2 * Math.PI, false);
+                ctx.fillStyle = '#3b82f6';
                 ctx.fill();
                 ctx.lineWidth = 2;
                 ctx.strokeStyle = '#fff';
                 ctx.stroke();
 
-                // Calcular ancho del texto para el fondo
-                ctx.font = 'bold 16px Arial';
+                ctx.font = 'bold 15px Segoe UI';
                 const metrics = ctx.measureText(key);
-                const textWidth = metrics.width;
-
-                // Dibujar fondo oscuro semitransparente para legibilidad
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                ctx.beginPath();
-                ctx.roundRect(coords.x + 8, coords.y - 12, textWidth + 10, 22, 4);
-                ctx.fill();
-
-                // Dibujar texto
-                ctx.fillStyle = '#10b981'; // Texto verde
-                ctx.fillText(key, coords.x + 13, coords.y + 4);
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                ctx.fillRect(coords.x + 10, coords.y - 15, metrics.width + 10, 25);
+                
+                ctx.fillStyle = '#10b981';
+                ctx.fillText(key, coords.x + 15, coords.y + 4);
             }
         }
 
         function updateJSON() {
             jsonOutput.value = JSON.stringify(mappedData, null, 4);
-            // Auto-scroll json to bottom
             jsonOutput.scrollTop = jsonOutput.scrollHeight;
         }
 
-        // Reiniciar
         document.getElementById('resetBtn').addEventListener('click', () => {
-            if(confirm('¿Estás seguro de reiniciar todo el mapeo?')) {
+            if(confirm('¿Reiniciar coordenadas?')) {
                 mappedData = {};
                 currentIndex = 0;
                 updateJSON();
@@ -214,12 +181,10 @@
             }
         });
 
-        // Copiar JSON
         document.getElementById('copyBtn').addEventListener('click', () => {
             if(Object.keys(mappedData).length === 0) return;
             jsonOutput.select();
             document.execCommand('copy');
-            
             const btn = document.getElementById('copyBtn');
             btn.innerText = '¡Copiado!';
             setTimeout(() => btn.innerText = '📋 Copiar', 2000);

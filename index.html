@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analizador IP OSINT - Proyecto Universitario</title>
+    <title>Leviatham Core - O.S.I.N.T IP STRIKER</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     
-    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -20,10 +19,11 @@
                 extend: {
                     colors: {
                         cyber: {
-                            dark: '#0f172a',
-                            panel: '#1e293b',
+                            dark: '#050a0f', // Más oscuro para contraste CRT
+                            panel: '#0f172a',
                             primary: '#0ea5e9',
-                            accent: '#38bdf8'
+                            accent: '#38bdf8',
+                            matrix: '#00ff41' // Añadido verde hacker
                         }
                     }
                 }
@@ -33,13 +33,14 @@
     <style>
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        ::-webkit-scrollbar-thumb { background: #00ff41; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #0ea5e9; }
         #map { z-index: 10; }
         .json-key { color: #38bdf8; }
         .json-string { color: #a7f3d0; }
         .json-number { color: #fde047; }
         .json-boolean { color: #f472b6; }
+        
         /* Animación de pulso para carga */
         .pulse-border { animation: pulse-border 2s infinite; }
         @keyframes pulse-border {
@@ -47,210 +48,274 @@
             70% { border-color: rgba(14, 165, 233, 1); box-shadow: 0 0 0 10px rgba(14, 165, 233, 0); }
             100% { border-color: rgba(14, 165, 233, 0.4); box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); }
         }
+
+        /* Efecto CRT Inmersivo */
+        .crt::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 999;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        /* Red Neuronal Animación (Sutil en fondo) */
+        .bg-neural {
+            background-image: radial-gradient(circle at 50% 50%, rgba(0, 255, 65, 0.05) 0%, transparent 60%);
+            background-size: 100vw 100vh;
+        }
+
+        /* Estilo para el PDF (Oculta botones en la impresión) */
+        .pdf-hide { display: block; }
+        .is-printing .pdf-hide { display: none !important; }
+        .is-printing { background: #0f172a !important; color: white !important; padding: 20px; }
     </style>
 </head>
-<body class="bg-cyber-dark text-slate-300 font-sans min-h-screen flex flex-col selection:bg-cyber-primary selection:text-white">
+<body class="bg-cyber-dark text-slate-300 font-sans min-h-screen flex flex-col selection:bg-cyber-matrix selection:text-black crt bg-neural" id="app-body">
 
-    <!-- Navegación / Header -->
     <header class="bg-cyber-panel border-b border-slate-700 shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <i class="fa-solid fa-network-wired text-cyber-primary text-2xl"></i>
-                <h1 class="text-xl font-bold text-white tracking-wide">Analizador OSINT <span class="text-cyber-primary">IP</span></h1>
+                <i class="fa-solid fa-shield-cat text-cyber-matrix text-3xl"></i>
+                <div>
+                    <h1 class="text-xl font-bold text-white tracking-wide">LEVIATHAM CORE <span class="text-cyber-primary">|</span> <span class="text-cyber-matrix">IP STRIKER</span></h1>
+                    <p class="text-[10px] text-cyber-primary font-mono tracking-widest uppercase">Módulo Analizador OSINT Avanzado</p>
+                </div>
             </div>
-            <div class="text-sm text-slate-400 flex items-center gap-2">
-                <i class="fa-solid fa-location-crosshairs text-cyber-primary"></i> 
-                <span class="hidden sm:inline">Modo: Análisis Pasivo</span>
+            <div class="text-sm text-slate-400 flex flex-col items-end gap-1">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-location-crosshairs text-cyber-matrix animate-pulse"></i> 
+                    <span class="hidden sm:inline font-mono">ENLACE SEGURO</span>
+                </div>
+                <span class="text-[10px] text-green-500 font-mono" id="system-clock">00:00:00</span>
             </div>
         </div>
     </header>
 
-    <main class="container mx-auto px-4 py-8 flex-grow">
+    <main class="container mx-auto px-4 py-8 flex-grow" id="export-container">
         
-        <!-- Disclaimer Ético -->
-        <div class="bg-slate-800/80 backdrop-blur border-l-4 border-yellow-500 p-4 mb-8 rounded-r-lg shadow-sm">
+        <div class="bg-slate-800/80 backdrop-blur border-l-4 border-yellow-500 p-4 mb-8 rounded-r-lg shadow-sm pdf-hide">
             <div class="flex items-start">
                 <div class="flex-shrink-0">
                     <i class="fa-solid fa-shield-halved text-yellow-500 mt-1"></i>
                 </div>
                 <div class="ml-3">
-                    <h3 class="text-sm font-medium text-yellow-400">Uso Ético y Académico</h3>
+                    <h3 class="text-sm font-medium text-yellow-400">Operación Ética y Legal</h3>
                     <div class="mt-1 text-xs text-slate-300">
-                        <p>Las consultas se realizan utilizando APIs preparadas para CORS (Cross-Origin Resource Sharing). Toda la información es pública (WHOIS/RDAP y Geolocalización BGP). No se ejecutan pings ni escaneos de puertos contra el objetivo.</p>
+                        <p>Las consultas se realizan cruzando múltiples APIs públicas preparadas para CORS (WHOIS, BGP, Threat Intel). El sistema visual no intercepta tráfico privado, solo renderiza telemetría pública y satelital. No se ejecutan ataques contra el objetivo.</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Panel de Búsqueda -->
-        <div class="bg-cyber-panel rounded-xl shadow-lg border border-slate-700 p-6 mb-8 transition-all hover:border-slate-600">
-            <h2 class="text-lg font-semibold text-white mb-4"><i class="fa-solid fa-magnifying-glass mr-2 text-slate-400"></i>Objetivo de Investigación</h2>
+        <div class="bg-cyber-panel rounded-xl shadow-[0_0_15px_rgba(0,255,65,0.1)] border border-slate-700 p-6 mb-8 transition-all hover:border-cyber-matrix/50 pdf-hide" id="search-panel">
+            <h2 class="text-lg font-bold text-white mb-4 font-mono"><i class="fa-solid fa-terminal mr-2 text-cyber-matrix"></i>Fijar Objetivo IP</h2>
             <form id="ipForm" class="flex flex-col sm:flex-row gap-4">
                 <div class="relative flex-grow">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <i class="fa-solid fa-satellite-dish text-cyber-primary"></i>
+                        <i class="fa-solid fa-crosshairs text-cyber-matrix"></i>
                     </div>
-                    <!-- Expresión regular robusta para IPv4 e IPv6 -->
-                    <input type="text" id="ipInput" class="block w-full pl-11 pr-3 py-3 border border-slate-600 rounded-lg bg-slate-800/50 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyber-primary focus:border-transparent transition-all" placeholder="Ej: 8.8.8.8 o 181.16.0.0" required pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$|^([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}$|^([0-9a-fA-F]{1,4}:){1,7}:$|^([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}$|^([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}$|^([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}$|^([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}$|^([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}$|^[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})$|^:((:[0-9a-fA-F]{1,4}){1,7}|:)$">
+                    <input type="text" id="ipInput" class="block w-full pl-11 pr-3 py-3 border border-slate-600 rounded-lg bg-slate-900 text-cyber-matrix font-mono placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-cyber-matrix focus:border-transparent transition-all shadow-[inset_0_0_10px_rgba(0,0,0,0.5)]" placeholder="192.168.x.x -> INGRESA IP PÚBLICA..." required pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$|^([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}$|^([0-9a-fA-F]{1,4}:){1,7}:$|^([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}$|^([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}$|^([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}$|^([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}$|^([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,5})$|^[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})$|^:((:[0-9a-fA-F]{1,4}){1,7}|:)$">
                 </div>
-                <button type="button" id="btnMyIp" class="px-5 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm font-medium transition-colors border border-slate-600 flex items-center justify-center gap-2 whitespace-nowrap shadow-sm">
-                    <i class="fa-solid fa-crosshairs"></i> Obtener mi IP
+                <button type="button" id="btnMyIp" class="px-5 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-sm font-medium transition-colors border border-slate-600 flex items-center justify-center gap-2 whitespace-nowrap shadow-sm font-mono">
+                    <i class="fa-solid fa-satellite-dish"></i> Auto-Detect
                 </button>
-                <button type="submit" id="btnAnalyze" class="px-8 py-3 bg-cyber-primary hover:bg-cyber-accent text-white rounded-lg text-sm font-bold transition-all shadow-[0_0_15px_rgba(14,165,233,0.3)] hover:shadow-[0_0_25px_rgba(14,165,233,0.5)] flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-radar fa-spin-hover"></i> Analizar
+                <button type="submit" id="btnAnalyze" class="px-8 py-3 bg-cyber-matrix hover:bg-green-400 text-black rounded-lg text-sm font-bold transition-all shadow-[0_0_15px_rgba(0,255,65,0.3)] hover:shadow-[0_0_25px_rgba(0,255,65,0.6)] flex items-center justify-center gap-2 font-mono">
+                    <i class="fa-solid fa-bolt"></i> EJECUTAR
                 </button>
             </form>
         </div>
 
-        <!-- Estado de Carga -->
-        <div id="loadingState" class="hidden flex-col items-center justify-center py-16">
-            <div class="relative w-20 h-20 mb-6">
-                <div class="absolute inset-0 rounded-full border-4 border-slate-700"></div>
-                <div class="absolute inset-0 rounded-full border-4 border-cyber-primary border-t-transparent animate-spin"></div>
-                <i class="fa-solid fa-globe absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-slate-400 text-xl"></i>
+        <div id="loadingState" class="hidden flex-col items-center justify-center py-16 pdf-hide">
+            <div class="relative w-24 h-24 mb-6">
+                <div class="absolute inset-0 rounded-full border-4 border-slate-800"></div>
+                <div class="absolute inset-0 rounded-full border-4 border-cyber-matrix border-t-transparent animate-spin"></div>
+                <div class="absolute inset-2 rounded-full border-4 border-cyber-primary border-b-transparent animate-[spin_1.5s_linear_reverse_infinite]"></div>
+                <i class="fa-solid fa-skull-crossbones absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-cyber-matrix text-2xl animate-pulse"></i>
             </div>
-            <h3 class="text-xl font-bold text-white mb-2">Trazando ruta...</h3>
-            <p class="text-slate-400 text-sm" id="loadingText">Consultando bases de datos globales sin bloqueo CORS...</p>
+            <h3 class="text-xl font-bold text-cyber-matrix mb-2 font-mono">Trazando ruta de datos...</h3>
+            <p class="text-slate-400 text-sm font-mono" id="loadingText">Inyectando peticiones a nodos OSINT...</p>
         </div>
 
-        <!-- Mensaje de Error -->
-        <div id="errorMessage" class="hidden bg-red-900/40 border border-red-500/50 p-4 rounded-lg mb-8 shadow-lg">
+        <div id="errorMessage" class="hidden bg-red-900/40 border border-red-500/50 p-4 rounded-lg mb-8 shadow-lg pdf-hide">
             <div class="flex items-center gap-3">
-                <i class="fa-solid fa-triangle-exclamation text-red-400 text-xl"></i>
+                <i class="fa-solid fa-triangle-exclamation text-red-500 text-2xl animate-pulse"></i>
                 <div>
-                    <h4 class="text-red-300 font-bold">Error en la consulta</h4>
-                    <p class="text-sm text-red-200/80" id="errorText">Detalle del error.</p>
+                    <h4 class="text-red-400 font-bold font-mono">FATAL ERROR</h4>
+                    <p class="text-sm text-red-200/80 font-mono" id="errorText">Detalle del error.</p>
                 </div>
             </div>
         </div>
 
-        <!-- Resultados del Análisis -->
         <div id="resultsContainer" class="hidden space-y-6">
             
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Tarjeta Geográfica -->
-                <div class="bg-cyber-panel rounded-xl shadow-lg border border-slate-700/50 p-6 pulse-border" id="card-geo">
-                    <h3 class="text-sm uppercase tracking-wider font-bold text-slate-400 mb-4 border-b border-slate-700 pb-3 flex items-center">
-                        <i class="fa-solid fa-location-dot text-red-400 mr-2 text-lg"></i> Inteligencia Geográfica
-                    </h3>
-                    <ul class="space-y-4 text-sm">
-                        <li class="flex justify-between items-center bg-slate-800/50 p-2 rounded">
-                            <span class="text-slate-400">Objetivo</span>
-                            <span class="font-mono font-bold text-cyber-accent text-base" id="res-ip">-</span>
-                        </li>
-                        <li class="flex justify-between items-center border-b border-slate-700/50 pb-2">
-                            <span class="text-slate-400">País</span>
-                            <span class="font-medium text-white flex items-center gap-2">
-                                <span id="res-country">-</span>
-                                <img id="res-flag" src="" alt="Bandera" class="h-4 rounded-sm hidden shadow">
-                            </span>
-                        </li>
-                        <li class="flex justify-between items-center border-b border-slate-700/50 pb-2">
-                            <span class="text-slate-400">Región</span>
-                            <span class="font-medium text-white" id="res-region">-</span>
-                        </li>
-                        <li class="flex justify-between items-center border-b border-slate-700/50 pb-2">
-                            <span class="text-slate-400">Ciudad</span>
-                            <span class="font-medium text-white" id="res-city">-</span>
-                        </li>
-                        <li class="flex justify-between items-center">
-                            <span class="text-slate-400">Coordenadas</span>
-                            <span class="font-mono text-xs text-cyber-primary bg-cyber-primary/10 px-2 py-1 rounded" id="res-coords">-</span>
-                        </li>
-                    </ul>
-                </div>
+            <div class="flex justify-between items-center bg-slate-800/80 border border-slate-700 p-3 rounded-lg pdf-hide">
+                <span class="text-xs text-cyber-primary font-mono"><i class="fa-solid fa-check-double mr-1"></i> Expediente Listo para Exportación</span>
+                <button onclick="generatePDF()" class="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded text-xs font-bold font-mono transition shadow-[0_0_10px_rgba(220,38,38,0.4)] flex items-center gap-2">
+                    <i class="fa-solid fa-file-pdf"></i> GENERAR EXPEDIENTE PDF
+                </button>
+            </div>
 
-                <!-- Tarjeta de Red/ISP -->
-                <div class="bg-cyber-panel rounded-xl shadow-lg border border-slate-700/50 p-6">
-                    <h3 class="text-sm uppercase tracking-wider font-bold text-slate-400 mb-4 border-b border-slate-700 pb-3 flex items-center">
-                        <i class="fa-solid fa-diagram-project text-green-400 mr-2 text-lg"></i> Topología de Red
-                    </h3>
-                    <ul class="space-y-4 text-sm">
-                        <li class="flex justify-between items-center border-b border-slate-700/50 pb-2">
-                            <span class="text-slate-400">Proveedor (ISP)</span>
-                            <span class="font-medium text-white text-right max-w-[60%] truncate" title="Hover para ver completo" id="res-isp">-</span>
-                        </li>
-                        <li class="flex justify-between items-center border-b border-slate-700/50 pb-2">
-                            <span class="text-slate-400">Organización</span>
-                            <span class="font-medium text-white text-right max-w-[60%] truncate" id="res-org">-</span>
-                        </li>
-                        <li class="flex justify-between items-center border-b border-slate-700/50 pb-2">
-                            <span class="text-slate-400">ASN (Autónomo)</span>
-                            <span class="font-mono text-cyber-accent font-bold" id="res-asn">-</span>
-                        </li>
-                        <li class="flex justify-between items-center border-b border-slate-700/50 pb-2">
-                            <span class="text-slate-400">Zona Horaria</span>
-                            <span class="font-medium text-white" id="res-timezone">-</span>
-                        </li>
-                        <li class="flex justify-between items-center">
-                            <span class="text-slate-400">Protocolo</span>
-                            <span class="font-bold text-xs bg-slate-700 px-2 py-1 rounded text-white" id="res-type">-</span>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- Contenedor del Mapa -->
-                <div class="bg-cyber-panel rounded-xl shadow-lg border border-slate-700/50 p-2 lg:col-span-1 h-72 lg:h-auto flex flex-col relative group">
-                    <div class="absolute top-4 right-4 z-20 bg-slate-900/80 backdrop-blur px-2 py-1 rounded border border-slate-600 text-xs text-white">
-                        <i class="fa-solid fa-satellite text-cyber-primary"></i> Satélite Activo
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                <div class="space-y-6 xl:col-span-1">
+                    <div class="bg-cyber-panel rounded-xl shadow-lg border border-slate-700/50 p-6 pulse-border relative overflow-hidden" id="card-geo">
+                        <div class="absolute top-0 right-0 w-16 h-16 bg-cyber-matrix opacity-10 rounded-bl-full"></div>
+                        
+                        <h3 class="text-sm uppercase tracking-wider font-bold text-cyber-matrix mb-4 border-b border-slate-700 pb-3 flex items-center font-mono">
+                            <i class="fa-solid fa-satellite text-cyber-matrix mr-2 text-lg"></i> Telemetría Geográfica
+                        </h3>
+                        <ul class="space-y-4 text-sm font-mono">
+                            <li class="flex justify-between items-center bg-slate-900 p-3 rounded border border-slate-700">
+                                <span class="text-slate-400">Objetivo</span>
+                                <span class="font-bold text-red-400 text-lg" id="res-ip">-</span>
+                            </li>
+                            <li class="flex justify-between items-center border-b border-slate-700/50 pb-2">
+                                <span class="text-slate-400">País</span>
+                                <span class="font-medium text-white flex items-center gap-2">
+                                    <span id="res-country">-</span>
+                                    <img id="res-flag" src="" alt="Bandera" class="h-4 rounded-sm hidden shadow">
+                                </span>
+                            </li>
+                            <li class="flex justify-between items-center border-b border-slate-700/50 pb-2">
+                                <span class="text-slate-400">Región</span>
+                                <span class="font-medium text-white" id="res-region">-</span>
+                            </li>
+                            <li class="flex justify-between items-center border-b border-slate-700/50 pb-2">
+                                <span class="text-slate-400">Ciudad / Código</span>
+                                <span class="font-medium text-white" id="res-city">-</span>
+                            </li>
+                            <li class="flex flex-col gap-1 border-b border-slate-700/50 pb-2">
+                                <span class="text-slate-400 text-xs">Coordenadas Exactas</span>
+                                <span class="font-mono text-sm text-cyber-matrix bg-cyber-matrix/10 px-2 py-1 rounded w-full text-center border border-cyber-matrix/30" id="res-coords">-</span>
+                            </li>
+                        </ul>
                     </div>
-                    <div id="map" class="w-full flex-grow rounded-lg overflow-hidden relative z-10 border border-slate-700"></div>
+
+                    <div class="bg-cyber-panel rounded-xl shadow-lg border border-red-500/30 p-6 relative">
+                        <div class="absolute -left-1 top-4 w-2 h-8 bg-red-500 rounded-r animate-pulse"></div>
+                        <h3 class="text-sm uppercase tracking-wider font-bold text-red-400 mb-4 border-b border-slate-700 pb-3 flex items-center font-mono">
+                            <i class="fa-solid fa-fingerprint mr-2 text-lg"></i> GHOST ID / Threat Intel
+                        </h3>
+                        <ul class="space-y-3 text-sm font-mono">
+                            <li class="flex justify-between items-center bg-slate-800 p-2 rounded">
+                                <span class="text-slate-400">Conexión VPN/Proxy</span>
+                                <span id="res-proxy" class="font-bold px-2 py-0.5 rounded text-xs">-</span>
+                            </li>
+                            <li class="flex justify-between items-center bg-slate-800 p-2 rounded">
+                                <span class="text-slate-400">Nodo TOR Enrutado</span>
+                                <span id="res-tor" class="font-bold px-2 py-0.5 rounded text-xs">-</span>
+                            </li>
+                            <li class="flex justify-between items-center bg-slate-800 p-2 rounded">
+                                <span class="text-slate-400">Datacenter / Hosting</span>
+                                <span id="res-hosting" class="font-bold px-2 py-0.5 rounded text-xs">-</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="space-y-6 xl:col-span-2">
+                    <div class="bg-cyber-panel rounded-xl shadow-lg border border-slate-700/50 p-6 flex flex-col md:flex-row gap-6">
+                        <div class="flex-1">
+                            <h3 class="text-sm uppercase tracking-wider font-bold text-cyber-primary mb-4 border-b border-slate-700 pb-3 flex items-center font-mono">
+                                <i class="fa-solid fa-diagram-project text-cyber-primary mr-2 text-lg"></i> Topología BGP
+                            </h3>
+                            <ul class="space-y-4 text-sm font-mono">
+                                <li class="flex justify-between items-center border-b border-slate-700/50 pb-2">
+                                    <span class="text-slate-400">Proveedor (ISP)</span>
+                                    <span class="font-medium text-white text-right max-w-[60%] truncate text-xs" title="Hover para ver completo" id="res-isp">-</span>
+                                </li>
+                                <li class="flex justify-between items-center border-b border-slate-700/50 pb-2">
+                                    <span class="text-slate-400">Organización Base</span>
+                                    <span class="font-medium text-white text-right max-w-[60%] truncate text-xs" id="res-org">-</span>
+                                </li>
+                                <li class="flex justify-between items-center border-b border-slate-700/50 pb-2">
+                                    <span class="text-slate-400">ASN (Autónomo)</span>
+                                    <span class="font-bold text-cyber-matrix bg-cyber-matrix/10 px-2 rounded" id="res-asn">-</span>
+                                </li>
+                                <li class="flex justify-between items-center border-b border-slate-700/50 pb-2">
+                                    <span class="text-slate-400">Zona Horaria Local</span>
+                                    <span class="font-medium text-white" id="res-timezone">-</span>
+                                </li>
+                                <li class="flex justify-between items-center">
+                                    <span class="text-slate-400">Tipo de Protocolo</span>
+                                    <span class="font-bold text-xs bg-slate-700 px-2 py-1 rounded text-white border border-slate-500" id="res-type">-</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="flex-1 border-2 border-slate-700 rounded-lg relative overflow-hidden h-64 md:h-auto group">
+                            <div class="absolute inset-0 z-20 pointer-events-none p-3 flex flex-col justify-between border-2 border-red-500/20 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%)] bg-[length:100%_4px]">
+                                <div class="flex justify-between items-start text-red-500 font-mono text-xs font-bold drop-shadow-md">
+                                    <div class="flex items-center gap-2"><div class="w-3 h-3 bg-red-600 rounded-full animate-pulse shadow-[0_0_8px_#dc2626]"></div> REC</div>
+                                    <div id="cctv-time" class="bg-black/50 px-1">00:00:00:00</div>
+                                </div>
+                                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                                    <i class="fa-solid fa-crosshairs text-red-500/50 text-6xl drop-shadow-lg"></i>
+                                </div>
+                                <div class="text-red-500 font-mono text-[10px] sm:text-xs font-bold flex justify-between bg-black/50 px-1">
+                                    <span>SAT-UPLINK // ACTIVE</span>
+                                    <span class="text-cyber-matrix">ESRI SAT: HI-RES</span>
+                                </div>
+                            </div>
+                            <div id="map" class="w-full h-full relative z-10"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Fila 2: RDAP / WHOIS Avanzado -->
-            <div class="bg-cyber-panel rounded-xl shadow-lg border border-slate-700/50 overflow-hidden">
-                <div class="bg-slate-800/50 p-4 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                    <h3 class="text-sm uppercase tracking-wider font-bold text-white flex items-center">
-                        <i class="fa-solid fa-database text-purple-400 mr-2 text-lg"></i> Registry Data Access Protocol (RDAP)
+            <div class="bg-cyber-panel rounded-xl shadow-lg border border-slate-700/50 overflow-hidden mt-6">
+                <div class="bg-slate-900 p-4 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                    <h3 class="text-sm uppercase tracking-wider font-bold text-white flex items-center font-mono">
+                        <i class="fa-solid fa-server text-purple-400 mr-2 text-lg"></i> Registro RDAP / Extraídos
                     </h3>
-                    <div class="text-xs px-3 py-1 bg-cyber-dark rounded-full text-slate-400 border border-slate-600 flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                        Conexión RIR Directa
+                    <div class="text-xs px-3 py-1 bg-cyber-dark rounded-full text-slate-400 border border-slate-600 flex items-center gap-2 font-mono">
+                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_5px_#22c55e]"></span>
+                        Enlace RIR Establecido
                     </div>
                 </div>
                 
                 <div class="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- Entidades Extraídas -->
                     <div class="flex flex-col h-full">
-                        <h4 class="text-xs font-bold text-slate-400 mb-3 uppercase tracking-wider flex items-center gap-2">
-                            <i class="fa-solid fa-users text-slate-500"></i> Contactos Extraídos
+                        <h4 class="text-xs font-bold text-slate-400 mb-3 uppercase tracking-wider flex items-center gap-2 font-mono border-b border-slate-700 pb-2">
+                            <i class="fa-solid fa-users text-slate-500"></i> Sujetos Contacto (WHOIS)
                         </h4>
-                        <div id="rdap-entities" class="text-sm space-y-3 flex-grow overflow-y-auto pr-2" style="max-height: 300px;">
-                            <!-- Inyectado via JS -->
-                            <div class="flex items-center justify-center h-full text-slate-500 italic border border-dashed border-slate-700 rounded-lg p-4">
-                                Esperando análisis para extraer entidades...
+                        <div id="rdap-entities" class="text-sm space-y-3 flex-grow overflow-y-auto pr-2 custom-scrollbar" style="max-height: 300px;">
+                            <div class="flex items-center justify-center h-full text-slate-500 italic border border-dashed border-slate-700 rounded-lg p-4 font-mono text-xs">
+                                Esperando escaneo profundo...
                             </div>
                         </div>
                     </div>
                     
-                    <!-- JSON Crudo -->
                     <div class="flex flex-col h-full">
-                        <h4 class="text-xs font-bold text-slate-400 mb-3 uppercase tracking-wider flex items-center gap-2">
-                            <i class="fa-solid fa-code text-slate-500"></i> Payload Original
+                        <h4 class="text-xs font-bold text-slate-400 mb-3 uppercase tracking-wider flex items-center gap-2 font-mono border-b border-slate-700 pb-2">
+                            <i class="fa-solid fa-code text-slate-500"></i> Payload Original Bruto
                         </h4>
-                        <div class="bg-cyber-dark rounded-lg p-4 flex-grow overflow-y-auto border border-slate-700 font-mono text-xs relative group" style="max-height: 300px;">
-                            <button onclick="copyJson()" class="absolute top-2 right-2 bg-slate-700 hover:bg-slate-600 text-white p-2 rounded opacity-0 group-hover:opacity-100 transition-opacity" title="Copiar JSON">
+                        <div class="bg-black rounded-lg p-4 flex-grow overflow-y-auto border border-slate-700 font-mono text-[10px] relative group custom-scrollbar" style="max-height: 300px;">
+                            <button onclick="copyJson()" class="absolute top-2 right-2 bg-slate-800 hover:bg-slate-700 text-white p-2 rounded opacity-0 group-hover:opacity-100 transition-opacity border border-slate-600 pdf-hide" title="Copiar JSON">
                                 <i class="fa-regular fa-copy"></i>
                             </button>
-                            <pre id="rdap-raw" class="whitespace-pre-wrap break-words">Esperando datos...</pre>
+                            <pre id="rdap-raw" class="whitespace-pre-wrap break-words">Esperando volcado de memoria...</pre>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Fila 3: APIs Utilizadas -->
-            <div class="text-xs text-slate-500 text-center mt-8 pb-4">
-                <p class="mb-2 uppercase tracking-wide font-bold">Arquitectura de Consulta Libre de CORS:</p>
+            <div class="text-xs text-slate-500 text-center mt-8 pb-4 font-mono pdf-hide">
+                <p class="mb-2 uppercase tracking-widest text-cyber-matrix">Leviatham Core Routing Framework:</p>
                 <div class="flex flex-wrap justify-center gap-3">
-                    <span class="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-full flex items-center gap-1">
-                        <i class="fa-solid fa-check-circle text-green-500"></i> geojs.io (Geo/ASN)
+                    <span class="bg-slate-900 border border-slate-700 px-3 py-1.5 rounded flex items-center gap-2">
+                        <i class="fa-solid fa-satellite text-cyber-matrix"></i> Esri World Imagery (Sat)
                     </span>
-                    <span class="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-full flex items-center gap-1">
-                        <i class="fa-solid fa-check-circle text-green-500"></i> rdap.org (WHOIS)
+                    <span class="bg-slate-900 border border-slate-700 px-3 py-1.5 rounded flex items-center gap-2">
+                        <i class="fa-solid fa-globe text-cyber-matrix"></i> GeoJS & IPWhoIs (DB)
                     </span>
-                    <span class="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-full flex items-center gap-1">
-                        <i class="fa-solid fa-check-circle text-green-500"></i> api64.ipify.org (MyIP)
+                    <span class="bg-slate-900 border border-slate-700 px-3 py-1.5 rounded flex items-center gap-2">
+                        <i class="fa-solid fa-database text-cyber-matrix"></i> RDAP.org (Whois)
                     </span>
                 </div>
             </div>
@@ -258,10 +323,21 @@
         </div>
     </main>
 
-    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     
     <script>
+        // --- RELOJ DEL SISTEMA ---
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('system-clock').innerText = now.toLocaleTimeString();
+            
+            // Reloj de la cámara CCTV
+            const ms = String(now.getMilliseconds()).padStart(3, '0').substring(0,2);
+            if(document.getElementById('cctv-time')) {
+                document.getElementById('cctv-time').innerText = `${now.toLocaleTimeString()}:${ms}`;
+            }
+        }, 50);
+
         // --- VARIABLES GLOBALES ---
         let map = null;
         let marker = null;
@@ -276,53 +352,45 @@
         const errorMessage = document.getElementById('errorMessage');
         const errorText = document.getElementById('errorText');
 
-        // --- FUNCIONES DEL MAPA (Leaflet) ---
+        // --- FUNCIONES DEL MAPA (Leaflet con Esri Satellite) ---
         function updateMap(lat, lon) {
             if (!map) {
-                // Inicializar mapa oscuro estilo OSINT
-                map = L.map('map', { zoomControl: false }).setView([lat, lon], 12);
-                L.control.zoom({ position: 'bottomright' }).addTo(map);
+                // Inicializar mapa sin controles para que parezca una pantalla de monitor
+                map = L.map('map', { 
+                    zoomControl: false, 
+                    attributionControl: false 
+                }).setView([lat, lon], 16); // Zoom alto para ver calles/edificios
                 
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                    attribution: '&copy; OSINT Map',
-                    subdomains: 'abcd',
+                // Esri World Imagery - SATÉLITE REALISTA Y GRATUITO
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
                     maxZoom: 19
                 }).addTo(map);
 
-                // Icono personalizado estilo radar
+                // Icono invisible (usamos la mirilla central en el CSS para apuntar)
+                // Pero dejamos un marcador circular rojo sutil por si acaso
                 const radarIcon = L.divIcon({
                     className: 'custom-div-icon',
-                    html: `<div style="background-color: #0ea5e9; width: 14px; height: 14px; border-radius: 50%; box-shadow: 0 0 10px #0ea5e9, 0 0 20px #0ea5e9; border: 2px solid white;"></div>`,
-                    iconSize: [14, 14],
-                    iconAnchor: [7, 7]
+                    html: `<div style="background-color: transparent; border: 2px solid rgba(220, 38, 38, 0.6); width: 40px; height: 40px; border-radius: 50%; box-shadow: inset 0 0 10px rgba(220, 38, 38, 0.5); animation: pulse-border 2s infinite;"></div>`,
+                    iconSize: [40, 40],
+                    iconAnchor: [20, 20]
                 });
 
                 marker = L.marker([lat, lon], {icon: radarIcon}).addTo(map);
-                
-                // Círculo de radio de aproximación
-                L.circle([lat, lon], {
-                    color: '#0ea5e9',
-                    fillColor: '#0ea5e9',
-                    fillOpacity: 0.1,
-                    radius: 5000 // 5km radio
-                }).addTo(map);
 
             } else {
-                map.setView([lat, lon], 12);
+                map.setView([lat, lon], 16);
                 marker.setLatLng([lat, lon]);
             }
             
-            // Fix para Tailwind: Leaflet a veces renderiza mal en contenedores dinámicos
             setTimeout(() => { map.invalidateSize(); }, 300);
         }
 
         // --- UTILIDADES ---
-        // Resaltado de sintaxis JSON
         function syntaxHighlight(json) {
             if (typeof json != 'string') {
                 json = JSON.stringify(json, undefined, 2);
             }
-            lastRawJson = json; // Guardar para copiar
+            lastRawJson = json; 
             json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
                 let cls = 'json-number';
@@ -343,7 +411,6 @@
             });
         }
 
-        // Mostrar error en UI
         function showError(msg) {
             loadingState.classList.add('hidden');
             resultsContainer.classList.add('hidden');
@@ -351,28 +418,51 @@
             errorText.innerHTML = msg;
         }
 
-        // --- Lógica de parseo RDAP (Extracción de Entidades) ---
+        // --- PDF GENERATOR (html2pdf) ---
+        window.generatePDF = function() {
+            const element = document.getElementById('export-container');
+            
+            // Añadir clase temporal para ajustar estilos de impresión
+            element.classList.add('is-printing');
+            
+            const opt = {
+                margin:       10,
+                filename:     `OSINT_Expediente_${document.getElementById('res-ip').innerText}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Generar y luego remover clase
+            html2pdf().set(opt).from(element).save().then(() => {
+                element.classList.remove('is-printing');
+            }).catch(e => {
+                console.error(e);
+                element.classList.remove('is-printing');
+                alert("Hubo un error al compilar el PDF. Intenta de nuevo.");
+            });
+        };
+
+        // --- Lógica de parseo RDAP ---
         function parseRdapEntities(rdapData) {
             const container = document.getElementById('rdap-entities');
             container.innerHTML = '';
 
             if (!rdapData || !rdapData.entities || rdapData.entities.length === 0) {
-                container.innerHTML = '<div class="text-slate-500 italic p-3">No se encontraron entidades (Contactos) registradas en este bloque RDAP.</div>';
+                container.innerHTML = '<div class="text-slate-500 italic p-3 text-xs border border-slate-700 bg-black rounded">Módulo bloqueado. No se encontraron contactos públicos.</div>';
                 return;
             }
 
             let foundAny = false;
 
-            // Función recursiva para buscar entidades anidadas
             function processEntities(entities, depth = 0) {
-                if(depth > 3) return; // Evitar recursión infinita
+                if(depth > 3) return; 
                 
                 entities.forEach(entity => {
-                    let name = 'Desconocido';
-                    let email = 'No disponible';
-                    let phone = 'No disponible';
+                    let name = 'Clasificado';
+                    let email = 'Off-Grid';
+                    let phone = 'Off-Grid';
                     
-                    // Extraer de vCard (Estándar RDAP)
                     if (entity.vcardArray && entity.vcardArray[1]) {
                         const props = entity.vcardArray[1];
                         props.forEach(p => {
@@ -385,37 +475,34 @@
                     const roles = entity.roles ? entity.roles.join(', ') : 'Desconocido';
                     const handle = entity.handle || '';
 
-                    // Solo mostrar si tiene nombre o email útil
-                    if (name !== 'Desconocido' || email !== 'No disponible') {
+                    if (name !== 'Clasificado' || email !== 'Off-Grid') {
                         foundAny = true;
                         
-                        // Icono según rol
-                        let icon = 'fa-user';
+                        let icon = 'fa-user-secret';
                         let roleColor = 'text-slate-400';
-                        if(roles.includes('abuse')) { icon = 'fa-shield-virus'; roleColor = 'text-red-400'; }
-                        else if(roles.includes('technical')) { icon = 'fa-wrench'; roleColor = 'text-blue-400'; }
-                        else if(roles.includes('administrative')) { icon = 'fa-briefcase'; roleColor = 'text-green-400'; }
+                        if(roles.includes('abuse')) { icon = 'fa-skull'; roleColor = 'text-red-500'; }
+                        else if(roles.includes('technical')) { icon = 'fa-microchip'; roleColor = 'text-cyber-primary'; }
+                        else if(roles.includes('administrative')) { icon = 'fa-user-tie'; roleColor = 'text-cyber-matrix'; }
 
                         const card = `
-                            <div class="bg-slate-800/80 p-3 rounded-lg border border-slate-700 hover:border-cyber-primary/50 transition-colors">
+                            <div class="bg-black/50 p-3 rounded border border-slate-700 hover:border-cyber-matrix/50 transition-colors">
                                 <div class="flex items-center justify-between mb-2 border-b border-slate-700/50 pb-2">
                                     <div class="flex items-center gap-2">
                                         <i class="fa-solid ${icon} ${roleColor}"></i>
-                                        <span class="font-bold text-slate-200">${name}</span>
+                                        <span class="font-bold text-slate-200 text-xs">${name}</span>
                                     </div>
-                                    <span class="text-[10px] uppercase bg-slate-700 px-2 py-0.5 rounded text-slate-300">${roles}</span>
+                                    <span class="text-[9px] uppercase bg-slate-800 px-2 py-0.5 rounded border border-slate-600 text-slate-300 font-mono">${roles}</span>
                                 </div>
-                                <div class="text-xs space-y-1.5 ml-1">
-                                    ${handle ? `<p class="text-slate-400"><i class="fa-solid fa-id-badge w-4"></i> ID: <span class="text-slate-300 font-mono">${handle}</span></p>` : ''}
-                                    <p class="text-slate-400"><i class="fa-solid fa-envelope w-4"></i> Mail: ${email !== 'No disponible' ? `<a href="mailto:${email}" class="text-cyber-accent hover:underline">${email}</a>` : email}</p>
-                                    ${phone !== 'No disponible' ? `<p class="text-slate-400"><i class="fa-solid fa-phone w-4"></i> Tel: <span class="text-slate-300">${phone}</span></p>` : ''}
+                                <div class="text-[11px] space-y-1.5 ml-1 font-mono">
+                                    ${handle ? `<p class="text-slate-500">ID: <span class="text-slate-300">${handle}</span></p>` : ''}
+                                    <p class="text-slate-500">ML: ${email !== 'Off-Grid' ? `<a href="mailto:${email}" class="text-cyber-accent hover:underline">${email}</a>` : email}</p>
+                                    ${phone !== 'Off-Grid' ? `<p class="text-slate-500">PH: <span class="text-slate-300">${phone}</span></p>` : ''}
                                 </div>
                             </div>
                         `;
                         container.innerHTML += card;
                     }
 
-                    // Procesar sub-entidades (A veces los contactos están dentro de la organización)
                     if (entity.entities && entity.entities.length > 0) {
                         processEntities(entity.entities, depth + 1);
                     }
@@ -425,41 +512,33 @@
             processEntities(rdapData.entities);
 
             if (!foundAny) {
-                container.innerHTML = '<div class="text-slate-500 italic p-3">Datos de contacto ofuscados por privacidad del RIR.</div>';
+                container.innerHTML = '<div class="text-slate-500 italic p-3 text-xs">Datos ofuscados por privacidad del RIR (Redacted).</div>';
             }
         }
 
-        // --- Eventos y Lógica Principal de Peticiones Fetch ---
-        
-        // Obtener Mi IP usando ipify (Soporta CORS perfecto)
+        // --- Eventos ---
         btnMyIp.addEventListener('click', async () => {
             try {
-                const originalText = btnMyIp.innerHTML;
-                btnMyIp.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Obteniendo...';
+                btnMyIp.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
                 btnMyIp.disabled = true;
-
                 const response = await fetch('https://api64.ipify.org?format=json');
-                if(!response.ok) throw new Error("Fallo en red.");
+                if(!response.ok) throw new Error("Fallo de red");
                 const data = await response.json();
-                
                 input.value = data.ip;
-                form.dispatchEvent(new Event('submit')); // Auto-buscar
-
+                form.dispatchEvent(new Event('submit')); 
             } catch (error) {
-                showError("No se pudo obtener tu IP pública. Revisa tu conexión o desactiva tu bloqueador de anuncios temporálmente.");
+                showError("Error al resolver IP local.");
             } finally {
-                btnMyIp.innerHTML = '<i class="fa-solid fa-crosshairs"></i> Obtener mi IP';
+                btnMyIp.innerHTML = '<i class="fa-solid fa-satellite-dish"></i> Auto-Detect';
                 btnMyIp.disabled = false;
             }
         });
 
-        // Envío del Formulario (Análisis Central)
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const ip = input.value.trim();
             if (!ip) return;
 
-            // Reset UI
             errorMessage.classList.add('hidden');
             resultsContainer.classList.add('hidden');
             loadingState.classList.remove('hidden');
@@ -467,40 +546,47 @@
             document.getElementById('card-geo').classList.remove('pulse-border');
 
             try {
-                /*
-                  NUEVA SOLUCIÓN DE CORS:
-                  Usamos GeoJS (get.geojs.io), un servicio gratuito, open-source y sin bloqueos CORS.
-                */
+                // 1. GeoJS (Principal Geolocalización sin CORS)
                 const geoPromise = fetch(`https://get.geojs.io/v1/ip/geo/${ip}.json`).then(r => {
-                    if (!r.ok) throw new Error("La IP es inválida (LAN/Privada) o hubo un error de red.");
+                    if (!r.ok) throw new Error("IP Inválida / Privada.");
                     return r.json();
                 });
                 
+                // 2. IPWhoIs (Cruce de Datos para Proxy/VPN/TOR y detalles extra, sin API Key)
+                const whoisPromise = fetch(`https://ipwho.is/${ip}`).then(r => r.json());
+
+                // 3. RDAP (Entidades / Contactos)
                 const rdapPromise = fetch(`https://rdap.org/ip/${ip}`, {
                     headers: { 'Accept': 'application/rdap+json' }
                 }).then(r => r.json());
 
-                // Esperamos que ambas terminen (ya sea éxito o fallo)
-                const [geoRes, rdapRes] = await Promise.allSettled([geoPromise, rdapPromise]);
+                // Ejecutar todo en paralelo
+                const [geoRes, whoisRes, rdapRes] = await Promise.allSettled([geoPromise, whoisPromise, rdapPromise]);
 
-                // Validar Geolocation (Es la más importante)
                 if (geoRes.status === 'rejected') {
-                    throw new Error(`Fallo en la resolución Geo/ISP: ${geoRes.reason.message}`);
+                    throw new Error(`Conexión rechazada: ${geoRes.reason.message}`);
                 }
 
                 const geoData = geoRes.value;
+                const whoisData = whoisRes.status === 'fulfilled' && whoisRes.value.success ? whoisRes.value : null;
 
-                // --- 1. POBLAR DATOS GEOGRÁFICOS ---
+                // --- LLENAR DATOS GEOGRÁFICOS ---
                 document.getElementById('res-ip').textContent = geoData.ip;
                 document.getElementById('res-country').textContent = geoData.country || 'Desconocido';
-                document.getElementById('res-region').textContent = geoData.region || 'Desconocida';
-                document.getElementById('res-city').textContent = geoData.city || 'Desconocida';
+                
+                // Si ipwho.is funciona, da región más precisa a veces
+                document.getElementById('res-region').textContent = (whoisData ? whoisData.region : geoData.region) || 'Desconocida';
+                
+                // Formatear Ciudad con Código postal si se puede
+                let cityText = (whoisData ? whoisData.city : geoData.city) || 'Desconocida';
+                if(whoisData && whoisData.postal) cityText += ` [${whoisData.postal}]`;
+                document.getElementById('res-city').textContent = cityText;
                 
                 const lat = parseFloat(geoData.latitude) || 0;
                 const lon = parseFloat(geoData.longitude) || 0;
-                document.getElementById('res-coords').innerHTML = `<i class="fa-solid fa-location-crosshairs"></i> ${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+                document.getElementById('res-coords').innerHTML = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
 
-                // Bandera usando FlagCDN (ya que GeoJS no la provee directamente)
+                // Bandera
                 const flagImg = document.getElementById('res-flag');
                 if (geoData.country_code) {
                     flagImg.src = `https://flagcdn.com/w40/${geoData.country_code.toLowerCase()}.png`;
@@ -509,39 +595,62 @@
                     flagImg.classList.add('hidden');
                 }
 
-                // --- 2. POBLAR DATOS RED ---
-                // GeoJS devuelve organization y asn directamente
-                const orgName = geoData.organization_name || geoData.organization || 'Desconocido';
-                document.getElementById('res-isp').textContent = orgName;
-                document.getElementById('res-org').textContent = orgName;
-                document.getElementById('res-asn').textContent = geoData.asn ? `AS${geoData.asn}` : 'Desconocido';
+                // --- LLENAR GHOST ID / THREAT INTEL (Cruce con IPWhoIs) ---
+                const eProxy = document.getElementById('res-proxy');
+                const eTor = document.getElementById('res-tor');
+                const eHost = document.getElementById('res-hosting');
+
+                if (whoisData && whoisData.security) {
+                    const s = whoisData.security;
+                    
+                    eProxy.textContent = s.proxy ? 'DETECTADO' : 'LIMPIO';
+                    eProxy.className = s.proxy ? 'font-bold px-2 py-0.5 rounded text-xs bg-red-900/50 text-red-400 border border-red-500' : 'font-bold px-2 py-0.5 rounded text-xs bg-green-900/50 text-green-400 border border-green-500';
+                    
+                    eTor.textContent = s.tor ? 'ALERTA NODO' : 'NEGATIVO';
+                    eTor.className = s.tor ? 'font-bold px-2 py-0.5 rounded text-xs bg-red-900/50 text-red-400 border border-red-500' : 'font-bold px-2 py-0.5 rounded text-xs bg-green-900/50 text-green-400 border border-green-500';
+                    
+                    eHost.textContent = s.hosting ? 'DATACENTER' : 'RESIDENCIAL';
+                    eHost.className = s.hosting ? 'font-bold px-2 py-0.5 rounded text-xs bg-yellow-900/50 text-yellow-400 border border-yellow-500' : 'font-bold px-2 py-0.5 rounded text-xs bg-blue-900/50 text-blue-400 border border-blue-500';
+                } else {
+                    // Fallback
+                    eProxy.textContent = "UNKNOWN"; eProxy.className = "font-bold text-slate-500";
+                    eTor.textContent = "UNKNOWN"; eTor.className = "font-bold text-slate-500";
+                    eHost.textContent = "UNKNOWN"; eHost.className = "font-bold text-slate-500";
+                }
+
+                // --- LLENAR DATOS RED ---
+                const orgName = (whoisData ? whoisData.connection.isp : geoData.organization_name) || geoData.organization || 'Desconocido';
+                const orgBase = (whoisData ? whoisData.connection.org : geoData.organization) || 'Desconocido';
                 
-                // Zona horaria y Tipo
-                document.getElementById('res-timezone').textContent = geoData.timezone || 'Desconocida';
+                document.getElementById('res-isp').textContent = orgName;
+                document.getElementById('res-org').textContent = orgBase;
+                
+                const asnStr = whoisData ? `AS${whoisData.connection.asn}` : (geoData.asn ? `AS${geoData.asn}` : 'Desconocido');
+                document.getElementById('res-asn').textContent = asnStr;
+                
+                document.getElementById('res-timezone').textContent = (whoisData ? whoisData.timezone.id : geoData.timezone) || 'Desconocida';
                 document.getElementById('res-type').textContent = ip.includes(':') ? 'IPv6' : 'IPv4';
 
-                // --- 3. ACTUALIZAR MAPA ---
+                // --- ACTUALIZAR MAPA SATELITAL ---
                 if (lat !== 0 && lon !== 0) {
                     updateMap(lat, lon);
                 }
 
-                // --- 4. PROCESAR RDAP ---
+                // --- PROCESAR RDAP ---
                 const rdapRawContainer = document.getElementById('rdap-raw');
                 if (rdapRes.status === 'fulfilled' && rdapRes.value) {
                     const rdapData = rdapRes.value;
                     rdapRawContainer.innerHTML = syntaxHighlight(rdapData);
                     parseRdapEntities(rdapData);
                 } else {
-                    rdapRawContainer.textContent = "// La consulta RDAP falló o el RIR no permite acceso CORS directo a esta IP.\n// Intentando obtener de fuentes alternativas...";
-                    document.getElementById('rdap-entities').innerHTML = '<div class="text-yellow-500 bg-yellow-900/30 border border-yellow-700 rounded p-3 text-xs"><i class="fa-solid fa-triangle-exclamation"></i> Información de contacto no expuesta en consultas directas frontend.</div>';
+                    rdapRawContainer.textContent = "// RIR Connection Refused.\n// Objetivo protegido por políticas de privacidad o sin CORS público.";
+                    document.getElementById('rdap-entities').innerHTML = '<div class="text-red-500 bg-red-900/30 border border-red-700 rounded p-3 text-xs font-mono"><i class="fa-solid fa-ban"></i> Firewalled.</div>';
                 }
 
-                // --- FINALIZAR ---
                 loadingState.classList.remove('flex');
                 loadingState.classList.add('hidden');
                 resultsContainer.classList.remove('hidden');
                 
-                // Añadir efecto de escaneo exitoso
                 document.getElementById('card-geo').classList.add('pulse-border');
                 setTimeout(() => {
                     document.getElementById('card-geo').classList.remove('pulse-border');
@@ -549,7 +658,7 @@
 
             } catch (error) {
                 console.error(error);
-                showError(`${error.message}<br><br><span class="text-xs text-red-300">💡 <strong>Nota Técnica:</strong> Si estás intentando buscar una IP local (ej. 192.168.x.x o 127.0.0.1) la consulta fallará. Intenta con una IP pública externa.</span>`);
+                showError(`${error.message}<br><br><span class="text-[10px] text-cyber-matrix">>> DIAGNÓSTICO: IP Local o error en la interconexión BGP.</span>`);
             }
         });
     </script>

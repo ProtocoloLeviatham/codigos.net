@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VANGUARD SOC | Terminal MOTO G42 LAUTY</title>
+    <title>Vanguard VMS | Security Operations Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
@@ -14,19 +14,20 @@
                 extend: {
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
-                        mono: ['Share Tech Mono', 'monospace'],
+                        mono: ['Roboto Mono', 'monospace'],
                     },
                     colors: {
-                        soc: {
-                            bg: '#050914',
-                            panel: '#0B1221',
-                            border: '#1A2B4C',
-                            cyan: '#00F0FF',
-                            cyan_dim: 'rgba(0, 240, 255, 0.15)',
-                            red: '#FF003C',
-                            red_dim: 'rgba(255, 0, 60, 0.2)',
-                            text: '#8B9BB4',
-                            text_bright: '#E2E8F0'
+                        vms: {
+                            bg: '#0f1115',
+                            panel: '#181b21',
+                            border: '#2a2e37',
+                            text: '#9ba1a6',
+                            text_light: '#e8eaed',
+                            blue: '#1a73e8',
+                            blue_hover: '#1557b0',
+                            red: '#d93025',
+                            green: '#1e8e3e',
+                            amber: '#f29900'
                         }
                     }
                 }
@@ -36,304 +37,281 @@
 
     <style>
         body {
-            background-color: #050914;
-            color: #8B9BB4;
+            background-color: #0f1115;
+            color: #e8eaed;
             overflow-x: hidden;
         }
 
-        /* Scanlines globales para efecto monitor */
-        body::before {
-            content: " ";
-            display: block;
-            position: absolute;
-            top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-            z-index: 999;
-            background-size: 100% 3px, 3px 100%;
-            pointer-events: none;
+        /* Paneles corporativos */
+        .vms-panel {
+            background-color: #181b21;
+            border: 1px solid #2a2e37;
+            border-radius: 4px;
         }
 
-        .soc-panel {
-            background-color: #0B1221;
-            border: 1px solid #1A2B4C;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            position: relative;
-        }
-
-        .soc-panel::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0;
-            width: 10px; height: 10px;
-            border-top: 2px solid #00F0FF;
-            border-left: 2px solid #00F0FF;
-        }
-
-        .soc-panel::before {
-            content: '';
-            position: absolute;
-            bottom: 0; right: 0;
-            width: 10px; height: 10px;
-            border-bottom: 2px solid #00F0FF;
-            border-right: 2px solid #00F0FF;
-        }
-
+        /* Estilos de Cámara y Pixelación Realista */
         .camera-container {
-            position: relative;
             background-color: #000;
-            border: 1px solid #1A2B4C;
+            border: 1px solid #2a2e37;
+            position: relative;
             overflow: hidden;
+            border-radius: 2px;
         }
 
-        canvas { display: block; width: 100%; height: 100%; }
-
-        .crt-flicker {
-            animation: flicker 0.15s infinite;
-        }
-        @keyframes flicker {
-            0% { opacity: 0.95; }
-            100% { opacity: 1; }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            /* Esto hace que cuando la resolución interna del canvas sea baja, se vea pixelado en lugar de borroso */
+            image-rendering: pixelated; 
         }
 
-        .glitch-text {
-            text-shadow: 2px 0 #FF003C, -2px 0 #00F0FF;
-            animation: glitch 2s infinite linear alternate-reverse;
-        }
-        @keyframes glitch {
-            0% { text-shadow: 2px 0 #FF003C, -2px 0 #00F0FF; }
-            20% { text-shadow: -2px 0 #FF003C, 2px 0 #00F0FF; }
-            40% { text-shadow: 2px 0 #FF003C, -2px 0 #00F0FF; }
-            100% { text-shadow: -2px 0 #FF003C, 2px 0 #00F0FF; }
-        }
-
-        /* Alarma Roja Intrusiva */
+        /* Overlay de Alarma Industrial */
         #critical-alert-overlay {
-            background: radial-gradient(circle, rgba(255,0,60,0.3) 0%, rgba(5,9,20,0.95) 100%);
-            border: 4px solid #FF003C;
+            background-color: rgba(15, 17, 21, 0.95);
         }
-        .strobe-bg {
-            animation: strobe 1s infinite;
+        .alarm-banner {
+            background-color: #d93025;
+            animation: alarm-flash 1s infinite alternate;
         }
-        @keyframes strobe {
-            0%, 100% { background-color: rgba(255, 0, 60, 0.1); }
-            50% { background-color: rgba(255, 0, 60, 0.4); }
+        @keyframes alarm-flash {
+            0% { background-color: #d93025; }
+            100% { background-color: #a50e0e; }
         }
 
-        /* Scrollbar Cyber */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #050914; }
-        ::-webkit-scrollbar-thumb { background: #00F0FF; }
+        /* Scrollbar limpio y profesional */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0f1115; }
+        ::-webkit-scrollbar-thumb { background: #3c4043; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #5f6368; }
 
-        .glass-blur { backdrop-filter: blur(16px); }
+        .backdrop-blur { backdrop-filter: blur(8px); }
     </style>
 </head>
-<body class="min-h-screen flex flex-col antialiased selection:bg-soc-cyan selection:text-black">
+<body class="min-h-screen flex flex-col antialiased">
 
-    <!-- PANTALLA DE INICIO (Bypass para Web Audio API) -->
-    <div id="boot-screen" class="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center cursor-pointer transition-opacity duration-1000">
-        <div class="text-soc-cyan font-mono text-center max-w-2xl">
-            <i class="fas fa-biohazard text-6xl mb-6 glitch-text"></i>
-            <h1 class="text-4xl font-bold mb-2 tracking-[0.3em]">VANGUARD KERNEL</h1>
-            <p class="text-soc-text mb-8">VERSIÓN 9.4.2 // CARGANDO MÓDULOS DE VIGILANCIA</p>
-            <div class="border border-soc-cyan p-4 bg-soc-cyan_dim mb-8">
-                <p class="text-sm">SISTEMA REQUERIDO: ACCESO A SENSORES BIOMÉTRICOS Y ACÚSTICOS.</p>
-                <p class="text-xs text-soc-text mt-2">AL HACER CLIC CONFIRMA LA ACEPTACIÓN DE LOS PROTOCOLOS DE SEGURIDAD INTERNACIONAL.</p>
+    <!-- PANTALLA DE INICIALIZACIÓN (Para habilitar Web Audio API de forma realista) -->
+    <div id="boot-screen" class="fixed inset-0 z-[100] bg-vms-bg flex flex-col items-center justify-center cursor-pointer transition-opacity duration-500">
+        <div class="text-center max-w-lg">
+            <i class="fas fa-shield-halved text-5xl text-vms-blue mb-4"></i>
+            <h1 class="text-2xl font-semibold mb-2">Vanguard Video Management System</h1>
+            <p class="text-vms-text text-sm mb-8">Versión de Cliente 2026.4.1 (Build 8902)</p>
+            
+            <div class="bg-vms-panel border border-vms-border p-6 rounded-md text-left mb-6 shadow-lg">
+                <h2 class="text-sm font-semibold mb-2 flex items-center gap-2">
+                    <i class="fas fa-info-circle text-vms-blue"></i> Autenticación Requerida
+                </h2>
+                <p class="text-xs text-vms-text leading-relaxed">
+                    Este terminal requiere acceso al hardware de telemetría acústica para operar en modo SOC completo. 
+                    Al continuar, usted acepta las políticas de monitoreo y auditoría interna de la organización.
+                </p>
             </div>
-            <p class="animate-pulse text-lg font-bold text-white tracking-widest">[ HAGA CLIC EN LA PANTALLA PARA INICIAR SISTEMA ]</p>
+            <button class="bg-vms-blue hover:bg-vms-blue_hover text-white px-6 py-2 rounded text-sm font-medium transition-colors">
+                Inicializar Entorno de Trabajo
+            </button>
         </div>
     </div>
 
-    <!-- OVERLAY DE ALARMA ROJA (10 SEGUNDOS) -->
-    <div id="critical-alert-overlay" class="fixed inset-0 z-[90] strobe-bg hidden flex-col items-center justify-center backdrop-blur-sm pointer-events-none transition-all">
-        <div class="bg-black/80 border-2 border-soc-red p-12 text-center rounded shadow-[0_0_100px_rgba(255,0,60,0.8)] relative overflow-hidden">
-            <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjMDAwIiBmaWxsLW9wYWNpdHk9IjAuMSIvPjwvc3ZnPg==')] opacity-50"></div>
-            <i class="fas fa-triangle-exclamation text-soc-red text-8xl mb-6 animate-pulse relative z-10"></i>
-            <h1 class="text-5xl font-black text-soc-red tracking-tighter uppercase mb-4 relative z-10 glitch-text">Anomalía Acústica Detectada</h1>
-            <h2 class="text-3xl font-bold text-white tracking-widest uppercase mb-6 relative z-10">
-                Enviando anomalía al celular <span class="text-soc-cyan bg-soc-cyan/20 px-4 py-1 border border-soc-cyan rounded">MOTO G42 LAUTY</span>
-            </h2>
-            <div class="w-full bg-soc-red_dim h-2 mt-4 relative z-10">
-                <div class="bg-soc-red h-full w-full animate-pulse"></div>
+    <!-- OVERLAY DE ALARMA (10 SEGUNDOS EXACTOS) -->
+    <div id="critical-alert-overlay" class="fixed inset-0 z-[90] hidden flex-col items-center justify-center backdrop-blur transition-all">
+        <div class="w-full max-w-4xl bg-vms-panel border border-vms-red shadow-2xl rounded-lg overflow-hidden">
+            <div class="alarm-banner px-8 py-6 flex justify-between items-center text-white">
+                <div class="flex items-center gap-4">
+                    <i class="fas fa-triangle-exclamation text-4xl"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold uppercase tracking-wide">Alerta Crítica: Anomalía Acústica</h1>
+                        <p class="text-sm opacity-90 font-mono mt-1">EVENT_ID: 4099 - PICO DE DECIBELIOS EXCEDIDO</p>
+                    </div>
+                </div>
             </div>
-            <p class="font-mono text-soc-text mt-4 text-sm relative z-10 countdown-text">AISLANDO SEÑAL... RETORNANDO EN 10s</p>
+            <div class="p-8 text-center bg-vms-bg">
+                <i class="fas fa-satellite-dish text-vms-text text-5xl mb-4 animate-pulse"></i>
+                <h2 class="text-xl font-medium text-vms-text_light mb-2">
+                    Ejecutando Protocolo de Derivación
+                </h2>
+                <p class="text-lg text-vms-text mb-6">
+                    Enviando anomalía al celular <span class="bg-vms-panel border border-vms-border text-vms-text_light px-3 py-1 rounded font-mono font-bold">MOTO G42 LAUTY</span>
+                </p>
+                
+                <div class="w-full bg-vms-panel h-2 rounded overflow-hidden">
+                    <div class="bg-vms-red h-full w-full animate-pulse"></div>
+                </div>
+                <p class="font-mono text-vms-text mt-4 text-xs countdown-text">RESTAURANDO ESTADO NOMINAL EN: 10s</p>
+            </div>
         </div>
     </div>
 
-    <!-- HEADER / TOPBAR -->
-    <header class="bg-soc-panel border-b border-soc-border shadow-lg z-10">
+    <!-- HEADER CORPORATIVO -->
+    <header class="bg-vms-panel border-b border-vms-border z-10 flex-shrink-0">
         <div class="px-6 py-3 flex justify-between items-center">
             <div class="flex items-center gap-4">
-                <div class="w-10 h-10 border border-soc-cyan flex items-center justify-center bg-soc-cyan_dim text-soc-cyan">
-                    <i class="fas fa-shield-cat text-xl"></i>
-                </div>
+                <i class="fas fa-shield-halved text-2xl text-vms-blue"></i>
                 <div>
-                    <h1 class="text-xl font-bold text-white tracking-[0.2em] uppercase font-mono">Vanguard SOC</h1>
-                    <p class="text-[10px] text-soc-cyan tracking-widest font-mono">MATRIZ DE MONITOREO GLOBAL DE ALTO RIESGO</p>
+                    <h1 class="text-lg font-semibold text-vms-text_light leading-tight">Vanguard Security</h1>
+                    <p class="text-[11px] text-vms-text uppercase font-medium">Panel de Control SOC</p>
                 </div>
             </div>
 
             <div class="flex items-center gap-6">
-                <!-- Data API -->
-                <div class="hidden md:flex flex-col text-right font-mono text-[10px]">
-                    <span class="text-soc-text">LAT/LON: <span id="geo-latlon" class="text-soc-cyan">OBTENIENDO...</span></span>
-                    <span class="text-soc-text">CLIMA EXT: <span id="geo-weather" class="text-soc-cyan">--</span></span>
-                </div>
-
-                <!-- Receptor -->
-                <div class="border border-soc-border bg-[#03060d] px-4 py-2 flex items-center gap-4 relative overflow-hidden">
-                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-soc-cyan animate-pulse"></div>
-                    <div class="flex flex-col text-right">
-                        <span class="text-[9px] text-soc-text tracking-widest">ENLACE ACTIVO CON TERMINAL MÓVIL</span>
-                        <span class="text-sm font-bold text-white font-mono tracking-wider">MOTO G42 LAUTY</span>
-                    </div>
-                    <i class="fas fa-satellite-dish text-soc-cyan text-lg"></i>
+                <!-- Status de conexión y usuario -->
+                <div class="flex items-center gap-3 bg-vms-bg border border-vms-border px-3 py-1.5 rounded">
+                    <div class="w-2 h-2 rounded-full bg-vms-green"></div>
+                    <span class="text-xs font-medium text-vms-text">ENLACE ESTABLE</span>
+                    <div class="w-px h-4 bg-vms-border mx-2"></div>
+                    <span class="text-xs font-mono text-vms-text_light">MOTO G42 LAUTY</span>
+                    <i class="fas fa-mobile-screen text-vms-text ml-1"></i>
                 </div>
             </div>
         </div>
     </header>
 
-    <main class="flex-1 p-4 grid grid-cols-1 xl:grid-cols-4 gap-4 h-[calc(100vh-70px)]">
+    <main class="flex-1 p-4 grid grid-cols-1 xl:grid-cols-4 gap-4 h-[calc(100vh-60px)]">
         
-        <!-- MATRIZ DE CÁMARAS (3 COLUMNAS - 6 CÁMARAS) -->
-        <div class="xl:col-span-3 soc-panel p-2 flex flex-col relative h-full">
+        <!-- MATRIZ DE CÁMARAS (3 COLUMNAS) -->
+        <div class="xl:col-span-3 vms-panel p-2 flex flex-col relative h-full overflow-hidden">
             
-            <!-- SISTEMA DE DESENCRIPTACIÓN (BLOQUEO) -->
-            <div id="security-lock-layer" class="absolute inset-0 z-20 glass-blur bg-soc-bg/80 flex flex-col items-center justify-center transition-all duration-500">
-                <div class="border border-soc-cyan p-8 bg-soc-panel/90 text-center max-w-lg shadow-[0_0_30px_rgba(0,240,255,0.2)]">
-                    <i class="fas fa-lock text-5xl text-soc-cyan mb-4 drop-shadow-[0_0_10px_rgba(0,240,255,0.8)]"></i>
-                    <h2 class="text-2xl font-mono text-white font-bold mb-2">ACCESO RESTRINGIDO</h2>
-                    <p class="text-xs text-soc-text font-mono mb-6">LA MATRIZ DE CÁMARAS REQUIERE DESENCRIPTACIÓN AES-512 PARA TRANSMITIR A <span class="text-white">MOTO G42 LAUTY</span>.</p>
+            <!-- PANEL DE ADMINISTRACIÓN / DESENCRIPTACIÓN -->
+            <div id="admin-unlock-panel" class="absolute inset-0 z-20 bg-vms-bg/90 backdrop-blur flex flex-col items-center justify-center transition-opacity duration-300">
+                <div class="bg-vms-panel border border-vms-border rounded-lg p-8 w-full max-w-md shadow-2xl">
+                    <div class="flex justify-center mb-6">
+                        <div class="w-16 h-16 bg-vms-bg rounded-full flex items-center justify-center border border-vms-border">
+                            <i class="fas fa-lock text-2xl text-vms-text"></i>
+                        </div>
+                    </div>
+                    <h2 class="text-xl font-semibold text-center mb-2">Transmisión Cifrada</h2>
+                    <p class="text-sm text-vms-text text-center mb-6">
+                        Las señales de video E2EE requieren credenciales de administrador para su decodificación en esta terminal.
+                    </p>
                     
-                    <div class="relative mb-4">
-                        <input type="password" id="sys-password" class="w-full bg-[#000] border border-soc-border px-4 py-3 text-soc-cyan font-mono text-center text-xl focus:outline-none focus:border-soc-cyan tracking-[0.5em]" placeholder="********">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium text-vms-text mb-1 uppercase">Clave de Descifrado</label>
+                            <input type="password" id="admin-password" class="w-full bg-vms-bg border border-vms-border rounded px-4 py-2.5 text-vms-text_light font-mono focus:outline-none focus:border-vms-blue transition-colors" placeholder="Ingrese credencial">
+                        </div>
+                        <button id="btn-decrypt" onclick="desencriptarCamaras()" class="w-full bg-vms-blue hover:bg-vms-blue_hover text-white font-medium py-2.5 rounded transition-colors flex justify-center items-center gap-2">
+                            <i class="fas fa-key"></i> Autenticar y Decodificar
+                        </button>
+                        <p id="unlock-msg" class="text-vms-red font-medium text-xs mt-2 text-center h-4"></p>
                     </div>
-                    <button id="btn-decrypt" onclick="intentarDesencriptar()" class="w-full border border-soc-cyan bg-soc-cyan_dim hover:bg-soc-cyan hover:text-black text-soc-cyan font-bold font-mono py-3 transition-all duration-300">
-                        EJECUTAR DECIFRADO
-                    </button>
-                    <p id="lock-msg" class="text-soc-red font-mono text-xs mt-4 h-4"></p>
                 </div>
             </div>
 
-            <div class="flex justify-between items-center mb-2 px-2">
-                <span class="text-xs font-mono text-soc-cyan"><i class="fas fa-th mr-2"></i>FEED_GRID_6X</span>
-                <span class="text-[10px] bg-soc-red text-white px-2 py-0.5 rounded-sm animate-pulse">REC / LIVE</span>
+            <!-- CONTROLES DEL GRID DE VIDEO -->
+            <div class="flex justify-between items-center px-2 py-1 mb-2 bg-vms-bg border border-vms-border rounded text-xs font-medium">
+                <div class="flex gap-4 text-vms-text">
+                    <span class="hover:text-vms-text_light cursor-pointer"><i class="fas fa-border-all mr-1"></i> Matriz 2x3</span>
+                    <span class="text-vms-blue"><i class="fas fa-video mr-1"></i> H.265 Activo</span>
+                </div>
+                <div class="flex items-center gap-2 text-vms-text">
+                    <i class="fas fa-server"></i> NVR_MAIN_01
+                </div>
             </div>
 
-            <!-- GRID 6 CÁMARAS -->
+            <!-- GRID DE 6 CÁMARAS -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 flex-1 h-full">
-                <!-- CAM 1 -->
-                <div class="camera-container crt-flicker group">
+                <!-- Estructura replicada para las 6 cámaras -->
+                <div class="camera-container group">
                     <canvas id="cam1"></canvas>
-                    <div class="absolute top-2 left-2 bg-black/70 border border-soc-border px-2 py-1 text-[10px] font-mono text-soc-cyan">
-                        CAM-01 | PERÍMETRO N
+                    <div class="absolute top-0 left-0 right-0 p-2 bg-gradient-to-b from-black/80 to-transparent flex justify-between">
+                        <span class="text-[10px] font-mono text-white/90">CAM-01 | Acceso Principal</span>
+                        <span class="text-[10px] font-mono text-vms-red font-bold flex items-center gap-1"><div class="w-1.5 h-1.5 bg-vms-red rounded-full animate-pulse"></div> REC</span>
                     </div>
                 </div>
-                <!-- CAM 2 -->
-                <div class="camera-container crt-flicker">
+                <div class="camera-container">
                     <canvas id="cam2"></canvas>
-                    <div class="absolute top-2 left-2 bg-black/70 border border-soc-border px-2 py-1 text-[10px] font-mono text-soc-cyan">
-                        CAM-02 | ACCESO SUR
+                    <div class="absolute top-0 left-0 right-0 p-2 bg-gradient-to-b from-black/80 to-transparent flex justify-between">
+                        <span class="text-[10px] font-mono text-white/90">CAM-02 | Perímetro Norte</span>
                     </div>
                 </div>
-                <!-- CAM 3 -->
-                <div class="camera-container crt-flicker">
+                <div class="camera-container">
                     <canvas id="cam3"></canvas>
-                    <div class="absolute top-2 left-2 bg-black/70 border border-soc-border px-2 py-1 text-[10px] font-mono text-soc-cyan">
-                        CAM-03 | ZONA CARGA
+                    <div class="absolute top-0 left-0 right-0 p-2 bg-gradient-to-b from-black/80 to-transparent flex justify-between">
+                        <span class="text-[10px] font-mono text-white/90">CAM-03 | Zona de Carga</span>
                     </div>
                 </div>
-                <!-- CAM 4 -->
-                <div class="camera-container crt-flicker">
+                <div class="camera-container">
                     <canvas id="cam4"></canvas>
-                    <div class="absolute top-2 left-2 bg-black/70 border border-soc-border px-2 py-1 text-[10px] font-mono text-soc-cyan">
-                        CAM-04 | PASILLO B
+                    <div class="absolute top-0 left-0 right-0 p-2 bg-gradient-to-b from-black/80 to-transparent flex justify-between">
+                        <span class="text-[10px] font-mono text-white/90">CAM-04 | Pasillo B</span>
                     </div>
                 </div>
-                <!-- CAM 5 -->
-                <div class="camera-container crt-flicker">
+                <div class="camera-container">
                     <canvas id="cam5"></canvas>
-                    <div class="absolute top-2 left-2 bg-black/70 border border-soc-border px-2 py-1 text-[10px] font-mono text-soc-cyan">
-                        CAM-05 | SERVIDORES
+                    <div class="absolute top-0 left-0 right-0 p-2 bg-gradient-to-b from-black/80 to-transparent flex justify-between">
+                        <span class="text-[10px] font-mono text-white/90">CAM-05 | Centro de Datos</span>
                     </div>
                 </div>
-                <!-- CAM 6 -->
-                <div class="camera-container crt-flicker relative">
+                <div class="camera-container">
                     <canvas id="cam6"></canvas>
-                    <div class="absolute top-2 left-2 bg-black/70 border border-soc-border px-2 py-1 text-[10px] font-mono text-soc-cyan">
-                        CAM-06 | RECEPCIÓN
-                    </div>
-                    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 border border-soc-cyan/30 w-16 h-16 pointer-events-none">
-                        <div class="absolute -top-1 -left-1 w-2 h-2 border-t border-l border-soc-cyan"></div>
-                        <div class="absolute -top-1 -right-1 w-2 h-2 border-t border-r border-soc-cyan"></div>
-                        <div class="absolute -bottom-1 -left-1 w-2 h-2 border-b border-l border-soc-cyan"></div>
-                        <div class="absolute -bottom-1 -right-1 w-2 h-2 border-b border-r border-soc-cyan"></div>
+                    <div class="absolute top-0 left-0 right-0 p-2 bg-gradient-to-b from-black/80 to-transparent flex justify-between">
+                        <span class="text-[10px] font-mono text-white/90">CAM-06 | Recepción</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- PANEL LATERAL DERECHO (DATA & TELEMETRÍA) -->
+        <!-- PANEL LATERAL DERECHO (TELEMETRÍA, AUDIO Y LOGS) -->
         <div class="flex flex-col gap-4 h-full overflow-hidden">
             
-            <!-- SENSORES DE AUDIO HIPERSENSIBLES -->
-            <div class="soc-panel p-4">
-                <div class="flex justify-between items-center border-b border-soc-border pb-2 mb-3">
-                    <h2 class="text-xs font-mono font-bold text-white"><i class="fas fa-wave-square text-soc-cyan mr-2"></i>ACÚSTICA BIAURAL</h2>
-                    <span class="text-[9px] text-soc-cyan bg-soc-cyan/10 px-1 border border-soc-cyan/30">ALTA SENSIBILIDAD</span>
+            <!-- TELEMETRÍA AMBIENTAL Y RED (APIs Reales) -->
+            <div class="vms-panel p-4">
+                <h2 class="text-xs font-semibold text-vms-text_light uppercase mb-3 flex items-center gap-2 border-b border-vms-border pb-2">
+                    <i class="fas fa-network-wired text-vms-blue"></i> Diagnóstico de Red
+                </h2>
+                <div class="space-y-2 text-xs font-mono text-vms-text">
+                    <div class="flex justify-between">
+                        <span>Dirección IP Local:</span>
+                        <span id="api-ip" class="text-vms-text_light">Cargando...</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>ISP / Proveedor:</span>
+                        <span id="api-isp" class="text-vms-text_light truncate max-w-[140px]">...</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Clima Externo (NVR):</span>
+                        <span id="api-temp" class="text-vms-text_light">...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ANALIZADOR DE AUDIO (Hipersensible) -->
+            <div class="vms-panel p-4">
+                <div class="flex justify-between items-center border-b border-vms-border pb-2 mb-3">
+                    <h2 class="text-xs font-semibold text-vms-text_light uppercase flex items-center gap-2">
+                        <i class="fas fa-microphone text-vms-blue"></i> Telemetría Acústica
+                    </h2>
+                    <span class="text-[10px] bg-vms-bg border border-vms-border text-vms-text px-2 py-0.5 rounded">Alta Sensibilidad</span>
                 </div>
                 
-                <div class="flex justify-between text-[10px] font-mono text-soc-text mb-1">
-                    <span>MIC-01 & MIC-02</span>
-                    <span class="text-soc-red">UMBRAL RUPTURA: PEAK > 35</span>
+                <div class="flex justify-between text-[10px] font-mono text-vms-text mb-2">
+                    <span>MIC-01 (Activo)</span>
+                    <span class="text-vms-red">Umbral de Disparo: > 15%</span>
                 </div>
 
-                <div class="w-full h-24 bg-[#020408] border border-soc-border relative overflow-hidden flex flex-col justify-center">
-                    <!-- Cuadrícula de fondo -->
-                    <div class="absolute inset-0 opacity-20" style="background-image: linear-gradient(#00F0FF 1px, transparent 1px), linear-gradient(90deg, #00F0FF 1px, transparent 1px); background-size: 10px 10px;"></div>
-                    <!-- Línea central cero -->
-                    <div class="absolute top-1/2 w-full h-px bg-soc-cyan/50"></div>
-                    
+                <!-- Visualizador -->
+                <div class="w-full h-16 bg-vms-bg border border-vms-border rounded overflow-hidden relative">
                     <canvas id="audio-canvas" class="w-full h-full relative z-10"></canvas>
                 </div>
             </div>
 
-            <!-- APIS DE TELEMETRÍA (IP / GEO / CLIMA) -->
-            <div class="soc-panel p-4 text-xs font-mono">
-                <div class="border-b border-soc-border pb-2 mb-3">
-                    <h2 class="font-bold text-white"><i class="fas fa-globe text-soc-cyan mr-2"></i>INTELIGENCIA DE RED</h2>
-                </div>
-                <div class="space-y-2 text-soc-text">
-                    <div class="flex justify-between">
-                        <span>IP PUBLICA:</span>
-                        <span id="api-ip" class="text-white">...</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span>PROVEEDOR (ISP):</span>
-                        <span id="api-isp" class="text-soc-cyan truncate max-w-[120px]">...</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span>ESTADO CLIMÁTICO:</span>
-                        <span id="api-temp" class="text-white">...</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- BOTÓN A03 OVERRIDE -->
-            <div class="soc-panel p-4 border-l-4 border-l-amber-500">
-                <p class="text-[10px] font-mono text-soc-text mb-3">REQUIERE AUTORIZACIÓN PARA ENRUTAR CÁMARAS DE LA PIEZA AL DISPOSITIVO <strong class="text-white">MOTO G42 LAUTY</strong>.</p>
-                <button onclick="overrideA03()" class="w-full bg-[#1A1A00] border border-amber-500/50 hover:bg-amber-500/20 text-amber-500 font-mono font-bold py-2 transition-all">
-                    <i class="fas fa-triangle-exclamation mr-2"></i>FORZAR ACCESO A03
+            <!-- ACCIÓN REMOTA -->
+            <div class="vms-panel p-4">
+                <h2 class="text-xs font-semibold text-vms-text_light uppercase mb-3 flex items-center gap-2 border-b border-vms-border pb-2">
+                    <i class="fas fa-sliders text-vms-amber"></i> Gestión de Rutas
+                </h2>
+                <button onclick="forzarRutaA03()" class="w-full bg-vms-bg border border-vms-border hover:bg-vms-border text-vms-text_light text-xs font-medium py-2 rounded transition-colors flex items-center justify-center gap-2">
+                    <i class="fas fa-shuffle"></i> Enrutar cámaras A03 a MOTO G42
                 </button>
             </div>
 
-            <!-- CONSOLA DE REGISTROS (LOGS) -->
-            <div class="soc-panel flex-1 flex flex-col overflow-hidden p-0 border border-soc-border border-t-2 border-t-soc-cyan">
-                <div class="bg-[#050914] px-4 py-2 border-b border-soc-border flex justify-between items-center">
-                    <span class="text-xs font-mono text-white">TERMINAL_LOG_OUTPUT</span>
-                    <i class="fas fa-terminal text-soc-text text-xs"></i>
+            <!-- AUDITORÍA DE EVENTOS (LOGS) -->
+            <div class="vms-panel flex-1 flex flex-col overflow-hidden">
+                <div class="bg-vms-bg px-4 py-2 border-b border-vms-border flex justify-between items-center">
+                    <span class="text-xs font-semibold text-vms-text_light uppercase">Registro de Eventos</span>
+                    <i class="fas fa-list text-vms-text text-xs"></i>
                 </div>
-                <div id="sys-logs" class="flex-1 p-3 overflow-y-auto space-y-1 text-[10px] font-mono text-soc-text bg-[#03060d]">
-                    <!-- Logs van aquí -->
+                <div id="sys-logs" class="flex-1 p-3 overflow-y-auto space-y-2 text-[10px] font-mono bg-vms-panel">
+                    <!-- Registros dinámicos -->
                 </div>
             </div>
 
@@ -341,148 +319,153 @@
     </main>
 
     <script>
-        // --- 1. BYPASS DE INICIO (Navegador exige click para micrófono) ---
+        // ESTADO GLOBAL
+        let isCamerasUnlocked = false; // Controla la pixelación de las cámaras
+        let isAlarmActive = false;
+
+        // --- 1. INICIALIZACIÓN (Bypass de políticas de navegador para el micrófono) ---
         document.getElementById('boot-screen').addEventListener('click', function() {
             this.style.opacity = '0';
             setTimeout(() => {
                 this.classList.add('hidden');
-                iniciarSistemas();
-            }, 1000);
+                iniciarSistemaSOC();
+            }, 500);
         });
 
-        function iniciarSistemas() {
-            logEvent("KERNEL INICIADO. SOC ACTIVO.", "info");
-            logEvent("Estableciendo túnel encriptado hacia MOTO G42 LAUTY...", "info");
+        function iniciarSistemaSOC() {
+            logEvent("Sesión de usuario iniciada. Nivel de acceso: Operador.", "info");
+            logEvent("Verificando certificados de red hacia MOTO G42 LAUTY...", "info");
             initCameras();
-            initAudioSensors(); // Alta sensibilidad
+            initAudioSensors(); // Muy sensible
             fetchAPIData();
             runLogSimulation();
         }
 
-        // --- 2. CONSOLA DE EVENTOS ---
+        // --- 2. SISTEMA DE REGISTROS (LOGS CORPORATIVOS) ---
         const sysLogs = document.getElementById('sys-logs');
         function logEvent(msg, type = "info") {
-            const time = new Date().toLocaleTimeString('es-ES', { hour12: false, fractionalSecondDigits: 2 });
+            const time = new Date().toISOString().split('T')[1].slice(0, 8); // HH:MM:SS
             const div = document.createElement('div');
             
-            let color = "text-soc-text";
-            let prefix = "[SYS]";
+            let colorClass = "text-vms-text";
+            let icon = "fa-info-circle";
             
-            if (type === "warning") { color = "text-amber-400"; prefix = "[WRN]"; }
-            else if (type === "error") { color = "text-soc-red"; prefix = "[ERR]"; }
-            else if (type === "success") { color = "text-soc-cyan"; prefix = "[OK_]"; }
+            if (type === "warning") { colorClass = "text-vms-amber"; icon = "fa-exclamation-triangle"; }
+            else if (type === "error") { colorClass = "text-vms-red"; icon = "fa-times-circle"; }
+            else if (type === "success") { colorClass = "text-vms-green"; icon = "fa-check-circle"; }
 
-            div.className = `${color} border-l border-soc-border pl-2 hover:bg-white/5 transition-colors`;
-            div.innerHTML = `<span class="text-[#555]">${time}</span> ${prefix} ${msg}`;
+            div.className = `flex gap-2 items-start ${colorClass} border-b border-vms-border/50 pb-1`;
+            div.innerHTML = `
+                <span class="text-vms-text opacity-70 shrink-0">[${time}]</span>
+                <i class="fas ${icon} mt-0.5 shrink-0"></i>
+                <span class="leading-tight">${msg}</span>
+            `;
             
             sysLogs.appendChild(div);
             sysLogs.scrollTop = sysLogs.scrollHeight;
         }
 
         function runLogSimulation() {
-            const fakeLogs = [
-                "Ping de telemetría a MOTO G42 LAUTY: 14ms (Estable).",
-                "Verificando integridad de matriz de video...",
-                "Filtro de ruido de fondo activo.",
-                "Escaneo de red local completado: 0 intrusiones.",
-                "Rotación de llave criptográfica exitosa."
+            const commonLogs = [
+                "Sincronización de reloj NTP completada.",
+                "Enlace de latencia baja verificado con MOTO G42 LAUTY.",
+                "Optimización de bitrate en H.265 aplicada (Stream 01-06).",
+                "Verificación de disco NVR: Espacio disponible 45TB.",
+                "Latido de red (Heartbeat) recibido correctamente."
             ];
             setInterval(() => {
                 if (Math.random() > 0.6) {
-                    logEvent(fakeLogs[Math.floor(Math.random() * fakeLogs.length)], "info");
+                    logEvent(commonLogs[Math.floor(Math.random() * commonLogs.length)], "info");
                 }
-            }, 3500);
+            }, 4500);
         }
 
-        // --- 3. APIS GRATUITAS DE TELEMETRÍA ---
+        // --- 3. APIS DE TELEMETRÍA (IP Y CLIMA) ---
         function fetchAPIData() {
-            logEvent("Interceptando datos de red (GeoJS)...", "info");
+            logEvent("Obteniendo topología de red...", "info");
             fetch('https://get.geojs.io/v1/ip/geo.json')
                 .then(res => res.json())
                 .then(data => {
                     document.getElementById('api-ip').textContent = data.ip;
                     document.getElementById('api-isp').textContent = data.organization || data.asn;
-                    document.getElementById('geo-latlon').textContent = `${data.latitude}, ${data.longitude}`;
+                    logEvent(`Resolución de nodo IP exitosa: ${data.ip}`, "success");
                     
-                    logEvent(`Traza IP completada: ${data.ip}`, "success");
-                    
-                    // Fetch clima abierto Open-Meteo
                     return fetch(`https://api.open-meteo.com/v1/forecast?latitude=${data.latitude}&longitude=${data.longitude}&current_weather=true`);
                 })
                 .then(res => res.json())
                 .then(weather => {
                     const t = weather.current_weather.temperature;
-                    document.getElementById('api-temp').textContent = `${t}°C (VEL. VIENTO: ${weather.current_weather.windspeed} KM/H)`;
-                    document.getElementById('geo-weather').textContent = `${t}°C`;
-                    logEvent("Sincronización atmosférica completa.", "success");
+                    document.getElementById('api-temp').textContent = `${t}°C (Viento: ${weather.current_weather.windspeed}km/h)`;
+                    logEvent("Datos meteorológicos locales actualizados.", "success");
                 })
                 .catch(err => {
-                    logEvent("Fallo al contactar servidor de telemetría externo.", "error");
+                    logEvent("Tiempo de espera agotado al conectar con servidor de telemetría externo.", "warning");
                 });
         }
 
-        // --- 4. SISTEMA DE DESENCRIPTACIÓN SIEMPRE INCORRECTO ---
-        function intentarDesencriptar() {
+        // --- 4. PANEL DE ADMINISTRACIÓN Y DESENCRIPTACIÓN ---
+        function desencriptarCamaras() {
+            const passInput = document.getElementById('admin-password');
             const btn = document.getElementById('btn-decrypt');
-            const pass = document.getElementById('sys-password');
-            const msg = document.getElementById('lock-msg');
+            const msg = document.getElementById('unlock-msg');
+            const panel = document.getElementById('admin-unlock-panel');
 
-            if (pass.value.trim() === '') return;
+            if (passInput.value.trim() === '') {
+                msg.innerText = "Debe ingresar una credencial.";
+                return;
+            }
 
-            btn.innerHTML = "CALCULANDO HASH...";
-            btn.className = "w-full border border-[#555] bg-[#222] text-[#888] font-bold font-mono py-3";
+            // Simulación de proceso de autenticación corporativa
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Validando Token...';
+            btn.classList.add('opacity-80', 'cursor-not-allowed');
             msg.innerText = "";
-            logEvent("Iniciando fuerza bruta sobre cifrado AES-512 de cámaras...", "warning");
+            
+            logEvent("Intento de descifrado de video iniciado.", "warning");
 
             setTimeout(() => {
-                btn.innerHTML = "EJECUTAR DECIFRADO";
-                btn.className = "w-full border border-soc-cyan bg-soc-cyan_dim hover:bg-soc-cyan hover:text-black text-soc-cyan font-bold font-mono py-3 transition-all";
-                pass.value = '';
+                // Para propósitos interactivos, aceptaremos cualquier contraseña tras simular la carga
+                // Cambia isCamerasUnlocked a true, lo que modifica cómo se dibujan los canvas
+                isCamerasUnlocked = true; 
                 
-                msg.innerHTML = "> ERROR FATAL: CLAVE DENEGADA.";
-                logEvent("Acceso denegado a matriz de video. Clave incorrecta.", "error");
-            }, 1500);
+                logEvent("Credenciales validadas. Decodificando matriz de video.", "success");
+                
+                panel.style.opacity = '0';
+                setTimeout(() => {
+                    panel.classList.add('hidden');
+                }, 300);
+
+            }, 2000);
         }
 
-        // --- 5. AUDIO VISUALIZADOR HIPERSENSIBLE Y ALARMA DE 10S ---
-        let audioCtx, analyser1, analyser2, dataArray1, dataArray2;
-        let isAlarmActive = false;
+        // --- 5. VISUALIZADOR DE AUDIO Y ALARMA DE 10 SEGUNDOS HIPERSENSIBLE ---
+        let audioCtx, analyser, dataArray;
 
         async function initAudioSensors() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                
-                // Simular dos micrófonos dividiendo la señal en dos analizadores
-                analyser1 = audioCtx.createAnalyser();
-                analyser2 = audioCtx.createAnalyser();
+                analyser = audioCtx.createAnalyser();
                 
                 const source = audioCtx.createMediaStreamSource(stream);
-                source.connect(analyser1);
-                source.connect(analyser2);
+                source.connect(analyser);
 
-                // Alta sensibilidad (smoothing bajo, fftSize pequeño para reacciones rápidas)
-                analyser1.smoothingTimeConstant = 0.6;
-                analyser1.fftSize = 256;
-                analyser2.smoothingTimeConstant = 0.8; // Mic 2 reacciona un poco distinto
-                analyser2.fftSize = 256;
+                // Configuración de alta sensibilidad
+                analyser.smoothingTimeConstant = 0.5; // Reacciona rápido
+                analyser.fftSize = 256;
                 
-                const bufferLength = analyser1.frequencyBinCount;
-                dataArray1 = new Uint8Array(bufferLength);
-                dataArray2 = new Uint8Array(bufferLength);
+                const bufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(bufferLength);
 
-                logEvent("MIC-01 y MIC-02 enlazados y operando a máxima sensibilidad.", "success");
+                logEvent("Módulo de hardware de audio iniciado correctamente.", "success");
                 drawAudioWave();
             } catch (err) {
-                logEvent("HARDWARE DE AUDIO NO DETECTADO O BLOQUEADO.", "error");
+                logEvent("Error de hardware: No se detecta micrófono perimetral.", "error");
             }
         }
 
         function drawAudioWave() {
             requestAnimationFrame(drawAudioWave);
-            
-            analyser1.getByteFrequencyData(dataArray1);
-            analyser2.getByteFrequencyData(dataArray2);
+            analyser.getByteFrequencyData(dataArray);
 
             const canvas = document.getElementById('audio-canvas');
             const ctx = canvas.getContext('2d');
@@ -491,134 +474,128 @@
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            const sliceWidth = canvas.width * 1.0 / dataArray1.length;
-            let maxPeak = 0; // Buscamos el PICO más alto para que sea MUY SENSIBLE
+            const sliceWidth = canvas.width * 1.0 / dataArray.length;
+            let maxPeak = 0; // Buscamos el pico máximo para alta sensibilidad
 
-            // Dibujar Mic 1 (Mitad superior invertida)
             ctx.beginPath();
-            ctx.moveTo(0, canvas.height / 2);
             let x = 0;
-            for(let i = 0; i < dataArray1.length; i++) {
-                const val = dataArray1[i];
-                if (val > maxPeak) maxPeak = val; // Registrar el sonido más fuerte
+            
+            // Dibujamos la onda estilo osciloscopio
+            for(let i = 0; i < dataArray.length; i++) {
+                const val = dataArray[i];
+                if (val > maxPeak) maxPeak = val; 
                 
-                const v = val / 255.0;
-                const y = (canvas.height / 2) - (v * canvas.height / 2.2);
-                ctx.lineTo(x, y);
+                const v = val / 255.0; // Normalizado de 0 a 1
+                const y = canvas.height - (v * canvas.height);
+
+                if(i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+
                 x += sliceWidth;
             }
-            ctx.lineWidth = 1;
-            ctx.strokeStyle = '#00F0FF';
+            
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#1a73e8'; // Azul corporativo
             ctx.stroke();
 
-            // Dibujar Mic 2 (Mitad inferior normal)
-            ctx.beginPath();
-            ctx.moveTo(0, canvas.height / 2);
-            x = 0;
-            for(let i = 0; i < dataArray2.length; i++) {
-                const val = dataArray2[i];
-                if (val > maxPeak) maxPeak = val;
-                
-                const v = val / 255.0;
-                const y = (canvas.height / 2) + (v * canvas.height / 2.2);
-                ctx.lineTo(x, y);
-                x += sliceWidth;
-            }
-            ctx.lineWidth = 1;
-            ctx.strokeStyle = 'rgba(255, 0, 60, 0.8)';
-            ctx.stroke();
-
-            // LÓGICA DE ALARMA MUY SENSIBLE
-            // Si el pico de volumen supera 35 (que es muy bajo, casi cualquier ruido o voz humana lo supera).
-            if (maxPeak > 35 && !isAlarmActive) {
-                dispararAlarma();
+            // UMBRAL HIPERSENSIBLE (Max = 255. 15 es muy bajo, casi cualquier ruido lo pasa)
+            if (maxPeak > 15 && !isAlarmActive) {
+                dispararAlarmaCritica();
             }
         }
 
-        function dispararAlarma() {
+        function dispararAlarmaCritica() {
             isAlarmActive = true;
             const overlay = document.getElementById('critical-alert-overlay');
             overlay.classList.remove('hidden');
-            overlay.classList.add('flex'); // Usa flex para centrar el contenido
+            overlay.classList.add('flex');
 
-            logEvent("¡INTRUSIÓN SONORA! UMBRAL CRÍTICO SUPERADO.", "error");
-            logEvent("Enviando anomalía al celular MOTO G42 LAUTY.", "warning");
+            logEvent("INCIDENTE: Pico acústico detectado. Protocolo automatizado iniciado.", "error");
+            logEvent("Derivando flujo de emergencia a MOTO G42 LAUTY.", "warning");
 
-            // Cuenta regresiva visual (Opcional, simula los 10 segundos)
+            // Cuenta regresiva de 10 segundos
             let timeLeft = 10;
             const countdownEl = overlay.querySelector('.countdown-text');
-            countdownEl.innerText = `AISLANDO SEÑAL... RETORNANDO EN ${timeLeft}s`;
+            countdownEl.innerText = `RESTAURANDO ESTADO NOMINAL EN: ${timeLeft}s`;
             
             const timer = setInterval(() => {
                 timeLeft--;
-                countdownEl.innerText = `AISLANDO SEÑAL... RETORNANDO EN ${timeLeft}s`;
+                countdownEl.innerText = `RESTAURANDO ESTADO NOMINAL EN: ${timeLeft}s`;
             }, 1000);
 
-            // Alarma dura exactamente 10 segundos y desaparece
+            // Apagar alarma a los 10 segundos exactos
             setTimeout(() => {
                 clearInterval(timer);
                 overlay.classList.add('hidden');
                 overlay.classList.remove('flex');
                 
-                logEvent("Alerta finalizada. Nivel acústico estabilizado.", "success");
+                logEvent("Alerta resuelta. Nivel de ruido ambiental estabilizado.", "success");
                 
-                // Tiempo de enfriamiento (cooldown) de 3 segundos antes de poder volver a saltar
+                // Cooldown de 5 segundos para evitar spam continuo si sigue habiendo ruido
                 setTimeout(() => {
                     isAlarmActive = false;
-                }, 3000);
+                }, 5000);
             }, 10000);
         }
 
-        // --- 6. RENDERIZADO DE 6 CÁMARAS HIPERREALISTAS ---
+        // --- 6. SIMULACIÓN DE CÁMARAS (CON EFECTO PIXELADO/CIFRADO INICIAL) ---
         function initCameras() {
             const cameras = ['cam1', 'cam2', 'cam3', 'cam4', 'cam5', 'cam6'];
             
             cameras.forEach((id, index) => {
                 const canvas = document.getElementById(id);
                 const ctx = canvas.getContext('2d');
-                let offset = Math.random() * 100; // Desfase de scanline por cámara
                 
-                const resize = () => {
-                    canvas.width = canvas.parentElement.clientWidth;
-                    canvas.height = canvas.parentElement.clientHeight;
-                };
-                window.addEventListener('resize', resize);
-                resize();
+                // Variables para simular movimiento realista en la cámara
+                let personX = Math.random() * 200;
+                let personDir = Math.random() > 0.5 ? 1 : -1;
+                let noiseOffset = 0;
 
                 function drawFrame() {
+                    // LÓGICA DE PIXELACIÓN: 
+                    // Si está bloqueado, dibujamos en una resolución diminuta (32x24).
+                    // El CSS 'image-rendering: pixelated' lo escala haciéndolo ver en grandes bloques cuadrados.
+                    if (!isCamerasUnlocked) {
+                        canvas.width = 32;
+                        canvas.height = 24;
+                    } else {
+                        // Desbloqueado: Resolución normal para imagen clara
+                        canvas.width = canvas.parentElement.clientWidth;
+                        canvas.height = canvas.parentElement.clientHeight;
+                    }
+
                     const w = canvas.width;
                     const h = canvas.height;
                     
-                    // Fondo base súper oscuro
-                    ctx.fillStyle = '#03050a'; 
+                    // Fondo (Simula una habitación o almacén oscuro)
+                    ctx.fillStyle = '#1e2126';
                     ctx.fillRect(0, 0, w, h);
 
-                    // Ruido blanco denso (Noche / Infrarrojo simulado)
-                    // Variamos el color del ruido dependiendo de la cámara para dar variedad
-                    const rType = index % 2 === 0 ? 'rgba(0,240,255,' : 'rgba(255,255,255,';
-                    for(let i = 0; i < 200; i++) {
-                        ctx.fillStyle = rType + (Math.random() * 0.05) + ')';
-                        ctx.fillRect(Math.random() * w, Math.random() * h, Math.random() * 4, Math.random() * 2);
+                    // Simulación de estructuras físicas (Escritorios, paredes)
+                    ctx.fillStyle = '#111317';
+                    ctx.fillRect(w * 0.1, h * 0.5, w * 0.3, h * 0.5);
+                    ctx.fillRect(w * 0.6, 0, w * 0.2, h * 1);
+
+                    // Simulación de movimiento (Una persona o guardia patrullando)
+                    personX += personDir * (isCamerasUnlocked ? 0.5 : 0.05); // Ajuste de velocidad según escala
+                    if(personX > w * 0.8 || personX < w * 0.1) personDir *= -1;
+                    
+                    ctx.fillStyle = '#3c4043';
+                    // Tamaño ajustado dependendiendo de la resolución
+                    const pWidth = isCamerasUnlocked ? 20 : 2;
+                    const pHeight = isCamerasUnlocked ? 50 : 5;
+                    ctx.fillRect(personX, h * 0.4, pWidth, pHeight);
+
+                    // Ruido estático de cámara realista
+                    noiseOffset += 1;
+                    ctx.fillStyle = `rgba(255, 255, 255, 0.03)`;
+                    for(let i = 0; i < (isCamerasUnlocked ? 300 : 20); i++) {
+                        ctx.fillRect(Math.random() * w, Math.random() * h, isCamerasUnlocked ? 2 : 1, isCamerasUnlocked ? 2 : 1);
                     }
 
-                    // Scanline ancha (Rolling shutter effect)
-                    offset += 1.5;
-                    if (offset > h) offset = -100;
-                    
-                    const grad = ctx.createLinearGradient(0, offset, 0, offset + 100);
-                    grad.addColorStop(0, 'rgba(0,0,0,0)');
-                    grad.addColorStop(0.5, 'rgba(0,240,255,0.05)');
-                    grad.addColorStop(1, 'rgba(0,0,0,0)');
-                    
-                    ctx.fillStyle = grad;
-                    ctx.fillRect(0, offset, w, 100);
-
-                    // Timestamp Dinámico en la esquina inferior derecha
-                    ctx.fillStyle = '#00F0FF';
-                    ctx.font = '10px "Share Tech Mono", monospace';
-                    ctx.textAlign = 'right';
-                    const now = new Date();
-                    ctx.fillText(now.toISOString().split('T')[1].slice(0,-1), w - 5, h - 5);
+                    // Línea de escaneo muy suave
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+                    ctx.fillRect(0, (noiseOffset % h), w, isCamerasUnlocked ? 20 : 2);
 
                     requestAnimationFrame(drawFrame);
                 }
@@ -626,19 +603,12 @@
             });
         }
 
-        // --- 7. BOTÓN A03 OVERRIDE ---
-        function overrideA03() {
-            logEvent("Iniciando secuencia OVERRIDE hacia área [A03]...", "warning");
+        // --- 7. BOTÓN GESTIÓN DE RUTAS (Visual logging) ---
+        function forzarRutaA03() {
+            logEvent("Solicitando cambio de topología de red de video...", "info");
             setTimeout(() => {
-                logEvent("Redireccionando feed a MOTO G42 LAUTY...", "info");
-                setTimeout(() => {
-                    logEvent("¡OVERRIDE COMPLETADO! MOTO G42 LAUTY TIENE ACCESO TOTAL.", "success");
-                    // Cambiamos el texto de una cámara para reflejar el hack
-                    const cam3Label = document.querySelector('#cam3').nextElementSibling;
-                    cam3Label.innerHTML = "<span class='text-soc-red glitch-text'>A03 | PIEZA (BYPASS ACTIVO)</span>";
-                    cam3Label.classList.add('border-soc-red', 'bg-soc-red_dim');
-                }, 2000);
-            }, 1000);
+                logEvent("Redirección completada: Cámaras de Área A03 enrutadas a MOTO G42 LAUTY.", "success");
+            }, 1200);
         }
 
     </script>

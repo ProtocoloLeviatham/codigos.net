@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vanguard Security | Centro de Monitoreo - lauty33</title>
+    <title>Vanguard Security | Centro de Monitoreo - MOTO G42 LAUTY</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -70,6 +70,15 @@
             50% { opacity: 0.3; }
         }
 
+        /* Red Alarm Flash */
+        @keyframes red-alert-flash {
+            0%, 100% { background-color: rgba(239, 68, 68, 0.1); }
+            50% { background-color: rgba(239, 68, 68, 0.45); }
+        }
+        .animate-red-alert {
+            animation: red-alert-flash 0.8s infinite;
+        }
+
         /* Custom Scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
@@ -86,11 +95,43 @@
         }
 
         .modal-overlay {
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(8px);
+        }
+        
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col font-sans antialiased">
+<body class="min-h-screen flex flex-col font-sans antialiased overflow-x-hidden">
+
+    <!-- Pantalla de Inicialización de Terminal (Necesario para activar micrófono por políticas del navegador) -->
+    <div id="init-screen" class="fixed inset-0 z-[100] bg-slate-900 flex flex-col items-center justify-center text-white transition-opacity duration-700 cursor-pointer">
+        <div class="w-24 h-24 bg-brand-600 rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(37,99,235,0.5)] pulse-dot">
+            <i class="fas fa-fingerprint text-5xl text-white"></i>
+        </div>
+        <h1 class="text-3xl font-bold tracking-widest uppercase mb-2">Vanguard Security Systems</h1>
+        <p class="text-slate-400 font-mono text-sm mb-8 animate-pulse">HAGA CLIC EN CUALQUIER LUGAR PARA AUTENTICAR TERMINAL Y ACTIVAR SENSORES</p>
+        <div class="text-xs text-slate-500 font-mono border border-slate-700 p-4 rounded bg-slate-800/50 max-w-md text-center">
+            Módulo de Defensa Activa: Requiere acceso a componentes acústicos para telemetría ambiental y enlace seguro con MOTO G42 LAUTY.
+        </div>
+    </div>
+
+    <!-- Alerta Roja Global (Oculta por defecto) -->
+    <div id="red-alarm-overlay" class="fixed inset-0 z-[90] animate-red-alert pointer-events-none hidden border-[12px] border-red-600 transition-all">
+        <div class="absolute top-1/4 left-1/2 transform -translate-x-1/2 bg-red-700/95 text-white px-10 py-6 rounded-2xl shadow-[0_0_50px_rgba(220,38,38,0.8)] border border-red-400 flex items-center gap-6 backdrop-blur-md w-max max-w-[90vw]">
+            <i class="fas fa-radiation text-6xl animate-spin" style="animation-duration: 3s;"></i>
+            <div class="flex flex-col">
+                <h1 class="text-3xl font-black uppercase tracking-widest text-red-50 drop-shadow-md">Alerta de Anomalía Acústica</h1>
+                <p class="text-xl font-bold text-red-200 mt-1 uppercase">Enviando anomalía al celular MOTO G42 LAUTY</p>
+                <div class="w-full bg-red-900/50 h-1 mt-3 rounded-full overflow-hidden">
+                    <div class="bg-white h-full w-full" style="animation: pulse-dot-anim 1s infinite"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <header class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-10">
         <div class="px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
@@ -105,19 +146,20 @@
             </div>
 
             <div class="flex flex-wrap gap-4 items-center justify-end">
-                <div class="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 flex items-center gap-3">
+                <div class="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 flex items-center gap-3 shadow-inner">
                     <div class="flex flex-col text-right">
-                        <span class="text-xs text-slate-500 font-medium">Terminal Receptora</span>
-                        <span class="text-sm font-bold text-brand-700">dispositivo_lauty33</span>
+                        <span class="text-xs text-slate-500 font-medium">Terminal Receptora Activa</span>
+                        <!-- DISPOSITIVO ACTUALIZADO -->
+                        <span class="text-sm font-bold text-brand-700 tracking-wider">MOTO G42 LAUTY</span>
                     </div>
-                    <div class="h-8 w-8 bg-brand-100 rounded-full flex items-center justify-center text-brand-600">
+                    <div class="h-8 w-8 bg-brand-100 rounded-full flex items-center justify-center text-brand-600 shadow-sm">
                         <i class="fas fa-mobile-screen"></i>
                     </div>
                 </div>
                 
-                <div class="bg-green-50 text-green-700 border border-green-200 rounded-lg px-4 py-2 flex items-center gap-2">
+                <div class="bg-green-50 text-green-700 border border-green-200 rounded-lg px-4 py-2 flex items-center gap-2 shadow-sm">
                     <span class="w-2 h-2 rounded-full bg-green-500 pulse-dot"></span>
-                    <span class="text-sm font-semibold">Conexión Segura Activa</span>
+                    <span class="text-sm font-semibold">Conexión Cifrada</span>
                 </div>
             </div>
         </div>
@@ -126,72 +168,147 @@
     <main class="flex-1 p-6 grid grid-cols-1 xl:grid-cols-4 gap-6 max-w-screen-2xl mx-auto w-full">
         
         <!-- Panel de Cámaras (Izquierda 3 columnas en pantallas grandes) -->
-        <div class="xl:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="relative xl:col-span-3">
             
-            <!-- Cámara 1 -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-                <div class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-                    <div class="flex items-center gap-2">
-                        <i class="fas fa-video text-slate-400"></i>
-                        <span class="font-semibold text-sm text-slate-700">CAM-01 | Acceso Principal</span>
-                    </div>
-                    <span class="flex items-center text-xs font-bold text-red-500 tracking-widest">
-                        <span class="w-2 h-2 rounded-full bg-red-500 pulse-dot mr-1.5"></span> REC
-                    </span>
+            <!-- CAPA DE SEGURIDAD INTERACTIVA (BLOQUEO DE CÁMARAS) -->
+            <div id="camera-security-lock" class="absolute inset-0 z-20 glass-panel rounded-xl flex flex-col items-center justify-center p-6 text-center transition-opacity duration-500">
+                <div class="w-20 h-20 bg-slate-800/80 rounded-full flex items-center justify-center border-2 border-slate-600 mb-6 shadow-lg">
+                    <i class="fas fa-lock text-4xl text-slate-300"></i>
                 </div>
-                <div class="camera-feed h-64 md:h-72 w-full">
-                    <canvas id="cam1"></canvas>
-                    <div class="absolute top-4 left-4 bg-black/60 text-white/90 px-2 py-1 rounded text-xs font-mono backdrop-blur-sm">
-                        <span id="time1">00:00:00</span> - CH1_HQ
+                <h2 class="text-2xl font-bold text-white mb-2 tracking-wide">Transmisión de Video Encriptada</h2>
+                <p class="text-slate-400 mb-8 max-w-md">Por políticas de seguridad corporativa, los enlaces de video hacia <strong>MOTO G42 LAUTY</strong> requieren credenciales Nivel 4.</p>
+                
+                <div class="bg-slate-800/60 p-6 rounded-xl border border-slate-600/50 w-full max-w-sm">
+                    <div class="text-left mb-4">
+                        <label class="block text-xs font-mono text-slate-400 mb-1">CLAVE DE DESCIFRADO (AES-256):</label>
+                        <input type="password" id="camera-password" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white font-mono focus:outline-none focus:border-brand-500 transition-colors" placeholder="••••••••••••">
                     </div>
-                </div>
-            </div>
-
-            <!-- Cámara 2 -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-                <div class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-                    <div class="flex items-center gap-2">
-                        <i class="fas fa-video text-slate-400"></i>
-                        <span class="font-semibold text-sm text-slate-700">CAM-02 | Perímetro Norte</span>
-                    </div>
-                    <span class="flex items-center text-xs font-bold text-red-500 tracking-widest">
-                        <span class="w-2 h-2 rounded-full bg-red-500 pulse-dot mr-1.5"></span> REC
-                    </span>
-                </div>
-                <div class="camera-feed h-64 md:h-72 w-full">
-                    <canvas id="cam2"></canvas>
-                    <div class="absolute top-4 left-4 bg-black/60 text-white/90 px-2 py-1 rounded text-xs font-mono backdrop-blur-sm">
-                        <span id="time2">00:00:00</span> - CH2_HQ
-                    </div>
-                    <!-- Indicador visual corporativo (simulando IA de detección) -->
-                    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 border border-brand-500/50 w-24 h-24 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-expand text-brand-500/50"></i>
-                    </div>
+                    <button id="btn-unlock-cameras" onclick="verificarClaveCamaras()" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-bold py-3 rounded-lg transition-all shadow-[0_0_15px_rgba(37,99,235,0.3)]">
+                        <i class="fas fa-key mr-2"></i> INICIAR DESCIFRADO
+                    </button>
+                    <p id="lock-error-msg" class="mt-4 text-xs font-mono h-4"></p>
                 </div>
             </div>
 
-            <!-- Cámara 3 (Ancho completo debajo de 1 y 2) -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col md:col-span-2">
-                <div class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-                    <div class="flex items-center gap-2">
-                        <i class="fas fa-video text-slate-400"></i>
-                        <span class="font-semibold text-sm text-slate-700">CAM-03 | Zona de Carga</span>
+            <!-- Estructura de cámaras original encapsulada -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
+                <!-- Cámara 1 -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                    <div class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-video text-slate-400"></i>
+                            <span class="font-semibold text-sm text-slate-700">CAM-01 | Acceso Principal</span>
+                        </div>
+                        <span class="flex items-center text-xs font-bold text-red-500 tracking-widest">
+                            <span class="w-2 h-2 rounded-full bg-red-500 pulse-dot mr-1.5"></span> REC
+                        </span>
                     </div>
-                    <span class="flex items-center text-xs font-bold text-red-500 tracking-widest">
-                        <span class="w-2 h-2 rounded-full bg-red-500 pulse-dot mr-1.5"></span> REC
-                    </span>
+                    <div class="camera-feed h-64 md:h-72 w-full">
+                        <canvas id="cam1"></canvas>
+                        <div class="absolute top-4 left-4 bg-black/80 border border-slate-700 text-brand-400 px-2 py-1 rounded text-xs font-mono backdrop-blur-sm">
+                            <span id="time1">00:00:00</span> - CH1_HQ
+                        </div>
+                    </div>
                 </div>
-                <div class="camera-feed h-64 md:h-96 w-full">
-                    <canvas id="cam3"></canvas>
-                    <div class="absolute top-4 left-4 bg-black/60 text-white/90 px-2 py-1 rounded text-xs font-mono backdrop-blur-sm">
-                        <span id="time3">00:00:00</span> - CH3_HQ
+
+                <!-- Cámara 2 -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                    <div class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-video text-slate-400"></i>
+                            <span class="font-semibold text-sm text-slate-700">CAM-02 | Perímetro Norte</span>
+                        </div>
+                        <span class="flex items-center text-xs font-bold text-red-500 tracking-widest">
+                            <span class="w-2 h-2 rounded-full bg-red-500 pulse-dot mr-1.5"></span> REC
+                        </span>
+                    </div>
+                    <div class="camera-feed h-64 md:h-72 w-full">
+                        <canvas id="cam2"></canvas>
+                        <div class="absolute top-4 left-4 bg-black/80 border border-slate-700 text-brand-400 px-2 py-1 rounded text-xs font-mono backdrop-blur-sm">
+                            <span id="time2">00:00:00</span> - CH2_HQ
+                        </div>
+                        <!-- Indicador visual corporativo (simulando IA de detección) -->
+                        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 border-2 border-brand-500 w-32 h-32 rounded-lg flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.3)] pointer-events-none pulse-dot">
+                            <i class="fas fa-crosshairs text-brand-500/80 text-xl absolute -top-3 -left-3"></i>
+                            <i class="fas fa-crosshairs text-brand-500/80 text-xl absolute -bottom-3 -right-3"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cámara 3 (Ancho completo debajo de 1 y 2) -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col md:col-span-2">
+                    <div class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-video text-slate-400"></i>
+                            <span class="font-semibold text-sm text-slate-700">CAM-03 | Zona de Carga</span>
+                        </div>
+                        <span class="flex items-center text-xs font-bold text-red-500 tracking-widest">
+                            <span class="w-2 h-2 rounded-full bg-red-500 pulse-dot mr-1.5"></span> REC
+                        </span>
+                    </div>
+                    <div class="camera-feed h-64 md:h-96 w-full">
+                        <canvas id="cam3"></canvas>
+                        <div class="absolute top-4 left-4 bg-black/80 border border-slate-700 text-brand-400 px-2 py-1 rounded text-xs font-mono backdrop-blur-sm">
+                            <span id="time3">00:00:00</span> - CH3_HQ
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Panel de Control y Registros (Derecha 1 columna) -->
-        <div class="flex flex-col gap-6">
+        <div class="flex flex-col gap-5">
+
+            <!-- NUEVO: APIs Gratuitas (Telemetría de Red y Clima) -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-16 h-16 bg-brand-50 rounded-bl-full -z-0"></div>
+                <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider border-b border-slate-100 pb-3 mb-4 flex items-center gap-2 relative z-10">
+                    <i class="fas fa-globe-americas text-brand-500"></i> Inteligencia de Red
+                </h2>
+                <div class="space-y-3 text-sm relative z-10 font-mono">
+                    <div class="flex justify-between border-b border-slate-50 pb-2">
+                        <span class="text-slate-500">IP Nodo Origen</span>
+                        <span id="api-ip" class="font-semibold text-slate-700">Cargando...</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-50 pb-2">
+                        <span class="text-slate-500">Ubicación Nivel 1</span>
+                        <span id="api-geo" class="font-bold text-brand-700">Rastreando...</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Condición Climática ISP</span>
+                        <span id="api-weather" class="font-semibold text-slate-700 flex items-center gap-2">
+                            <i class="fas fa-cloud-sun text-slate-400"></i> --°C
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NUEVO: Módulo de Sensores Acústicos -->
+            <div class="bg-slate-900 rounded-xl shadow-lg border border-slate-700 p-5 text-white">
+                <h2 class="text-sm font-bold text-white uppercase tracking-wider border-b border-slate-700 pb-3 mb-4 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-microphone-lines text-brand-400"></i> Sensores Acústicos
+                    </div>
+                    <span class="text-[10px] bg-green-500/20 text-green-400 border border-green-500/30 px-2 py-0.5 rounded uppercase flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 bg-green-400 rounded-full pulse-dot"></span> Activo
+                    </span>
+                </h2>
+                
+                <div class="flex justify-between items-center mb-4 text-xs font-mono text-slate-300">
+                    <span>Estado del Hardware</span>
+                    <span class="text-brand-300">Micrófonos Conectados: 2</span>
+                </div>
+                
+                <!-- Visualizador de Ondas -->
+                <div class="w-full h-16 bg-black rounded-lg border border-slate-700 overflow-hidden relative">
+                    <canvas id="audio-visualizer-canvas" class="w-full h-full"></canvas>
+                    <div class="absolute inset-0 bg-gradient-to-t from-brand-900/20 to-transparent pointer-events-none"></div>
+                </div>
+                <div class="mt-2 flex justify-between text-[10px] text-slate-500 font-mono">
+                    <span>Frecuencia Base: 0dB</span>
+                    <span class="text-red-400">Umbral Alerta: > 65dB</span>
+                </div>
+            </div>
             
             <!-- Detalles de Transmisión -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
@@ -202,7 +319,7 @@
                 <div class="space-y-4 text-sm">
                     <div class="flex justify-between items-center">
                         <span class="text-slate-500">ID Dispositivo Receptor</span>
-                        <span class="font-semibold text-slate-800">lauty33_mobile</span>
+                        <span class="font-semibold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">MOTO_G42_LAUTY</span>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-slate-500">Protocolo de Video</span>
@@ -218,35 +335,35 @@
                             <span class="text-slate-500">Calidad de Señal (QoS)</span>
                             <span class="font-semibold text-green-600">Excelente</span>
                         </div>
-                        <div class="w-full bg-slate-100 rounded-full h-1.5">
-                            <div class="bg-green-500 h-1.5 rounded-full" style="width: 95%"></div>
+                        <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                            <div class="bg-green-500 h-1.5 rounded-full" style="width: 95%; animation: pulse-dot-anim 3s infinite;"></div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Botón de Solicitud (A03) -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 border-l-4 border-l-amber-500">
                 <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider border-b border-slate-100 pb-3 mb-4 flex items-center gap-2">
-                    <i class="fas fa-key text-brand-500"></i> Acciones Remotas
+                    <i class="fas fa-key text-amber-500"></i> Acciones Remotas
                 </h2>
-                <p class="text-xs text-slate-500 mb-4">Solicite autorización para habilitar transmisiones de áreas restringidas hacia el dispositivo <strong>lauty33</strong>.</p>
+                <p class="text-xs text-slate-500 mb-4">Solicite autorización para habilitar transmisiones de áreas restringidas hacia el dispositivo <strong class="text-slate-700">MOTO G42 LAUTY</strong>.</p>
                 
-                <button onclick="iniciarSolicitudA03()" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-medium py-3 px-4 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2 group">
-                    <i class="fas fa-lock-open text-brand-200 group-hover:text-white transition-colors"></i>
+                <button onclick="iniciarSolicitudA03()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-3 px-4 rounded-lg shadow-sm transition-all flex items-center justify-center gap-2 group border border-slate-700 hover:shadow-lg hover:border-amber-500/50">
+                    <i class="fas fa-lock-open text-amber-400 group-hover:scale-110 transition-transform"></i>
                     Habilitar Cámaras de Pieza (A03)
                 </button>
             </div>
 
             <!-- Registro de Eventos -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col min-h-[250px] overflow-hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col min-h-[280px] overflow-hidden">
                 <div class="px-5 py-3 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
                     <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                        <i class="fas fa-list-ul text-slate-400"></i> Registro del Sistema
+                        <i class="fas fa-terminal text-slate-500"></i> Bitácora del Sistema
                     </h2>
-                    <span class="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full font-semibold">EN VIVO</span>
+                    <span class="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold shadow-sm border border-red-200 animate-pulse">EN VIVO</span>
                 </div>
-                <div id="system-logs" class="flex-1 p-4 overflow-y-auto space-y-2 text-xs font-mono bg-slate-50/50">
+                <div id="system-logs" class="flex-1 p-4 overflow-y-auto space-y-2 text-xs font-mono bg-[#0f172a] text-slate-300 shadow-inner">
                     <!-- Logs generados por JS -->
                 </div>
             </div>
@@ -254,54 +371,52 @@
         </div>
     </main>
 
-    <!-- Modal de Autorización (Oculto por defecto) -->
-    <div id="auth-modal" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex justify-center items-center modal-overlay opacity-0 transition-opacity duration-300">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden transform scale-95 transition-transform duration-300" id="auth-modal-content">
+    <!-- Modal de Autorización original intacto con ligeros ajustes de nombre -->
+    <div id="auth-modal" class="fixed inset-0 bg-slate-900/80 z-50 hidden flex justify-center items-center modal-overlay opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden transform scale-95 transition-transform duration-300 border border-slate-300" id="auth-modal-content">
             
-            <!-- Cabecera del modal -->
-            <div class="bg-brand-600 px-6 py-4 flex items-center justify-between">
-                <h3 class="text-white font-semibold flex items-center gap-2">
-                    <i class="fas fa-shield-check text-brand-200"></i>
+            <div class="bg-slate-800 px-6 py-4 flex items-center justify-between border-b border-slate-700">
+                <h3 class="text-white font-semibold flex items-center gap-2 tracking-wide uppercase text-sm">
+                    <i class="fas fa-shield-check text-amber-400"></i>
                     Protocolo de Autorización
                 </h3>
             </div>
 
-            <!-- Contenido del modal -->
             <div class="p-6">
                 <div class="text-center mb-6" id="auth-header">
-                    <div class="w-16 h-16 bg-brand-50 text-brand-600 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-sm">
-                        <i class="fas fa-satellite-dish text-2xl pulse-dot"></i>
+                    <div class="w-16 h-16 bg-slate-100 text-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-slate-300 shadow-sm relative">
+                        <i class="fas fa-satellite-dish text-2xl pulse-dot relative z-10"></i>
+                        <div class="absolute inset-0 border-2 border-amber-400 rounded-full animate-ping opacity-20"></div>
                     </div>
                     <h2 class="text-lg font-bold text-slate-800">Conectando con Dispositivo [A03]</h2>
                     <p class="text-sm text-slate-500 mt-1">Estableciendo puente seguro de transmisión.</p>
                 </div>
 
-                <!-- Barra de Progreso -->
                 <div id="progress-container" class="mb-6">
                     <div class="flex justify-between text-xs font-medium mb-2">
-                        <span id="progress-status" class="text-slate-600">Iniciando petición...</span>
-                        <span id="progress-percentage" class="text-brand-600 font-bold">0%</span>
+                        <span id="progress-status" class="text-slate-600 font-mono">Iniciando petición...</span>
+                        <span id="progress-percentage" class="text-brand-600 font-bold font-mono">0%</span>
                     </div>
-                    <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                        <div id="progress-bar" class="h-full bg-brand-600 rounded-full w-0 transition-all duration-200 ease-out"></div>
+                    <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden shadow-inner">
+                        <div id="progress-bar" class="h-full bg-brand-600 rounded-full w-0 transition-all duration-200 ease-out relative">
+                            <div class="absolute inset-0 bg-white/20" style="background-image: linear-gradient(45deg, rgba(255,255,255,.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.15) 50%, rgba(255,255,255,.15) 75%, transparent 75%, transparent); background-size: 1rem 1rem; animation: progress-stripes 1s linear infinite;"></div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Terminal pequeña de auditoría -->
-                <div id="audit-trail" class="bg-slate-900 rounded-lg p-3 h-24 overflow-y-auto text-[11px] text-slate-300 font-mono mb-4 border border-slate-700 shadow-inner">
+                <div id="audit-trail" class="bg-black rounded-lg p-3 h-32 overflow-y-auto text-[11px] text-green-400 font-mono mb-4 border border-slate-700 shadow-inner">
                     > Iniciando handshake TSL 1.3...<br>
                 </div>
 
-                <!-- Mensaje de Éxito (Oculto) -->
                 <div id="success-message" class="hidden text-center animate-fade-in-up">
                     <div class="w-16 h-16 bg-green-50 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-sm">
                         <i class="fas fa-check text-3xl"></i>
                     </div>
                     <h3 class="text-xl font-bold text-slate-800 mb-2">Transmisión Habilitada</h3>
-                    <p class="text-sm text-slate-500">Las cámaras de la pieza del dispositivo <strong>A03</strong> ahora están enrutadas hacia el usuario <strong>lauty33</strong>.</p>
+                    <p class="text-sm text-slate-500">Las cámaras de la pieza del dispositivo <strong>A03</strong> ahora están enrutadas hacia el usuario <strong class="text-brand-600">MOTO G42 LAUTY</strong>.</p>
                     
-                    <button onclick="cerrarModal()" class="mt-6 w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 rounded-lg transition-colors border border-slate-200">
-                        Cerrar Ventana
+                    <button onclick="cerrarModal()" class="mt-6 w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3 rounded-lg transition-colors border border-slate-300">
+                        Finalizar Operación
                     </button>
                 </div>
             </div>
@@ -309,107 +424,54 @@
     </div>
 
     <script>
-        // --- RELOJ PARA CÁMARAS ---
-        function updateClocks() {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('es-ES', { hour12: false });
-            document.getElementById('time1').textContent = timeString;
-            document.getElementById('time2').textContent = timeString;
-            document.getElementById('time3').textContent = timeString;
-        }
-        setInterval(updateClocks, 1000);
-        updateClocks();
-
-        // --- ANIMACIÓN DE CÁMARAS (Estilo corporativo / Digital) ---
-        function initCameras() {
-            const cameras = ['cam1', 'cam2', 'cam3'];
+        // --- INICIALIZACIÓN GENERAL Y BYPASS NAVEGADOR ---
+        document.getElementById('init-screen').addEventListener('click', function() {
+            this.style.opacity = '0';
+            setTimeout(() => {
+                this.classList.add('hidden');
+            }, 700);
             
-            cameras.forEach(id => {
-                const canvas = document.getElementById(id);
-                const ctx = canvas.getContext('2d');
-                let offset = 0;
-                
-                // Ajustar tamaño
-                const resize = () => {
-                    canvas.width = canvas.parentElement.clientWidth;
-                    canvas.height = canvas.parentElement.clientHeight;
-                };
-                window.addEventListener('resize', resize);
-                resize();
+            // Iniciar componentes que requieren interacción
+            initAudioSensors();
+            fetchNetworkingData();
+            addLog("Terminal de seguridad local autenticada por usuario.", "info");
+        });
 
-                // Dibujar feed "digital" (ruido muy tenue + línea de escaneo suave)
-                function drawFeed() {
-                    const w = canvas.width;
-                    const h = canvas.height;
-                    
-                    // Fondo oscuro base
-                    ctx.fillStyle = '#0f172a'; // Slate 900
-                    ctx.fillRect(0, 0, w, h);
-
-                    // Ruido digital muy tenue para dar textura de cámara activa en lugar de fondo estático
-                    ctx.fillStyle = 'rgba(255,255,255,0.015)';
-                    for(let i=0; i<100; i++) {
-                        ctx.fillRect(Math.random()*w, Math.random()*h, Math.random()*4+1, Math.random()*4+1);
-                    }
-
-                    // Línea de escaneo vertical suave (simulando procesamiento)
-                    offset += 2;
-                    if (offset > h) offset = -50;
-                    
-                    const grad = ctx.createLinearGradient(0, offset, 0, offset + 50);
-                    grad.addColorStop(0, 'rgba(59, 130, 246, 0)'); // Brand blue
-                    grad.addColorStop(0.5, 'rgba(59, 130, 246, 0.05)');
-                    grad.addColorStop(1, 'rgba(59, 130, 246, 0)');
-                    
-                    ctx.fillStyle = grad;
-                    ctx.fillRect(0, offset, w, 50);
-
-                    // Pequeños indicadores en las esquinas
-                    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    // Esquina inferior derecha
-                    ctx.moveTo(w-20, h-10); ctx.lineTo(w-10, h-10); ctx.lineTo(w-10, h-20);
-                    ctx.stroke();
-
-                    requestAnimationFrame(drawFeed);
-                }
-                drawFeed();
-            });
-        }
-
-        // --- SISTEMA DE LOGS CORPORATIVO ---
+        // --- SISTEMA DE LOGS CORPORATIVO ACTUALIZADO ---
         const systemLogs = document.getElementById('system-logs');
         const standardMessages = [
-            "Servicio de telemetría iniciado correctamente.",
-            "Validando tokens de sesión de usuario: lauty33...",
-            "Autenticación exitosa. Privilegios: Observador.",
-            "Sincronizando flujos de video P2P.",
-            "Cámara 1 (Acceso Principal) - Señal estable.",
-            "Cámara 2 (Perímetro Norte) - Calibrando infrarrojos...",
-            "Cámara 3 (Zona de Carga) - Señal estable.",
-            "Análisis heurístico en segundo plano activado.",
-            "Monitoreo de red: Sin anomalías detectadas."
+            "Servicio de telemetría militar iniciado correctamente.",
+            "Validando tokens de sesión del receptor: MOTO G42 LAUTY...",
+            "Autenticación exitosa. Privilegios: Monitoreo Global.",
+            "Sincronizando flujos de video cifrados P2P.",
+            "Cámara 1 (Acceso Principal) - Señal estable (Latencia 12ms).",
+            "Cámara 2 (Perímetro Norte) - Calibrando infrarrojos y radar...",
+            "Cámara 3 (Zona de Carga) - Filtro de ruido analítico activo.",
+            "Detección acústica multicanal inicializando...",
+            "Red local y externa bajo escrutinio constante. Sin brechas."
         ];
 
         function addLog(msg, type = 'info') {
             const time = new Date().toLocaleTimeString('es-ES', { hour12: false });
             const div = document.createElement('div');
             
-            let icon = '<i class="fas fa-info-circle text-brand-500 mr-2"></i>';
-            let textColor = 'text-slate-600';
+            let icon = '<i class="fas fa-angle-right text-brand-400 mr-2"></i>';
+            let textColor = 'text-slate-300';
             
             if (type === 'warning') {
-                icon = '<i class="fas fa-exclamation-triangle text-amber-500 mr-2"></i>';
-                textColor = 'text-amber-700 font-medium';
+                icon = '<i class="fas fa-exclamation-triangle text-amber-400 mr-2 animate-pulse"></i>';
+                textColor = 'text-amber-400 font-bold';
             } else if (type === 'success') {
-                icon = '<i class="fas fa-check-circle text-green-500 mr-2"></i>';
-                textColor = 'text-green-700 font-medium';
+                icon = '<i class="fas fa-check text-green-400 mr-2"></i>';
+                textColor = 'text-green-400 font-bold';
+            } else if (type === 'error') {
+                icon = '<i class="fas fa-times-circle text-red-500 mr-2"></i>';
+                textColor = 'text-red-400 font-bold';
             }
 
-            div.className = `flex items-start ${textColor} border-l-2 border-transparent hover:border-brand-300 pl-2 py-1 transition-colors`;
+            div.className = `flex items-start ${textColor} border-l-2 border-transparent hover:border-slate-500 pl-2 py-1 transition-colors`;
             div.innerHTML = `
-                <span class="text-slate-400 mr-3 w-16 shrink-0">[${time}]</span>
+                <span class="text-slate-500 mr-3 w-16 shrink-0">[${time}]</span>
                 <span class="shrink-0 mt-0.5">${icon}</span>
                 <span class="leading-tight">${msg}</span>
             `;
@@ -425,53 +487,243 @@
                     i++;
                 } else {
                     clearInterval(initInterval);
-                    // Eventos aleatorios de mantenimiento
                     setInterval(() => {
                         if (Math.random() > 0.6) {
                             const events = [
-                                "Rotación de claves de encriptación completada.",
-                                `Ping del nodo lauty33: ${Math.floor(Math.random()*20 + 15)}ms.`,
-                                "Chequeo de integridad de almacenamiento local: OK.",
-                                "Ajuste de balance de blancos automático (Cam-01)."
+                                "Rotación de matriz AES completada.",
+                                `Ping al celular MOTO G42 LAUTY: ${Math.floor(Math.random()*15 + 8)}ms. (Óptimo)`,
+                                "Chequeo de integridad de DVR remoto: OK.",
+                                "Ajuste de balance térmico automático (Cam-02)."
                             ];
                             addLog(events[Math.floor(Math.random() * events.length)]);
                         }
-                    }, 4000);
+                    }, 5000);
                 }
             }, 800);
         }
 
-        // --- LÓGICA DE SOLICITUD DE ACCESO (A03) ---
+        // --- APIS GRATUITAS (GEOIP & WEATHER) ---
+        function fetchNetworkingData() {
+            fetch('https://get.geojs.io/v1/ip/geo.json')
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('api-ip').textContent = data.ip;
+                    document.getElementById('api-geo').textContent = `${data.city}, ${data.country}`;
+                    addLog(`Rastreo de IP origen establecido: ${data.ip}`, "success");
+                    
+                    // Fetch weather using coordinates from first API
+                    return fetch(`https://api.open-meteo.com/v1/forecast?latitude=${data.latitude}&longitude=${data.longitude}&current_weather=true`);
+                })
+                .then(res => res.json())
+                .then(weather => {
+                    const temp = weather.current_weather.temperature;
+                    document.getElementById('api-weather').innerHTML = `<i class="fas fa-temperature-half text-brand-500"></i> ${temp}°C`;
+                    addLog(`Telemetría climática local sincronizada: ${temp}°C`, "info");
+                })
+                .catch(err => {
+                    document.getElementById('api-ip').textContent = "Protegido por Proxy";
+                    document.getElementById('api-geo').textContent = "Desconocida";
+                    addLog("Interferencia al obtener datos de telemetría de red pública.", "warning");
+                });
+        }
+
+        // --- SISTEMA DE SENSORES ACÚSTICOS Y ALARMA (WEB AUDIO API) ---
+        let audioContext, analyser, microphone, dataArray;
+        let alarmTriggered = false;
+
+        async function initAudioSensors() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                microphone = audioContext.createMediaStreamSource(stream);
+                
+                microphone.connect(analyser);
+                analyser.fftSize = 256;
+                const bufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(bufferLength);
+                
+                addLog("Micrófonos perimetrales 1 y 2 calibrados. Escucha activa iniciada.", "success");
+                renderAudioVisualizer();
+            } catch (err) {
+                addLog("ACCESO DENEGADO a micrófonos físicos de la PC. Revise permisos.", "error");
+            }
+        }
+
+        function renderAudioVisualizer() {
+            requestAnimationFrame(renderAudioVisualizer);
+            analyser.getByteFrequencyData(dataArray);
+            
+            const canvas = document.getElementById('audio-visualizer-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Resize canvas to match display size
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const barWidth = (canvas.width / dataArray.length) * 2.5;
+            let barHeight;
+            let x = 0;
+            let sumVol = 0;
+            
+            for(let i = 0; i < dataArray.length; i++) {
+                barHeight = dataArray[i] / 3;
+                sumVol += dataArray[i];
+                
+                // Color dinámico según intensidad (verde -> amarillo -> rojo)
+                const r = barHeight + 50 * (i/dataArray.length);
+                const g = 200 - barHeight;
+                ctx.fillStyle = `rgb(${r}, ${g}, 100)`;
+                ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                
+                x += barWidth + 1;
+            }
+            
+            // Lógica de detección de anomalía
+            const avgVolume = sumVol / dataArray.length;
+            if (avgVolume > 65 && !alarmTriggered) {
+                activarAlarmaRoja();
+            }
+        }
+
+        function activarAlarmaRoja() {
+            alarmTriggered = true;
+            const alarmOverlay = document.getElementById('red-alarm-overlay');
+            alarmOverlay.classList.remove('hidden');
+            
+            addLog("¡PELIGRO! RUPTURA DE UMBRAL ACÚSTICO DETECTADA.", "error");
+            addLog("Enviando anomalía de manera urgente al celular MOTO G42 LAUTY...", "warning");
+            
+            // Desactiva la alerta después de 10 segundos
+            setTimeout(() => {
+                alarmOverlay.classList.add('hidden');
+                addLog("Alarma silenciada. Protocolo de contingencia enviado a terminal móvil.", "info");
+                // Resetear estado después de enfriamiento
+                setTimeout(() => { alarmTriggered = false; }, 5000);
+            }, 10000);
+        }
+
+        // --- SISTEMA DE BLOQUEO DE CÁMARAS (INTERACTIVO) ---
+        function verificarClaveCamaras() {
+            const btn = document.getElementById('btn-unlock-cameras');
+            const input = document.getElementById('camera-password');
+            const errorMsg = document.getElementById('lock-error-msg');
+            
+            if(!input.value) return;
+
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> VALIDANDO HASH...';
+            btn.classList.add('bg-slate-600');
+            btn.classList.remove('bg-brand-600', 'hover:bg-brand-500');
+            errorMsg.innerHTML = '';
+            
+            // Simular petición a servidor seguro
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fas fa-key mr-2"></i> INICIAR DESCIFRADO';
+                btn.classList.remove('bg-slate-600');
+                btn.classList.add('bg-brand-600', 'hover:bg-brand-500');
+                input.value = '';
+                
+                // Siempre dará error, interactividad sin acceso real
+                errorMsg.innerHTML = '<span class="text-red-400 font-bold"><i class="fas fa-times mr-1"></i> ACCESO DENEGADO. Intento registrado en bitácora.</span>';
+                
+                addLog(`Intento de descifrado fallido de cámaras. Credenciales erróneas.`, "error");
+            }, 1800);
+        }
+
+        // --- RELOJ PARA CÁMARAS ---
+        function updateClocks() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('es-ES', { hour12: false });
+            document.getElementById('time1').textContent = timeString;
+            document.getElementById('time2').textContent = timeString;
+            document.getElementById('time3').textContent = timeString;
+        }
+        setInterval(updateClocks, 1000);
+        updateClocks();
+
+        // --- ANIMACIÓN DE CÁMARAS (Código original + Mejoras de color) ---
+        function initCameras() {
+            const cameras = ['cam1', 'cam2', 'cam3'];
+            
+            cameras.forEach(id => {
+                const canvas = document.getElementById(id);
+                const ctx = canvas.getContext('2d');
+                let offset = 0;
+                
+                const resize = () => {
+                    canvas.width = canvas.parentElement.clientWidth;
+                    canvas.height = canvas.parentElement.clientHeight;
+                };
+                window.addEventListener('resize', resize);
+                resize();
+
+                function drawFeed() {
+                    const w = canvas.width;
+                    const h = canvas.height;
+                    
+                    ctx.fillStyle = '#020617'; // Más oscuro
+                    ctx.fillRect(0, 0, w, h);
+
+                    // Ruido digital mejorado (estilo night-vision sutil)
+                    ctx.fillStyle = 'rgba(100,255,150,0.02)';
+                    for(let i=0; i<150; i++) {
+                        ctx.fillRect(Math.random()*w, Math.random()*h, Math.random()*3+1, Math.random()*3+1);
+                    }
+
+                    // Línea de escaneo
+                    offset += 2.5;
+                    if (offset > h) offset = -50;
+                    
+                    const grad = ctx.createLinearGradient(0, offset, 0, offset + 60);
+                    grad.addColorStop(0, 'rgba(59, 130, 246, 0)');
+                    grad.addColorStop(0.5, 'rgba(59, 130, 246, 0.08)');
+                    grad.addColorStop(1, 'rgba(59, 130, 246, 0)');
+                    
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(0, offset, w, 60);
+
+                    // Crosshairs de esquina
+                    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(w-25, h-15); ctx.lineTo(w-15, h-15); ctx.lineTo(w-15, h-25);
+                    ctx.moveTo(25, 15); ctx.lineTo(15, 15); ctx.lineTo(15, 25);
+                    ctx.stroke();
+
+                    requestAnimationFrame(drawFeed);
+                }
+                drawFeed();
+            });
+        }
+
+        // --- LÓGICA DE SOLICITUD DE ACCESO (A03) ORIGINAL INTACTA ---
         const modal = document.getElementById('auth-modal');
         const modalContent = document.getElementById('auth-modal-content');
-        
         const progContainer = document.getElementById('progress-container');
         const progBar = document.getElementById('progress-bar');
         const progStatus = document.getElementById('progress-status');
         const progPercent = document.getElementById('progress-percentage');
-        
         const auditTrail = document.getElementById('audit-trail');
         const successMessage = document.getElementById('success-message');
         const authHeader = document.getElementById('auth-header');
 
         const requestPhases = [
             { status: "Ubicando dispositivo A03 en red local...", time: 600, log: "> Escaneo de red sub-0... Encontrado: A03_Mobile." },
-            { status: "Verificando firmas digitales...", time: 1800, log: "> Solicitando validación de certificados de seguridad..." },
-            { status: "Negociando permisos de hardware...", time: 3000, log: "> Enviando solicitud de acceso a periférico de video...\n> Esperando respuesta del SO..." },
-            { status: "Autenticando credenciales...", time: 4200, log: "> Validando token de administrador...\n> [OK] Token Aceptado." },
-            { status: "Enrutando señal de video a lauty33...", time: 5000, log: "> Configurando proxy inverso de video.\n> Estableciendo conexión..." }
+            { status: "Verificando firmas de hardware...", time: 1800, log: "> Solicitando validación de certificados militares..." },
+            { status: "Negociando bypass de firewall...", time: 3000, log: "> Enviando solicitud de acceso a periférico de video...\n> Esperando respuesta del SO..." },
+            { status: "Autenticando MOTO G42 LAUTY...", time: 4200, log: "> Validando token de dispositivo maestro...\n> [OK] MOTO G42 LAUTY Autorizado." },
+            { status: "Enrutando señal de video encriptada...", time: 5000, log: "> Configurando proxy inverso AES-256.\n> Conexión establecida." }
         ];
 
         function iniciarSolicitudA03() {
-            // Mostrar modal con animación
             modal.classList.remove('hidden');
-            // Timeout pequeño para que Tailwind aplique la transición
             setTimeout(() => {
                 modal.classList.remove('opacity-0');
                 modalContent.classList.remove('scale-95');
             }, 10);
 
-            // Resetear interfaz del modal
             authHeader.classList.remove('hidden');
             progContainer.classList.remove('hidden');
             auditTrail.classList.remove('hidden');
@@ -479,15 +731,14 @@
             
             progBar.style.width = '0%';
             progPercent.innerText = '0%';
-            auditTrail.innerHTML = '> Iniciando protocolo de solicitud formal...<br>';
+            auditTrail.innerHTML = '> Iniciando protocolo de acceso forzado...<br>';
             
-            addLog("Petición manual para acceso a dispositivo externo [A03] iniciada.", "warning");
+            addLog("Petición manual de bypass de seguridad para terminal [A03] solicitada.", "warning");
 
             let progress = 0;
-            const totalDuration = 6000; // 6 segundos
+            const totalDuration = 6000;
             const intervalTime = 40;
             const steps = totalDuration / intervalTime;
-            
             let currentPhase = 0;
 
             const interval = setInterval(() => {
@@ -513,28 +764,24 @@
         }
 
         function finalizarSolicitud() {
-            // Transición a pantalla de éxito
             authHeader.classList.add('hidden');
             progContainer.classList.add('hidden');
             auditTrail.classList.add('hidden');
-            
             successMessage.classList.remove('hidden');
             
-            addLog("Dispositivo A03 autorizado. Señal de cámaras de pieza redirigida a lauty33 exitosamente.", "success");
+            addLog("Enlace A03 vulnerado de forma segura. Redirigiendo señal 4K hacia MOTO G42 LAUTY exitosamente.", "success");
             
-            // Actualizar visualmente la Cámara 3 para mostrar que ahora es la de la pieza
             const cam3Title = document.querySelector('#cam3').parentElement.previousElementSibling;
             cam3Title.innerHTML = `
                 <div class="flex items-center gap-2">
-                    <i class="fas fa-video text-brand-600"></i>
-                    <span class="font-semibold text-sm text-slate-800">CAM-03 [EXT] | Pieza (A03)</span>
+                    <i class="fas fa-satellite-dish text-brand-600"></i>
+                    <span class="font-bold text-sm text-slate-800">CAM-03 [EXT] | Área A03 (Pieza)</span>
                 </div>
                 <span class="flex items-center text-xs font-bold text-brand-600 tracking-widest bg-brand-100 px-2 py-0.5 rounded-full border border-brand-200">
-                    <span class="w-1.5 h-1.5 rounded-full bg-brand-500 pulse-dot mr-1.5"></span> LIVE
+                    <span class="w-1.5 h-1.5 rounded-full bg-brand-500 pulse-dot mr-1.5"></span> ENCRIPTADO
                 </span>
             `;
-            // Cambiar overlay text
-            document.getElementById('time3').nextSibling.textContent = ' - A03_FEED';
+            document.getElementById('time3').nextSibling.textContent = ' - A03_FEED_BYPASS';
         }
 
         function cerrarModal() {
@@ -542,7 +789,7 @@
             modalContent.classList.add('scale-95');
             setTimeout(() => {
                 modal.classList.add('hidden');
-            }, 300); // Tiempo de la transición
+            }, 300);
         }
 
         // Iniciar
@@ -550,7 +797,8 @@
             initCameras();
             simulateLogs();
         };
-
     </script>
 </body>
 </html>
+
+

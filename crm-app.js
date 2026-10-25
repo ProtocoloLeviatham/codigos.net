@@ -1,8 +1,9 @@
 /**
  * ============================================================================
- * MY CRM STUDIO • SUITE OFICIAL DE GESTIÓN, ANALÍTICA Y MONETIZACIÓN (v11.0)
+ * MY CRM STUDIO • SUITE OFICIAL DE GESTIÓN, ANALÍTICA E INTELIGENCIA (v12.0)
  * Client-Side Application Core Controller (assets/js/crm-app.js)
- * Partners Oficiales: Meta AI • TikTok for Developers • Google Cloud • Gemini • Groq
+ * Partners Oficiales: Meta AI • TikTok for Developers • Google Cloud
+ * Motor Neuronal Propio: NYX Neural Engine (Conectado al Cerebro Edge)
  * Dominios: https://cvstudio33.com.ar & https://protocololeviatham.github.io/codigos.net/
  * ============================================================================
  */
@@ -14,9 +15,10 @@
   // 1. CONSTANTES Y CONFIGURACIÓN GENERAL (100% DATOS OFICIALES OAUTH 2.0)
   // ==========================================================================
   const WORKER_URL = 'https://paneldeestadisticas.lautybg2005.workers.dev';
-  const STORAGE_KEY = 'mycrmstudio_space_v11';
-  const THEME_KEY = 'mycrmstudio_theme_v11';
-  const GUIDE_SEEN_KEY = 'mycrmstudio_guide_seen_v11';
+  const STORAGE_KEY = 'mycrmstudio_space_v12';
+  const LEGACY_STORAGE_KEY = 'mycrmstudio_space_v11';
+  const THEME_KEY = 'mycrmstudio_theme_v12';
+  const GUIDE_SEEN_KEY = 'mycrmstudio_guide_seen_v12';
 
   // ==========================================================================
   // 2. ESTADO GLOBAL REACTIVO DEL CRM
@@ -36,15 +38,18 @@
       chartType: 'area',  // 'area' | 'bar' | 'line'
       range: '15'         // '10' | '15' | 'all'
     },
-    studioConfig: {
-      nicheCpm: 24,       // CPM base en USD según nicho
-      rightsMultiplier: 1 // 1.0 orgánico | 1.35 Spark Ads | 1.65 Exclusividad
+    calendarControls: {
+      filterPlatform: 'all',
+      filterStatus: 'all',
+      monthOffset: 0
     },
     calendarItems: [],
     savedScripts: [],
     utmLinks: [],
     auditChecklist: {},
     chatHistory: [],
+    radarCompetitors: [],
+    activeRadarHandle: null,
     radarLastResult: null
   };
 
@@ -61,7 +66,7 @@
     if (p === 'tiktok') return 'tiktok.png';
     if (p === 'instagram' || p === 'meta') return 'instagram.png';
     if (p === 'youtube' || p === 'google') return 'youtube.png';
-    return 'logo.png';
+    return 'logo3.png';
   }
 
   function getPlatformName(platform) {
@@ -73,14 +78,14 @@
   }
 
   function proxyThumbnailUrl(rawUrl) {
-    if (!rawUrl || rawUrl === 'logo.png' || rawUrl.startsWith('data:')) return 'logo.png';
+    if (!rawUrl || rawUrl === 'logo.png' || rawUrl === 'logo3.png' || rawUrl.startsWith('data:')) return 'logo3.png';
     if (rawUrl.includes('/api/proxy/image')) return rawUrl;
     return rawUrl;
   }
 
   function buildProxiedFallbackUrl(rawUrl) {
-    if (!rawUrl || rawUrl === 'logo.png' || rawUrl.startsWith('data:')) return 'logo.png';
-    if (rawUrl.includes('/api/proxy/image')) return 'logo.png';
+    if (!rawUrl || rawUrl === 'logo.png' || rawUrl === 'logo3.png' || rawUrl.startsWith('data:')) return 'logo3.png';
+    if (rawUrl.includes('/api/proxy/image')) return 'logo3.png';
     return `${crmState.workerUrl}/api/proxy/image?url=${encodeURIComponent(rawUrl)}`;
   }
 
@@ -104,7 +109,7 @@
       pubIso = new Date(Date.now() - idx * 86400000).toISOString();
     }
 
-    const rawThumb = v.thumbnail || v.cover || v.cover_image_url || v.origin_cover || 'logo.png';
+    const rawThumb = v.thumbnail || v.cover || v.cover_image_url || v.origin_cover || 'logo3.png';
     const id = String(v.id || v.video_id || `${platform || 'vid'}_${idx}_${Date.now()}`);
     const title = String(v.title || v.desc || v.video_description || v.caption || `Publicación #${idx + 1}`).trim();
     const url = v.url || v.share_url || v.permalink || (platform === 'youtube' ? `https://www.youtube.com/watch?v=${id}` : '#');
@@ -141,7 +146,7 @@
     const totalViews = Math.max(Number(acc.totalViews || 0), sumVideoViews);
     const mediaCount = Math.max(Number(acc.mediaCount || 0), videos.length);
 
-    let er = Number(acc.engagementRate || 0);
+    let er = Number(acc.engagementRate ?? acc.estimatedEngagement ?? 0);
     if (sumVideoViews > 0 && sumInteractions > 0) {
       er = Number(((sumInteractions / sumVideoViews) * 100).toFixed(2));
     } else if (!er && followers > 0 && videos.length > 0 && sumInteractions > 0) {
@@ -151,7 +156,7 @@
     return {
       id: acc.id || `acc_${platform}_${Date.now()}`,
       platform,
-      name: acc.name || acc.handle || 'Cuenta Oficial',
+      name: acc.name || acc.displayName || acc.handle || 'Cuenta Oficial',
       handle: acc.handle ? (acc.handle.startsWith('@') ? acc.handle : '@' + acc.handle) : '@cuenta',
       avatar: acc.avatar || getPlatformLogo(platform),
       bio: acc.bio || '',
@@ -171,7 +176,7 @@
 
   function loadSpace() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
         const cleanAccounts = (Array.isArray(parsed.accounts) ? parsed.accounts : [])
@@ -189,15 +194,13 @@
         if (Array.isArray(parsed.utmLinks)) crmState.utmLinks = parsed.utmLinks;
         if (parsed.auditChecklist && typeof parsed.auditChecklist === 'object') crmState.auditChecklist = parsed.auditChecklist;
         if (Array.isArray(parsed.chatHistory)) crmState.chatHistory = parsed.chatHistory.slice(-16);
-        if (parsed.studioConfig && typeof parsed.studioConfig === 'object') {
-          crmState.studioConfig = { ...crmState.studioConfig, ...parsed.studioConfig };
-        }
+        if (Array.isArray(parsed.radarCompetitors)) crmState.radarCompetitors = parsed.radarCompetitors.slice(0, 6);
+        if (parsed.activeRadarHandle) crmState.activeRadarHandle = parsed.activeRadarHandle;
       }
     } catch (e) {
       console.warn('[My CRM Studio] Error cargando espacio local:', e);
     }
 
-    // Semilla inicial de Calendario y Guiones solo si están vacíos para mostrar ejemplos reales editables
     if (crmState.calendarItems.length === 0) {
       crmState.calendarItems = [
         {
@@ -205,16 +208,36 @@
           title: 'Caso de Éxito: Estructura de Video de Alta Retención (0-3s Hook)',
           platform: 'tiktok',
           date: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
+          time: '19:30',
+          format: 'Video Vertical (30-45s)',
+          priority: 'high',
           status: 'ready',
-          hook: 'Si tus videos se estancan en 200 vistas, cambia esta estructura en los primeros 3 segundos...'
+          hook: 'Si tus videos se estancan en 200 vistas, cambia esta estructura en los primeros 3 segundos...',
+          cta: 'Comenta la palabra PLANTILLA para enviarte la estructura completa.'
         },
         {
           id: 'cal_init_2',
-          title: 'Demostración Práctica detrás de escena + CTA a Link en Bio',
+          title: 'Demostración Práctica Detrás de Escena + CTA a Link UTM en Bio',
           platform: 'instagram',
           date: new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10),
+          time: '20:00',
+          format: 'Reel Dinámico + 3 Stories',
+          priority: 'medium',
           status: 'scripting',
-          hook: '3 ajustes que aplicamos hoy para duplicar la retención orgánica...'
+          hook: '3 ajustes visuales que aplicamos hoy para duplicar la retención orgánica...',
+          cta: 'Entra al enlace de mi perfil para descargar el checklist.'
+        },
+        {
+          id: 'cal_init_3',
+          title: 'Análisis Comparativo de Resultados Reales Paso a Paso',
+          platform: 'youtube',
+          date: new Date(Date.now() + 4 * 86400000).toISOString().slice(0, 10),
+          time: '18:45',
+          format: 'YouTube Short / Video',
+          priority: 'high',
+          status: 'idea',
+          hook: 'Probamos estos 2 ganchos durante 7 días y este fue el ganador absoluto...',
+          cta: 'Suscríbete y revisa el primer comentario fijado.'
         }
       ];
     }
@@ -244,7 +267,8 @@
         utmLinks: crmState.utmLinks,
         auditChecklist: crmState.auditChecklist,
         chatHistory: crmState.chatHistory.slice(-16),
-        studioConfig: crmState.studioConfig
+        radarCompetitors: (crmState.radarCompetitors || []).slice(0, 6),
+        activeRadarHandle: crmState.activeRadarHandle
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     } catch (e) {
@@ -386,6 +410,8 @@
       renderCrmCalendar();
     } else if (viewName === 'crm-studio') {
       renderCrmStudio();
+    } else if (viewName === 'radar-competencia') {
+      renderRadarView();
     } else if (viewName === 'ai-audit') {
       renderAuditSection();
     }
@@ -395,7 +421,7 @@
   }
 
   // ==========================================================================
-  // 5. SISTEMA DE MODALES Y NOTIFICACIONES PERSONALIZADAS (CON LOGO.PNG)
+  // 5. SISTEMA DE MODALES Y NOTIFICACIONES PERSONALIZADAS (CON LOGO3.PNG)
   // ==========================================================================
   function showConfirmModal({ title, message, confirmText = 'Confirmar', cancelText = 'Cancelar', danger = false, onConfirm }) {
     const modal = document.getElementById('customConfirmModal');
@@ -445,7 +471,7 @@
     confirmModalCallback = null;
   }
 
-  function showToast({ type = 'info', title = '', message = '', duration = 4500, iconImg = 'logo.png' }) {
+  function showToast({ type = 'info', title = '', message = '', duration = 4500, iconImg = 'logo3.png' }) {
     const container = document.getElementById('toastContainer');
     if (!container) return;
 
@@ -462,7 +488,7 @@
 
     toast.innerHTML = `
       <div class="w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 p-1.5 ${colorMap[type] || colorMap.info}">
-        <img src="${escapeHtml(iconImg)}" alt="My CRM Studio" class="w-full h-full object-contain" onerror="this.src='logo.png'" />
+        <img src="${escapeHtml(iconImg)}" alt="My CRM Studio" class="w-full h-full object-contain rounded-lg" onerror="this.src='logo3.png'" />
       </div>
       <div class="flex-1 min-w-0">
         <div class="text-xs font-extrabold text-slate-900 dark:text-slate-100">${escapeHtml(title)}</div>
@@ -497,6 +523,7 @@
     renderCatalogView();
     renderCrmCalendar();
     renderCrmStudio();
+    renderRadarView();
     renderAuditSection();
     renderAiContextInfo();
   }
@@ -513,7 +540,7 @@
     if (countBadge) countBadge.textContent = String(crmState.accounts.length);
 
     if (!current) {
-      if (avatarEl) avatarEl.src = 'logo.png';
+      if (avatarEl) avatarEl.src = 'logo3.png';
       if (nameEl) nameEl.textContent = 'Sin cuenta conectada';
       if (handleEl) handleEl.textContent = 'Conecta vía OAuth 2.0 Oficial';
       if (badgeEl) {
@@ -633,7 +660,9 @@
           </div>
           <div class="flex items-center gap-2 shrink-0">
             <button onclick="syncLiveAccountVideos(false)" class="sync-live-btn flex items-center gap-2 px-4 py-2.5 rounded-2xl border surface-card hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-extrabold transition shadow-2xs" style="border-color: var(--border-subtle);">
-              <img src="logo.png" class="w-4 h-4 object-contain sync-icon" alt="" />
+              <svg class="w-4 h-4 sync-icon text-indigo-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
               <span>Sincronizar API Oficial</span>
             </button>
             <button onclick="openAiDrawer()" class="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold transition shadow-xs">
@@ -652,13 +681,13 @@
   function handleImageFallback(imgEl, rawUrl) {
     if (!imgEl) return;
     const triedProxy = imgEl.getAttribute('data-tried-proxy');
-    if (!triedProxy && rawUrl && rawUrl !== 'logo.png' && !rawUrl.includes('/api/proxy/image')) {
+    if (!triedProxy && rawUrl && rawUrl !== 'logo.png' && rawUrl !== 'logo3.png' && !rawUrl.includes('/api/proxy/image')) {
       imgEl.setAttribute('data-tried-proxy', '1');
       imgEl.src = buildProxiedFallbackUrl(rawUrl);
       return;
     }
     imgEl.onerror = null;
-    imgEl.src = 'logo.png';
+    imgEl.src = 'logo3.png';
   }
 
   function buildVideoGalleryCard(v, platform, avgViews) {
@@ -667,9 +696,9 @@
     const isHighEr = v.er >= 6;
 
     const badgeHtml = isTop
-      ? `<span class="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-emerald-500/90 text-white backdrop-blur-md flex items-center gap-1 shadow-sm"><img src="logo.png" class="w-3 h-3 object-contain" alt="" /> Destacado Viral</span>`
+      ? `<span class="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-emerald-500/90 text-white backdrop-blur-md flex items-center gap-1 shadow-sm"><svg class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg> Destacado Viral</span>`
       : (isHighEr
-          ? `<span class="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-indigo-600/90 text-white backdrop-blur-md flex items-center gap-1 shadow-sm"><img src="logo.png" class="w-3 h-3 object-contain" alt="" /> Alto ER%</span>`
+          ? `<span class="px-2.5 py-1 rounded-xl text-[10px] font-extrabold bg-indigo-600/90 text-white backdrop-blur-md flex items-center gap-1 shadow-sm"><svg class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Alto ER%</span>`
           : `<span class="px-2.5 py-1 rounded-xl text-[10px] font-bold bg-slate-900/75 text-slate-200 backdrop-blur-md">Verificado</span>`);
 
     const erBarWidth = Math.min(100, Math.max(8, Math.round(v.er * 8)));
@@ -940,7 +969,11 @@
     if (!current || !Array.isArray(current.videos) || current.videos.length === 0) {
       chartContainer.innerHTML = `
         <div class="h-72 flex flex-col items-center justify-center text-center p-6 text-slate-400 text-xs">
-          <img src="logo.png" class="w-10 h-10 object-contain mb-3 opacity-60" alt="" />
+          <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-3 text-indigo-500">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+            </svg>
+          </div>
           <p class="font-bold text-slate-600 dark:text-slate-300">Gráfica de Evolución en Espera de Publicaciones</p>
           <p class="mt-1 max-w-md">Conecta tu cuenta oficial o presiona <strong>Sincronizar API Oficial</strong> para trazar la curva cronológica de visualizaciones, likes, comentarios y ER%.</p>
         </div>
@@ -1140,57 +1173,191 @@
   }
 
   // ==========================================================================
-  // 9. CALENDARIO EDITORIAL Y PLANIFICADOR DE PRODUCCIÓN
+  // 9. CALENDARIO EDITORIAL PRO Y PLANIFICADOR MENSUAL INTERACTIVO
   // ==========================================================================
+  function setCalendarFilter(field, value) {
+    if (!crmState.calendarControls) {
+      crmState.calendarControls = { filterPlatform: 'all', filterStatus: 'all', monthOffset: 0 };
+    }
+    crmState.calendarControls[field] = value;
+    renderCrmCalendar();
+  }
+
+  function changeCalendarMonth(delta) {
+    if (!crmState.calendarControls) {
+      crmState.calendarControls = { filterPlatform: 'all', filterStatus: 'all', monthOffset: 0 };
+    }
+    crmState.calendarControls.monthOffset = (crmState.calendarControls.monthOffset || 0) + Number(delta || 0);
+    renderCalendarMonthGrid();
+  }
+
+  function selectCalendarDate(isoDate) {
+    const dateInput = document.getElementById('calDateInput');
+    if (dateInput && isoDate) {
+      dateInput.value = isoDate;
+      showToast({
+        type: 'info',
+        title: 'Fecha Seleccionada',
+        message: `Fecha objetivo fijada en ${isoDate} para tu nueva entrega.`
+      });
+    }
+  }
+
+  function renderCalendarMonthGrid() {
+    const gridEl = document.getElementById('calendarMonthGrid');
+    const titleEl = document.getElementById('calendarMonthLabel');
+    if (!gridEl) return;
+
+    const offset = crmState.calendarControls?.monthOffset || 0;
+    const base = new Date();
+    const viewDate = new Date(base.getFullYear(), base.getMonth() + offset, 1);
+    const year = viewDate.getFullYear();
+    const month = viewDate.getMonth();
+
+    const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    if (titleEl) titleEl.textContent = `${monthNames[month]} ${year}`;
+
+    const firstDayWeek = (new Date(year, month, 1).getDay() + 6) % 7; // Lunes = 0
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const todayIso = new Date().toISOString().slice(0, 10);
+
+    const itemsByDate = {};
+    (crmState.calendarItems || []).forEach(it => {
+      const d = String(it.date || '').slice(0, 10);
+      if (!itemsByDate[d]) itemsByDate[d] = [];
+      itemsByDate[d].push(it);
+    });
+
+    let cellsHtml = '';
+    for (let i = 0; i < firstDayWeek; i++) {
+      cellsHtml += `<div class="h-14 sm:h-16 rounded-xl bg-slate-100/40 dark:bg-slate-900/25 border border-transparent"></div>`;
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const mStr = String(month + 1).padStart(2, '0');
+      const dStr = String(day).padStart(2, '0');
+      const iso = `${year}-${mStr}-${dStr}`;
+      const dayItems = itemsByDate[iso] || [];
+      const isToday = iso === todayIso;
+
+      const dotsHtml = dayItems.slice(0, 3).map(it => {
+        const pLogo = getPlatformLogo(it.platform);
+        return `<img src="${pLogo}" class="w-3.5 h-3.5 rounded-full object-contain bg-white dark:bg-slate-900 p-0.5 shadow-2xs" title="${escapeHtml(it.title)}" alt="" />`;
+      }).join('');
+
+      cellsHtml += `
+        <button type="button" onclick="selectCalendarDate('${iso}')" class="h-14 sm:h-16 p-1.5 rounded-xl border text-left flex flex-col justify-between transition hover:border-indigo-500/60 ${isToday ? 'border-indigo-500 bg-indigo-500/10' : (dayItems.length > 0 ? 'surface-card border-emerald-500/35' : 'surface-card')}" style="${!isToday && !dayItems.length ? 'border-color: var(--border-subtle);' : ''}">
+          <div class="flex items-center justify-between w-full">
+            <span class="text-[10.5px] font-mono font-extrabold ${isToday ? 'text-indigo-500' : 'text-slate-600 dark:text-slate-300'}">${day}</span>
+            ${dayItems.length > 0 ? `<span class="px-1.5 py-0.2 rounded-full text-[9px] font-mono font-extrabold bg-indigo-500/15 text-indigo-500">${dayItems.length}</span>` : ''}
+          </div>
+          <div class="flex items-center gap-1 overflow-hidden">
+            ${dotsHtml}
+          </div>
+        </button>
+      `;
+    }
+
+    gridEl.innerHTML = cellsHtml;
+  }
+
   function renderCrmCalendar() {
+    renderCalendarMonthGrid();
+
+    const items = Array.isArray(crmState.calendarItems) ? crmState.calendarItems : [];
+    const totalEl = document.getElementById('calStatTotal');
+    const scriptingEl = document.getElementById('calStatScripting');
+    const readyEl = document.getElementById('calStatReady');
+    const pubEl = document.getElementById('calStatPublished');
+
+    if (totalEl) totalEl.textContent = String(items.length);
+    if (scriptingEl) scriptingEl.textContent = String(items.filter(i => i.status === 'scripting' || i.status === 'idea').length);
+    if (readyEl) readyEl.textContent = String(items.filter(i => i.status === 'ready').length);
+    if (pubEl) pubEl.textContent = String(items.filter(i => i.status === 'published').length);
+
     const container = document.getElementById('crmCalendarList');
     if (!container) return;
 
+    const { filterPlatform = 'all', filterStatus = 'all' } = crmState.calendarControls || {};
+
+    const filtered = items.filter(it => {
+      if (filterPlatform !== 'all' && it.platform !== filterPlatform) return false;
+      if (filterStatus !== 'all' && it.status !== filterStatus) return false;
+      return true;
+    }).sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
+
     const statusBadge = {
-      idea: { text: 'Idea / Borrador', cls: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30' },
-      scripting: { text: 'En Guion / Grabación', cls: 'bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30' },
-      ready: { text: 'Listo para Publicar', cls: 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30' },
-      published: { text: 'Publicado', cls: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' }
+      idea: { text: '1. Idea / Borrador', cls: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30' },
+      scripting: { text: '2. En Producción', cls: 'bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30' },
+      ready: { text: '3. Listo para Publicar', cls: 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30' },
+      published: { text: '4. Publicado', cls: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' }
     };
 
-    if (!crmState.calendarItems.length) {
+    const priorityBadge = {
+      high: { text: 'Prioridad Alta', cls: 'bg-rose-500/15 text-rose-500' },
+      medium: { text: 'Prioridad Media', cls: 'bg-indigo-500/15 text-indigo-500' },
+      low: { text: 'Estándar', cls: 'bg-slate-500/15 text-slate-400' }
+    };
+
+    if (!filtered.length) {
       container.innerHTML = `
         <div class="p-8 text-center text-xs text-slate-400 rounded-2xl border border-dashed" style="border-color: var(--border-subtle);">
-          No hay entregas agendadas. Programa tu próximo contenido en el formulario lateral.
+          No hay entregas que coincidan con este filtro. Programa tu próximo contenido en el formulario o usa el botón de auto-planificación semanal.
         </div>
       `;
       return;
     }
 
-    container.innerHTML = crmState.calendarItems.map(item => {
+    container.innerHTML = filtered.map(item => {
       const st = statusBadge[item.status] || statusBadge.idea;
+      const pr = priorityBadge[item.priority || 'medium'] || priorityBadge.medium;
       const pLogo = getPlatformLogo(item.platform);
       return `
-        <div class="p-4 rounded-2xl border surface-card flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-indigo-500/40 transition" style="border-color: var(--border-subtle);">
-          <div class="flex items-start gap-3 min-w-0">
-            <div class="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 border flex items-center justify-center p-2 shrink-0" style="border-color: var(--border-subtle);">
-              <img src="${pLogo}" class="w-full h-full object-contain" alt="${escapeHtml(item.platform)}" />
-            </div>
-            <div class="min-w-0">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="font-extrabold text-xs text-slate-900 dark:text-slate-100">${escapeHtml(item.title)}</span>
-                <span class="text-[10px] font-mono text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-lg">${escapeHtml(item.date)}</span>
+        <div class="p-4 rounded-2xl border surface-card flex flex-col gap-3 hover:border-indigo-500/40 transition" style="border-color: var(--border-subtle);">
+          <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+            <div class="flex items-start gap-3 min-w-0">
+              <div class="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 border flex items-center justify-center p-2 shrink-0" style="border-color: var(--border-subtle);">
+                <img src="${pLogo}" class="w-full h-full object-contain" alt="${escapeHtml(item.platform)}" />
               </div>
-              <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                <strong class="text-indigo-500">Gancho 0-3s:</strong> "${escapeHtml(item.hook || 'Sin gancho definido')}"
-              </p>
+              <div class="min-w-0 space-y-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-slate-100">${escapeHtml(item.title)}</span>
+                  <span class="px-2 py-0.5 rounded-md text-[9.5px] font-extrabold ${pr.cls}">${pr.text}</span>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap text-[10.5px] text-slate-400 font-mono">
+                  <span class="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-lg">📅 ${escapeHtml(item.date || 'Sin fecha')}</span>
+                  ${item.time ? `<span class="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-lg">⏰ ${escapeHtml(item.time)} hs</span>` : ''}
+                  ${item.format ? `<span class="bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded-lg font-sans font-bold">${escapeHtml(item.format)}</span>` : ''}
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-1.5 flex-wrap shrink-0">
+              <button onclick="cycleCalendarStatus('${item.id}')" title="Clic para avanzar fase" class="px-3 py-1.5 rounded-xl text-[10.5px] font-extrabold border ${st.cls} cursor-pointer transition">
+                ${st.text} ↻
+              </button>
+              <button onclick="sendQuickPrompt('Desarrolla el guion completo segundo a segundo (Bloque 1 Gancho 0-3s, Bloque 2 Desarrollo 3-35s, Bloque 3 CTA 35-45s) para mi entrega del Calendario Editorial: \"${escapeHtml(item.title)}\" en ${escapeHtml(item.platform)} con el gancho: \"${escapeHtml(item.hook || '')}\"')" class="px-2.5 py-1.5 rounded-xl bg-indigo-500/12 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-600 hover:text-white text-[10.5px] font-extrabold transition flex items-center gap-1">
+                <img src="logonyx.png" class="w-3.5 h-3.5 object-contain" alt="" />
+                <span>Guion IA</span>
+              </button>
+              <button onclick="duplicateCalendarItem('${item.id}')" title="Duplicar entrega" class="p-1.5 rounded-xl border text-slate-400 hover:text-indigo-500 transition text-xs" style="border-color: var(--border-subtle);">
+                ⧉
+              </button>
+              <button onclick="deleteCalendarItem('${item.id}')" title="Eliminar entrega" class="p-1.5 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition text-xs">
+                ✕
+              </button>
             </div>
           </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <button onclick="cycleCalendarStatus('${item.id}')" title="Clic para avanzar estado" class="px-3 py-1.5 rounded-xl text-[10.5px] font-extrabold border ${st.cls} cursor-pointer transition">
-              ${st.text} ↻
-            </button>
-            <button onclick="sendQuickPrompt('Desarrolla el guion completo segundo a segundo para mi entrega agendada: ${escapeHtml(item.title)} con el gancho: ${escapeHtml(item.hook || '')}')" class="px-2.5 py-1.5 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-600 hover:text-white text-[10.5px] font-extrabold transition flex items-center gap-1">
-              <img src="logonyx.png" class="w-3.5 h-3.5 object-contain" alt="" /> Guion
-            </button>
-            <button onclick="deleteCalendarItem('${item.id}')" class="p-1.5 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition text-xs">
-              ✕
-            </button>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t text-[11px]" style="border-color: var(--border-subtle);">
+            <div class="text-slate-500 dark:text-slate-400">
+              <strong class="text-indigo-500">Gancho (0-3s):</strong> "${escapeHtml(item.hook || 'Sin gancho definido')}"
+            </div>
+            ${item.cta ? `
+              <div class="text-slate-500 dark:text-slate-400">
+                <strong class="text-emerald-500">CTA / Conversión:</strong> "${escapeHtml(item.cta)}"
+              </div>
+            ` : ''}
           </div>
         </div>
       `;
@@ -1201,8 +1368,12 @@
     if (event) event.preventDefault();
     const title = (document.getElementById('calTitleInput')?.value || '').trim();
     const hook = (document.getElementById('calHookInput')?.value || '').trim();
+    const cta = (document.getElementById('calCtaInput')?.value || '').trim();
     const platform = document.getElementById('calPlatformInput')?.value || 'tiktok';
     const date = document.getElementById('calDateInput')?.value || new Date().toISOString().slice(0, 10);
+    const time = document.getElementById('calTimeInput')?.value || '19:30';
+    const format = document.getElementById('calFormatInput')?.value || 'Video Vertical (30-45s)';
+    const priority = document.getElementById('calPriorityInput')?.value || 'high';
     const status = document.getElementById('calStatusInput')?.value || 'idea';
 
     if (!title) {
@@ -1214,8 +1385,12 @@
       id: 'cal_' + Date.now(),
       title,
       hook,
+      cta,
       platform,
       date,
+      time,
+      format,
+      priority,
       status
     });
 
@@ -1223,12 +1398,117 @@
     renderCrmCalendar();
     if (document.getElementById('calTitleInput')) document.getElementById('calTitleInput').value = '';
     if (document.getElementById('calHookInput')) document.getElementById('calHookInput').value = '';
+    if (document.getElementById('calCtaInput')) document.getElementById('calCtaInput').value = '';
+
     showToast({
       type: 'success',
-      title: 'Contenido Programado',
-      message: `"${title}" se añadió al Calendario Editorial.`,
+      title: 'Entrega Agendada en Calendario',
+      message: `"${title}" programada para el ${date} a las ${time} hs.`,
       iconImg: getPlatformLogo(platform)
     });
+  }
+
+  function duplicateCalendarItem(itemId) {
+    const orig = crmState.calendarItems.find(i => i.id === itemId);
+    if (!orig) return;
+    const nextDay = new Date(new Date(orig.date || Date.now()).getTime() + 86400000).toISOString().slice(0, 10);
+    crmState.calendarItems.unshift({
+      ...orig,
+      id: 'cal_' + Date.now(),
+      title: `${orig.title} (Variación B)`,
+      date: nextDay,
+      status: 'idea'
+    });
+    saveSpace();
+    renderCrmCalendar();
+    showToast({ type: 'info', title: 'Entrega Duplicada', message: 'Se creó una variación para el día siguiente.' });
+  }
+
+  function autoGenerateWeekCalendar() {
+    const current = getActiveAccount();
+    const plat = current ? current.platform : 'tiktok';
+    const topV = current && Array.isArray(current.videos) && current.videos.length > 0
+      ? [...current.videos].sort((a, b) => b.views - a.views)[0]
+      : null;
+
+    const baseTopic = topV ? topV.title.slice(0, 42) : 'Estrategia de Crecimiento Orgánico';
+    const now = Date.now();
+
+    const batch = [
+      {
+        id: 'cal_auto_' + (now + 1),
+        title: `Parte 2: Claves prácticas sobre "${baseTopic}"`,
+        hook: 'El 90% pasa por alto este detalle en los primeros 3 segundos...',
+        cta: 'Comenta GUÍA para enviarte el paso a paso.',
+        platform: plat,
+        date: new Date(now + 1 * 86400000).toISOString().slice(0, 10),
+        time: '19:30',
+        format: 'Video Vertical (30-45s)',
+        priority: 'high',
+        status: 'ready'
+      },
+      {
+        id: 'cal_auto_' + (now + 2),
+        title: '3 Errores Silenciosos que Frenan tu Retención',
+        hook: 'Si haces esto al empezar tus videos, pierdes la mitad de tu audiencia...',
+        cta: 'Guarda este video para tu próxima grabación.',
+        platform: plat,
+        date: new Date(now + 3 * 86400000).toISOString().slice(0, 10),
+        time: '20:00',
+        format: 'Reel / TikTok Educativo',
+        priority: 'medium',
+        status: 'scripting'
+      },
+      {
+        id: 'cal_auto_' + (now + 3),
+        title: 'Caso de Estudio Real + Demostración en Pantalla',
+        hook: 'Así pasamos de estancamiento a resultados medibles en 7 días...',
+        cta: 'Entra al link UTM de mi perfil para ver la plantilla.',
+        platform: plat,
+        date: new Date(now + 5 * 86400000).toISOString().slice(0, 10),
+        time: '19:00',
+        format: 'Caso de Éxito (45s)',
+        priority: 'high',
+        status: 'idea'
+      }
+    ];
+
+    crmState.calendarItems = [...batch, ...crmState.calendarItems];
+    saveSpace();
+    renderCrmCalendar();
+    showToast({
+      type: 'success',
+      title: 'Semana Editorial Creada',
+      message: 'Se programaron 3 entregas estratégicas basadas en las métricas de tu cuenta.',
+      iconImg: 'logonyx.png'
+    });
+  }
+
+  function exportCalendarCSV() {
+    if (!crmState.calendarItems || !crmState.calendarItems.length) {
+      showToast({ type: 'warning', title: 'Calendario vacío', message: 'Agrega entregas antes de exportar.' });
+      return;
+    }
+    const headers = ['Fecha', 'Hora', 'Plataforma', 'Formato', 'Prioridad', 'Estado', 'Titulo', 'Gancho_0_3s', 'CTA'];
+    const rows = crmState.calendarItems.map(i => [
+      `"${i.date || ''}"`,
+      `"${i.time || '19:30'}"`,
+      `"${i.platform || ''}"`,
+      `"${String(i.format || '').replace(/"/g, '""')}"`,
+      `"${i.priority || 'medium'}"`,
+      `"${i.status || 'idea'}"`,
+      `"${String(i.title || '').replace(/"/g, '""')}"`,
+      `"${String(i.hook || '').replace(/"/g, '""')}"`,
+      `"${String(i.cta || '').replace(/"/g, '""')}"`
+    ]);
+    const csv = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const link = document.createElement('a');
+    link.setAttribute('href', encodeURI(csv));
+    link.setAttribute('download', 'MyCRMStudio_Calendario_Editorial.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast({ type: 'success', title: 'Calendario Exportado (CSV)', message: 'Tu planificación editorial se descargó correctamente.' });
   }
 
   function cycleCalendarStatus(itemId) {
@@ -1248,86 +1528,9 @@
   }
 
   // ==========================================================================
-  // 10. ESTUDIO PRO: TARIFARIO EXPLICADO, LABORATORIO DE GUIONES Y CONSTRUCTOR UTM
+  // 10. ESTUDIO CREATIVO PRO: LABORATORIO DE GUIONES Y CONSTRUCTOR UTM
   // ==========================================================================
-  function updateStudioCalculator(field, val) {
-    const numVal = Number(val);
-    if (field === 'nicheCpm' && numVal > 0) crmState.studioConfig.nicheCpm = numVal;
-    if (field === 'rightsMultiplier' && numVal > 0) crmState.studioConfig.rightsMultiplier = numVal;
-    saveSpace();
-    renderCrmStudio();
-  }
-
-  function calculateDynamicRates() {
-    const current = getActiveAccount();
-    const followers = current ? current.followers : 0;
-    const er = current ? current.engagementRate : 0;
-    const vids = current && Array.isArray(current.videos) ? current.videos : [];
-    const avgViews = vids.length > 0
-      ? Math.round(vids.reduce((s, v) => s + v.views, 0) / vids.length)
-      : Math.round(followers * 0.25);
-
-    const baseCpm = Number(crmState.studioConfig.nicheCpm || 24);
-    const rightsMult = Number(crmState.studioConfig.rightsMultiplier || 1);
-    const erMultiplier = Math.max(1, Math.min(2.6, 1 + (er / 10)));
-
-    // Cálculo transparente basado en estándares reales de agencias de Influencer Marketing
-    const rawSingle = ((Math.max(avgViews, 2000) / 1000) * baseCpm * erMultiplier + (followers * 0.0018)) * rightsMult;
-    const singleVideoRate = Math.max(45, Math.round(rawSingle / 5) * 5);
-    const bundle3Rate = Math.round((singleVideoRate * 3 * 0.85) / 5) * 5;
-    const mentionRate = Math.max(30, Math.round((singleVideoRate * 0.55) / 5) * 5);
-    const storyPackRate = Math.max(25, Math.round((singleVideoRate * 0.40) / 5) * 5);
-
-    return {
-      current,
-      followers,
-      er,
-      avgViews,
-      baseCpm,
-      rightsMult,
-      erMultiplier: Number(erMultiplier.toFixed(2)),
-      singleVideoRate,
-      bundle3Rate,
-      mentionRate,
-      storyPackRate
-    };
-  }
-
   function renderCrmStudio() {
-    const calc = calculateDynamicRates();
-
-    const rateSingleEl = document.getElementById('studioRateSingle');
-    const rateBundleEl = document.getElementById('studioRateBundle');
-    const rateMentionEl = document.getElementById('studioRateMention');
-    const rateStoryEl = document.getElementById('studioRateStory');
-    const rateContextEl = document.getElementById('studioRateAccountContext');
-    const formulaBoxEl = document.getElementById('studioFormulaExplanation');
-
-    if (rateSingleEl) rateSingleEl.textContent = `$${formatNumber(calc.singleVideoRate)} USD`;
-    if (rateBundleEl) rateBundleEl.textContent = `$${formatNumber(calc.bundle3Rate)} USD`;
-    if (rateMentionEl) rateMentionEl.textContent = `$${formatNumber(calc.mentionRate)} USD`;
-    if (rateStoryEl) rateStoryEl.textContent = `$${formatNumber(calc.storyPackRate)} USD`;
-
-    if (rateContextEl) {
-      rateContextEl.textContent = calc.current
-        ? `Cotización calculada en vivo para ${calc.current.handle} (${formatNumber(calc.followers)} seguidores • Promedio ${formatNumber(calc.avgViews)} vistas/video • ER ${calc.er}%)`
-        : 'Simulación base activa — Conecta tu cuenta oficial vía OAuth 2.0 para personalizar las tarifas con tu alcance real.';
-    }
-
-    if (formulaBoxEl) {
-      formulaBoxEl.innerHTML = `
-        <div class="flex flex-wrap items-center justify-between gap-2 text-[11px]">
-          <span class="font-extrabold text-indigo-600 dark:text-indigo-400">Fórmula Aplicada en Vivo:</span>
-          <span class="font-mono bg-slate-900 text-emerald-400 px-2.5 py-1 rounded-xl text-[10.5px]">
-            (${formatNumber(calc.avgViews)} vistas prom. ÷ 1.000) × $${calc.baseCpm} CPM × ${calc.erMultiplier}x Bono ER × ${calc.rightsMult}x Derechos
-          </span>
-        </div>
-        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
-          <strong>¿Por qué cobras este valor?</strong> Las marcas pagan por el <em>alcance garantizado</em> (CPM por cada 1.000 reproducciones reales) multiplicado por la <em>fidelidad de tu comunidad</em> (tu ER% de ${calc.er}% otorga un multiplicador de <strong>${calc.erMultiplier}x</strong>) más el tipo de licencia comercial elegida.
-        </p>
-      `;
-    }
-
     // Renderizar Bóveda de Guiones Estructurados
     const scriptsEl = document.getElementById('savedScriptsContainer');
     if (scriptsEl) {
@@ -1398,30 +1601,6 @@
     }
 
     updateUtmLivePreview();
-  }
-
-  function copyMediaKitQuote() {
-    const calc = calculateDynamicRates();
-    const accName = calc.current ? `${calc.current.name} (${calc.current.handle})` : 'Mi Canal Oficial';
-    const quoteText =
-      `PROPUESTA COMERCIAL & MEDIA KIT • ${accName.toUpperCase()}\n` +
-      `• Comunidad Verificada: ${formatNumber(calc.followers)} seguidores\n` +
-      `• Alcance Promedio por Publicación: ${formatNumber(calc.avgViews)} visualizaciones\n` +
-      `• Tasa de Interacción Oficial (ER%): ${calc.er}%\n\n` +
-      `TARIFARIO DE COLABORACIONES:\n` +
-      `1. Video Dedicado Exclusivo (45-60s): $${formatNumber(calc.singleVideoRate)} USD\n` +
-      `2. Pack Campaña 3 Videos (-15% Bonificado): $${formatNumber(calc.bundle3Rate)} USD\n` +
-      `3. Mención Integrada Orgánica (15-20s): $${formatNumber(calc.mentionRate)} USD\n` +
-      `4. Secuencia de 3 Stories con Link Directo: $${formatNumber(calc.storyPackRate)} USD`;
-
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(quoteText).catch(() => {});
-    }
-    showToast({
-      type: 'success',
-      title: 'Cotización Media Kit Copiada',
-      message: 'El resumen ejecutivo con tus métricas y tarifas está en tu portapapeles listo para enviar a marcas.'
-    });
   }
 
   function applyScriptTemplate(templateKey) {
@@ -1594,8 +1773,42 @@
   }
 
   // ==========================================================================
-  // 11. RADAR DE COMPETENCIA (@) EN TIEMPO REAL (ÚNICO LUGAR DE BÚSQUEDA POR @)
+  // 11. RADAR DE COMPETENCIA (@) MULTI-CUENTA EN TIEMPO REAL
   // ==========================================================================
+  let radarComparisonChartInstance = null;
+
+  function normalizeRadarCompetitor(raw, fallbackPlatform, fallbackHandle) {
+    if (!raw || typeof raw !== 'object') return null;
+    const platform = String(raw.platform || fallbackPlatform || 'tiktok').toLowerCase();
+    const cleanHandle = String(raw.handle || fallbackHandle || 'cuenta').replace(/^@/, '');
+    const videos = (Array.isArray(raw.videos) ? raw.videos : [])
+      .map((v, idx) => normalizeVideo(v, platform, idx))
+      .filter(Boolean);
+
+    const followers = Number(raw.followers || 0);
+    const totalViews = Number(raw.totalViews || videos.reduce((s, v) => s + v.views, 0) || 0);
+    const avgViews = Number(raw.avgViewsPerPost || (videos.length > 0 ? Math.round(videos.reduce((s, v) => s + v.views, 0) / videos.length) : 0));
+    const er = Number(raw.engagementRate ?? raw.estimatedEngagement ?? (videos.length > 0 ? Number((videos.reduce((s, v) => s + v.er, 0) / videos.length).toFixed(2)) : 4.2));
+
+    return {
+      key: `${platform}:@${cleanHandle.toLowerCase()}`,
+      platform,
+      handle: `@${cleanHandle}`,
+      displayName: raw.displayName || raw.name || `@${cleanHandle}`,
+      avatar: raw.avatar || getPlatformLogo(platform),
+      bio: raw.bio || `Perfil público monitoreado en ${platform.toUpperCase()}.`,
+      followers,
+      following: Number(raw.following || 0),
+      totalLikes: Number(raw.totalLikes || 0),
+      totalViews,
+      mediaCount: Number(raw.mediaCount || videos.length || 0),
+      engagementRate: Number(er.toFixed(2)),
+      avgViewsPerPost: avgViews,
+      videos,
+      inspectedAt: raw.inspectedAt || new Date().toISOString()
+    };
+  }
+
   async function searchCompetitor() {
     const input = document.getElementById('radarSearchInput');
     const platformSel = document.getElementById('radarPlatformSelect');
@@ -1605,7 +1818,7 @@
       showToast({
         type: 'warning',
         title: 'Ingresa un @usuario a investigar',
-        message: 'Escribe el handle público del competidor o referente (ej: @usuario) para escanearlo en el Radar.'
+        message: 'Escribe el handle público del competidor o referente (ej: @usuario) para sumarlo al Radar Comparativo.'
       });
       return;
     }
@@ -1617,126 +1830,401 @@
     if (resultContainer) {
       resultContainer.innerHTML = `
         <div class="p-10 rounded-3xl border surface-card flex flex-col items-center justify-center text-center space-y-3" style="border-color: var(--border-subtle);">
-          <img src="${pLogo}" class="w-11 h-11 object-contain animate-bounce" alt="" />
+          <div class="relative">
+            <img src="${pLogo}" class="w-12 h-12 object-contain animate-bounce" alt="" />
+            <span class="w-3 h-3 rounded-full bg-indigo-500 animate-ping absolute -top-1 -right-1"></span>
+          </div>
           <div class="text-sm font-extrabold">Escaneando perfil público @${escapeHtml(handle)} en ${platform.toUpperCase()}...</div>
-          <p class="text-xs text-slate-400 max-w-md">Extrayendo audiencia, visualizaciones, ER% y galería de publicaciones para compararlos con tu cuenta oficial.</p>
+          <p class="text-xs text-slate-400 max-w-md">Extrayendo audiencia, visualizaciones, ER% y galería de publicaciones reales para compararlos con tu cuenta y tus demás competidores en seguimiento.</p>
         </div>
       `;
     }
 
     try {
-      const res = await fetch(`${crmState.workerUrl}/api/radar/inspect?platform=${encodeURIComponent(platform)}&handle=${encodeURIComponent(handle)}`);
-      const data = await res.json();
+      let rawComp = null;
 
-      if (!res.ok || !data || !data.ok || !data.profile) {
-        throw new Error(data?.error || 'No se pudo obtener información pública de ese perfil.');
+      // Intento 1: Endpoint GET /api/radar/inspect (lee tanto data.competitor como data.profile o data.account)
+      try {
+        const res = await fetch(`${crmState.workerUrl}/api/radar/inspect?platform=${encodeURIComponent(platform)}&handle=${encodeURIComponent(handle)}`);
+        const data = await res.json();
+        if (res.ok && data && data.ok) {
+          rawComp = data.competitor || data.profile || data.account || null;
+        }
+      } catch (e1) {
+        console.warn('Intento 1 radar inspect:', e1);
       }
 
-      const comp = data.profile;
-      comp.videos = (Array.isArray(comp.videos) ? comp.videos : []).map((v, i) => normalizeVideo(v, platform, i)).filter(Boolean);
+      // Intento 2: Respaldo POST /api/connect/public en el Worker si no devolvió objeto
+      if (!rawComp) {
+        const resFallback = await fetch(`${crmState.workerUrl}/api/connect/public`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ platform, handle })
+        });
+        const dataFallback = await resFallback.json();
+        if (resFallback.ok && dataFallback && dataFallback.ok) {
+          rawComp = dataFallback.account || dataFallback.profile || dataFallback.competitor || null;
+        } else if (dataFallback && dataFallback.error) {
+          throw new Error(dataFallback.error);
+        }
+      }
+
+      const comp = normalizeRadarCompetitor(rawComp, platform, handle);
+      if (!comp) {
+        throw new Error('No se pudo extraer información pública de ese perfil. Verifica que el @usuario exista y sea público.');
+      }
+
       crmState.radarLastResult = comp;
+      if (!Array.isArray(crmState.radarCompetitors)) crmState.radarCompetitors = [];
 
-      const myAcc = getActiveAccount();
-      const myFollowers = myAcc ? myAcc.followers : 0;
-      const myEr = myAcc ? myAcc.engagementRate : 0;
-      const myAvgViews = myAcc && myAcc.videos?.length
-        ? Math.round(myAcc.videos.reduce((s, v) => s + v.views, 0) / myAcc.videos.length)
-        : 0;
-      const compAvgViews = comp.avgViewsPerPost || (comp.videos.length ? Math.round(comp.videos.reduce((s, v) => s + v.views, 0) / comp.videos.length) : 0);
-
-      if (resultContainer) {
-        resultContainer.innerHTML = `
-          <div class="space-y-6">
-            <!-- Cabecera del Competidor Escaneado -->
-            <div class="p-6 rounded-3xl border surface-card flex flex-col md:flex-row md:items-center justify-between gap-4" style="border-color: var(--border-subtle);">
-              <div class="flex items-center gap-4">
-                <div class="relative shrink-0">
-                  <img src="${escapeHtml(comp.avatar || pLogo)}" referrerpolicy="no-referrer" onerror="this.src='${pLogo}'" class="w-16 h-16 rounded-2xl object-cover border-2 border-indigo-500/30 shadow-md" />
-                  <img src="${pLogo}" class="w-5 h-5 rounded-full bg-white dark:bg-slate-900 p-0.5 absolute -bottom-1 -right-1 shadow" alt="" />
-                </div>
-                <div>
-                  <div class="flex items-center gap-2">
-                    <h3 class="text-lg font-extrabold">${escapeHtml(comp.displayName || comp.handle)}</h3>
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-indigo-500/15 text-indigo-500">${escapeHtml(comp.platform)}</span>
-                  </div>
-                  <p class="text-xs text-slate-400">${escapeHtml(comp.handle)} ${comp.bio ? '• ' + escapeHtml(comp.bio) : ''}</p>
-                </div>
-              </div>
-              <button onclick="sendQuickPrompt('Compara mi cuenta activa con el competidor ${escapeHtml(comp.handle)} (${formatNumber(comp.followers)} seguidores, ER ${comp.engagementRate}%, promedio ${formatNumber(compAvgViews)} vistas/post) y dime 3 acciones tácticas para superarlo.')" class="px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold transition shadow-xs shrink-0 flex items-center gap-2">
-                <img src="logonyx.png" class="w-4 h-4 object-contain" alt="" />
-                <span>Generar Estrategia Anti-Competencia con NYX</span>
-              </button>
-            </div>
-
-            <!-- Comparativa Head-to-Head -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div class="p-5 rounded-3xl border surface-card space-y-2" style="border-color: var(--border-subtle);">
-                <div class="text-[11px] font-bold text-slate-400 uppercase">Comunidad (Seguidores)</div>
-                <div class="flex items-baseline justify-between">
-                  <div>
-                    <div class="text-[10px] text-slate-400">Competidor (${escapeHtml(comp.handle)})</div>
-                    <div class="text-xl font-extrabold font-mono text-indigo-500">${formatNumber(comp.followers)}</div>
-                  </div>
-                  <div class="text-right">
-                    <div class="text-[10px] text-slate-400">Tu Cuenta (${myAcc ? escapeHtml(myAcc.handle) : 'Sin conectar'})</div>
-                    <div class="text-lg font-bold font-mono text-slate-600 dark:text-slate-300">${formatNumber(myFollowers)}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="p-5 rounded-3xl border surface-card space-y-2" style="border-color: var(--border-subtle);">
-                <div class="text-[11px] font-bold text-slate-400 uppercase">Tasa de Interacción (ER%)</div>
-                <div class="flex items-baseline justify-between">
-                  <div>
-                    <div class="text-[10px] text-slate-400">Competidor</div>
-                    <div class="text-xl font-extrabold font-mono text-emerald-500">${comp.engagementRate}%</div>
-                  </div>
-                  <div class="text-right">
-                    <div class="text-[10px] text-slate-400">Tu Cuenta</div>
-                    <div class="text-lg font-bold font-mono text-slate-600 dark:text-slate-300">${myEr}%</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="p-5 rounded-3xl border surface-card space-y-2" style="border-color: var(--border-subtle);">
-                <div class="text-[11px] font-bold text-slate-400 uppercase">Promedio Vistas / Video</div>
-                <div class="flex items-baseline justify-between">
-                  <div>
-                    <div class="text-[10px] text-slate-400">Competidor</div>
-                    <div class="text-xl font-extrabold font-mono text-sky-500">${formatNumber(compAvgViews)}</div>
-                  </div>
-                  <div class="text-right">
-                    <div class="text-[10px] text-slate-400">Tu Cuenta</div>
-                    <div class="text-lg font-bold font-mono text-slate-600 dark:text-slate-300">${formatNumber(myAvgViews)}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Galería de Publicaciones Extraídas del Competidor -->
-            <div class="p-5 sm:p-6 rounded-3xl border surface-card space-y-4" style="border-color: var(--border-subtle);">
-              <h4 class="font-extrabold text-sm">Galería de Publicaciones Detectadas de ${escapeHtml(comp.handle)} (${comp.videos.length})</h4>
-              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                ${comp.videos.slice(0, 6).map(v => buildVideoGalleryCard(v, comp.platform, compAvgViews)).join('')}
-              </div>
-            </div>
-          </div>
-        `;
+      const existingIdx = crmState.radarCompetitors.findIndex(c => c.key === comp.key);
+      if (existingIdx >= 0) {
+        crmState.radarCompetitors[existingIdx] = comp;
+      } else {
+        crmState.radarCompetitors.unshift(comp);
+        if (crmState.radarCompetitors.length > 6) {
+          crmState.radarCompetitors = crmState.radarCompetitors.slice(0, 6);
+        }
       }
+      crmState.activeRadarHandle = comp.key;
+      input.value = '';
+      saveSpace();
+      renderRadarView();
+
+      showToast({
+        type: 'success',
+        title: `${comp.handle} añadido al Radar`,
+        message: `${formatNumber(comp.followers)} seguidores • ER ${comp.engagementRate}% • ${comp.videos.length} publicaciones listas para comparar.`,
+        iconImg: pLogo
+      });
     } catch (err) {
-      if (resultContainer) {
+      if (crmState.radarCompetitors && crmState.radarCompetitors.length > 0) {
+        renderRadarView();
+      } else if (resultContainer) {
         resultContainer.innerHTML = `
           <div class="p-8 rounded-3xl border border-red-500/30 bg-red-500/5 text-center space-y-2">
-            <div class="text-sm font-extrabold text-red-500">No se pudo completar la inspección</div>
+            <div class="text-sm font-extrabold text-red-500">No se pudo completar la inspección de @${escapeHtml(handle)}</div>
             <p class="text-xs text-slate-400">${escapeHtml(err.message || 'Verifica el nombre de usuario e intenta nuevamente.')}</p>
           </div>
         `;
       }
+      showToast({
+        type: 'error',
+        title: 'Error al inspeccionar perfil',
+        message: err.message || 'Verifica que el @usuario sea válido.'
+      });
     }
   }
 
+  function selectRadarCompetitor(key) {
+    crmState.activeRadarHandle = key;
+    const found = (crmState.radarCompetitors || []).find(c => c.key === key);
+    if (found) crmState.radarLastResult = found;
+    saveSpace();
+    renderRadarView();
+  }
+
+  function removeRadarCompetitor(key) {
+    if (!Array.isArray(crmState.radarCompetitors)) return;
+    crmState.radarCompetitors = crmState.radarCompetitors.filter(c => c.key !== key);
+    if (crmState.activeRadarHandle === key) {
+      crmState.activeRadarHandle = crmState.radarCompetitors[0]?.key || null;
+      crmState.radarLastResult = crmState.radarCompetitors[0] || null;
+    }
+    saveSpace();
+    renderRadarView();
+  }
+
+  function clearRadarCompetitors() {
+    crmState.radarCompetitors = [];
+    crmState.activeRadarHandle = null;
+    crmState.radarLastResult = null;
+    saveSpace();
+    renderRadarView();
+    showToast({
+      type: 'info',
+      title: 'Radar reiniciado',
+      message: 'Se limpiaron los perfiles en seguimiento.'
+    });
+  }
+
+  function renderRadarView() {
+    const resultContainer = document.getElementById('radarResultContainer');
+    if (!resultContainer) return;
+
+    const list = Array.isArray(crmState.radarCompetitors) ? crmState.radarCompetitors : [];
+    if (list.length === 0) {
+      resultContainer.innerHTML = `
+        <div class="p-10 rounded-3xl border surface-card text-center space-y-3" style="border-color: var(--border-subtle);">
+          <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto text-indigo-500">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="m21 21-4.3-4.3"/></svg>
+          </div>
+          <div class="text-sm font-extrabold">Aún no hay competidores en la mesa comparativa</div>
+          <p class="text-xs text-slate-400 max-w-lg mx-auto">Busca uno o hasta 6 perfiles públicos (ej: <strong>@tiktok</strong>, <strong>@charlidamelio</strong>, <strong>@khaby.lame</strong> o referentes de tu nicho) para comparar seguidores, ER%, promedio de vistas y sus videos más virales lado a lado con tu cuenta oficial.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const activeComp = list.find(c => c.key === crmState.activeRadarHandle) || list[0];
+    crmState.activeRadarHandle = activeComp.key;
+    crmState.radarLastResult = activeComp;
+
+    const myAcc = getActiveAccount();
+    const myFollowers = myAcc ? Number(myAcc.followers || 0) : 0;
+    const myEr = myAcc ? Number(myAcc.engagementRate || 0) : 0;
+    const myAvgViews = myAcc && myAcc.videos?.length
+      ? Math.round(myAcc.videos.reduce((s, v) => s + v.views, 0) / myAcc.videos.length)
+      : 0;
+
+    const pLogo = getPlatformLogo(activeComp.platform);
+    const compAvgViews = activeComp.avgViewsPerPost || (activeComp.videos.length ? Math.round(activeComp.videos.reduce((s, v) => s + v.views, 0) / activeComp.videos.length) : 0);
+
+    const competitorsSummaryForPrompt = list.map(c => `${c.handle} (${c.platform}: ${formatNumber(c.followers)} seg, ER ${c.engagementRate}%, ${formatNumber(c.avgViewsPerPost || 0)} vistas/post)`).join('; ');
+
+    resultContainer.innerHTML = `
+      <div class="space-y-6">
+        <!-- Barra de Cuentas Monitoreadas en el Radar (Multi-Cuenta) -->
+        <div class="p-4 sm:p-5 rounded-3xl border surface-card space-y-3" style="border-color: var(--border-subtle);">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
+              <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400">Perfiles en Comparación Activa (${list.length}/6)</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="sendQuickPrompt('Realiza un benchmarking táctico entre mi cuenta activa y estos competidores del Radar: ${escapeHtml(competitorsSummaryForPrompt)}. Dime quién domina en retención, qué formatos les funcionan mejor y 3 guiones concretos para superarlos esta semana.')" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-extrabold transition flex items-center gap-1.5 shadow-xs">
+                <img src="logonyx.png" class="w-3.5 h-3.5 object-contain" alt="" />
+                <span>Comparar Todos con NYX IA</span>
+              </button>
+              <button onclick="clearRadarCompetitors()" class="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 text-[11px] font-bold text-slate-500 hover:text-red-500 transition">
+                Limpiar Radar
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            ${list.map(c => {
+              const isSel = c.key === activeComp.key;
+              const cLogo = getPlatformLogo(c.platform);
+              return `
+                <div onclick="selectRadarCompetitor('${escapeHtml(c.key)}')" class="p-3.5 rounded-2xl border transition cursor-pointer flex items-center justify-between gap-3 ${isSel ? 'border-indigo-500 bg-indigo-500/10 shadow-xs' : 'border-slate-200/70 dark:border-slate-800 hover:border-indigo-500/40'}">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <div class="relative shrink-0">
+                      <img src="${escapeHtml(c.avatar || cLogo)}" referrerpolicy="no-referrer" onerror="this.src='${cLogo}'" class="w-11 h-11 rounded-xl object-cover border border-slate-300 dark:border-slate-700" alt="" />
+                      <img src="${cLogo}" class="w-4 h-4 rounded-full bg-white dark:bg-slate-900 p-0.5 absolute -bottom-1 -right-1 shadow" alt="" />
+                    </div>
+                    <div class="min-w-0">
+                      <div class="text-xs font-extrabold truncate">${escapeHtml(c.displayName || c.handle)}</div>
+                      <div class="text-[11px] text-slate-400 truncate">${escapeHtml(c.handle)}</div>
+                      <div class="flex items-center gap-2 mt-1 text-[10px] font-mono font-bold">
+                        <span class="text-indigo-500">${formatNumber(c.followers)} seg</span>
+                        <span>•</span>
+                        <span class="text-emerald-500">ER ${c.engagementRate}%</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button onclick="event.stopPropagation(); removeRadarCompetitor('${escapeHtml(c.key)}')" class="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition shrink-0" title="Quitar del radar">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- Tabla + Gráfica Multi-Cuenta (Tu Cuenta vs Competidores) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div class="lg:col-span-7 p-5 sm:p-6 rounded-3xl border surface-card space-y-4 overflow-x-auto" style="border-color: var(--border-subtle);">
+            <div class="flex items-center justify-between">
+              <h4 class="text-sm font-extrabold">Matriz Comparativa Multi-Cuenta</h4>
+              <span class="text-[11px] font-bold text-indigo-500">Datos Públicos Verificados</span>
+            </div>
+            <table class="w-full text-left border-collapse min-w-[460px]">
+              <thead>
+                <tr class="border-b border-slate-200/70 dark:border-slate-800 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                  <th class="py-2.5 pr-3">Cuenta</th>
+                  <th class="py-2.5 px-2">Seguidores</th>
+                  <th class="py-2.5 px-2">ER%</th>
+                  <th class="py-2.5 px-2">Prom. Vistas</th>
+                  <th class="py-2.5 pl-2 text-right">Diferencial vs Ti</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200/50 dark:divide-slate-800/60 text-xs">
+                ${myAcc ? `
+                  <tr class="bg-indigo-500/5 font-bold">
+                    <td class="py-3 pr-3 flex items-center gap-2">
+                      <img src="${getPlatformLogo(myAcc.platform)}" class="w-4 h-4 object-contain" alt="" />
+                      <span class="truncate max-w-[130px]">${escapeHtml(myAcc.handle)} (Tú)</span>
+                    </td>
+                    <td class="py-3 px-2 font-mono">${formatNumber(myFollowers)}</td>
+                    <td class="py-3 px-2 font-mono text-emerald-500">${myEr}%</td>
+                    <td class="py-3 px-2 font-mono text-sky-500">${formatNumber(myAvgViews)}</td>
+                    <td class="py-3 pl-2 text-right"><span class="px-2 py-0.5 rounded-full text-[10px] bg-indigo-500/20 text-indigo-500">Tu Base</span></td>
+                  </tr>
+                ` : ''}
+                ${list.map(c => {
+                  const cAvg = c.avgViewsPerPost || 0;
+                  const erDiff = (c.engagementRate - myEr).toFixed(1);
+                  const isHigherEr = Number(erDiff) > 0;
+                  return `
+                    <tr onclick="selectRadarCompetitor('${escapeHtml(c.key)}')" class="cursor-pointer hover:bg-slate-500/5 transition ${c.key === activeComp.key ? 'bg-indigo-500/10' : ''}">
+                      <td class="py-3 pr-3 flex items-center gap-2 font-bold">
+                        <img src="${getPlatformLogo(c.platform)}" class="w-4 h-4 object-contain" alt="" />
+                        <span class="truncate max-w-[130px]">${escapeHtml(c.handle)}</span>
+                      </td>
+                      <td class="py-3 px-2 font-mono font-bold">${formatNumber(c.followers)}</td>
+                      <td class="py-3 px-2 font-mono font-bold text-emerald-500">${c.engagementRate}%</td>
+                      <td class="py-3 px-2 font-mono font-bold text-sky-500">${formatNumber(cAvg)}</td>
+                      <td class="py-3 pl-2 text-right font-mono text-[11px] ${isHigherEr ? 'text-amber-500' : 'text-emerald-500'}">
+                        ${isHigherEr ? `+${erDiff}% ER arriba` : `${erDiff}% ER abajo`}
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="lg:col-span-5 p-5 sm:p-6 rounded-3xl border surface-card flex flex-col justify-between" style="border-color: var(--border-subtle);">
+            <div>
+              <h4 class="text-sm font-extrabold">Gráfica Comparativa de Rendimiento</h4>
+              <p class="text-[11px] text-slate-400">Promedio de vistas por post y tasa de interacción (ER%)</p>
+            </div>
+            <div id="radarMultiComparisonChart" class="w-full min-h-[230px] mt-2"></div>
+          </div>
+        </div>
+
+        <!-- Foco Detallado del Competidor Seleccionado -->
+        <div class="p-6 rounded-3xl border surface-card flex flex-col md:flex-row md:items-center justify-between gap-4" style="border-color: var(--border-subtle);">
+          <div class="flex items-center gap-4">
+            <div class="relative shrink-0">
+              <img src="${escapeHtml(activeComp.avatar || pLogo)}" referrerpolicy="no-referrer" onerror="this.src='${pLogo}'" class="w-16 h-16 rounded-2xl object-cover border-2 border-indigo-500/30 shadow-md" />
+              <img src="${pLogo}" class="w-5 h-5 rounded-full bg-white dark:bg-slate-900 p-0.5 absolute -bottom-1 -right-1 shadow" alt="" />
+            </div>
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <h3 class="text-lg font-extrabold">${escapeHtml(activeComp.displayName || activeComp.handle)}</h3>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-indigo-500/15 text-indigo-500">${escapeHtml(activeComp.platform)}</span>
+                <span class="text-[11px] font-mono font-bold text-emerald-500">${formatNumber(activeComp.followers)} seguidores • ER ${activeComp.engagementRate}%</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-0.5">${escapeHtml(activeComp.handle)} ${activeComp.bio ? '• ' + escapeHtml(activeComp.bio) : ''}</p>
+            </div>
+          </div>
+          <button onclick="sendQuickPrompt('Compara mi cuenta activa con el competidor ${escapeHtml(activeComp.handle)} (${formatNumber(activeComp.followers)} seguidores, ER ${activeComp.engagementRate}%, promedio ${formatNumber(compAvgViews)} vistas/post) y dime 3 acciones tácticas y ganchos para superarlo.')" class="px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold transition shadow-xs shrink-0 flex items-center gap-2">
+            <img src="logonyx.png" class="w-4 h-4 object-contain" alt="" />
+            <span>Desglosar a ${escapeHtml(activeComp.handle)} con NYX</span>
+          </button>
+        </div>
+
+        <!-- Galería de Publicaciones Extraídas del Competidor Activo -->
+        <div class="p-5 sm:p-6 rounded-3xl border surface-card space-y-4" style="border-color: var(--border-subtle);">
+          <div class="flex items-center justify-between">
+            <h4 class="font-extrabold text-sm">Galería de Publicaciones Detectadas de ${escapeHtml(activeComp.handle)} (${activeComp.videos.length})</h4>
+            <span class="text-[11px] text-slate-400">Promedio del perfil: <strong class="font-mono text-sky-500">${formatNumber(compAvgViews)}</strong> vistas</span>
+          </div>
+          ${activeComp.videos.length > 0 ? `
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              ${activeComp.videos.slice(0, 6).map(v => buildVideoGalleryCard(v, activeComp.platform, compAvgViews)).join('')}
+            </div>
+          ` : `
+            <div class="p-6 rounded-2xl border border-dashed text-center text-xs text-slate-400" style="border-color: var(--border-subtle);">
+              Este perfil tiene métricas globales públicas (${formatNumber(activeComp.followers)} seguidores), pero restringe la lista detallada de posts recientes sin sesión.
+            </div>
+          `}
+        </div>
+      </div>
+    `;
+
+    renderRadarComparisonChart(list, myAcc);
+  }
+
+  function renderRadarComparisonChart(list, myAcc) {
+    const chartEl = document.getElementById('radarMultiComparisonChart');
+    if (!chartEl || typeof window.ApexCharts === 'undefined') return;
+
+    if (radarComparisonChartInstance) {
+      try { radarComparisonChartInstance.destroy(); } catch (e) {}
+      radarComparisonChartInstance = null;
+    }
+
+    const categories = [];
+    const avgViewsData = [];
+    const erData = [];
+
+    if (myAcc) {
+      const myAvg = myAcc.videos?.length
+        ? Math.round(myAcc.videos.reduce((s, v) => s + v.views, 0) / myAcc.videos.length)
+        : 0;
+      categories.push(`${myAcc.handle} (Tú)`);
+      avgViewsData.push(myAvg);
+      erData.push(Number(myAcc.engagementRate || 0));
+    }
+
+    list.forEach(c => {
+      categories.push(c.handle);
+      avgViewsData.push(Number(c.avgViewsPerPost || 0));
+      erData.push(Number(c.engagementRate || 0));
+    });
+
+    const isDark = crmState.theme === 'dark';
+    const options = {
+      chart: {
+        type: 'bar',
+        height: 235,
+        toolbar: { show: false },
+        fontFamily: 'Plus Jakarta Sans, sans-serif',
+        background: 'transparent'
+      },
+      series: [
+        { name: 'Prom. Vistas / Post', type: 'column', data: avgViewsData },
+        { name: 'Interacción (ER%)', type: 'line', data: erData }
+      ],
+      colors: ['#6366f1', '#10b981'],
+      stroke: { width: [0, 3], curve: 'smooth' },
+      plotOptions: {
+        bar: { borderRadius: 6, columnWidth: '48%' }
+      },
+      dataLabels: { enabled: false },
+      xaxis: {
+        categories,
+        labels: {
+          style: { colors: isDark ? '#94a3b8' : '#64748b', fontSize: '10px', fontWeight: 700 }
+        }
+      },
+      yaxis: [
+        {
+          labels: {
+            style: { colors: isDark ? '#94a3b8' : '#64748b', fontSize: '10px' },
+            formatter: val => formatNumber(Math.round(val))
+          }
+        },
+        {
+          opposite: true,
+          labels: {
+            style: { colors: '#10b981', fontSize: '10px' },
+            formatter: val => `${Number(val).toFixed(1)}%`
+          }
+        }
+      ],
+      grid: {
+        borderColor: isDark ? 'rgba(148,163,184,0.1)' : 'rgba(15,23,42,0.06)',
+        strokeDashArray: 4
+      },
+      legend: {
+        position: 'top',
+        labels: { colors: isDark ? '#cbd5e1' : '#334155' }
+      },
+      tooltip: {
+        theme: isDark ? 'dark' : 'light'
+      }
+    };
+
+    radarComparisonChartInstance = new window.ApexCharts(chartEl, options);
+    radarComparisonChartInstance.render();
+  }
+
   // ==========================================================================
-  // 12. AUDITORÍA EJECUTIVA DE CRECIMIENTO (6 DIMENSIONES + IA PRO)
+  // 12. AUDITORÍA EJECUTIVA DE CRECIMIENTO (6 DIMENSIONES + CEREBRO IA NYX)
   // ==========================================================================
   function renderAuditSection() {
     const current = getActiveAccount();
@@ -1782,7 +2270,7 @@
     }
 
     if (summaryEl) {
-      summaryEl.textContent = `Diagnóstico calculado sobre ${vids.length} publicaciones verificadas de ${current.name} (${current.handle}), ${formatNumber(followers)} seguidores y un ER real de ${er}%.`;
+      summaryEl.textContent = `Diagnóstico calculado sobre ${vids.length} publicaciones verificadas de ${current.name} (${current.handle}), ${formatNumber(followers)} seguidores y un ER real de ${er}%. Pulsa "Ejecutar Diagnóstico Profundo NYX" para que el motor neuronal evalúe tus títulos y retención en tiempo real.`;
     }
 
     if (dimensionsEl) {
@@ -1792,7 +2280,7 @@
         { label: 'Cadencia & Consistencia', val: cadenceScore, color: 'bg-sky-500' },
         { label: 'Debate en Comentarios', val: communityScore, color: 'bg-purple-500' },
         { label: 'Indexación SEO & Copy', val: seoScore, color: 'bg-amber-500' },
-        { label: 'Trazabilidad UTM & Monetización', val: conversionScore, color: 'bg-pink-500' }
+        { label: 'Trazabilidad UTM & Conversión', val: conversionScore, color: 'bg-pink-500' }
       ];
 
       dimensionsEl.innerHTML = dims.map(d => `
@@ -1818,7 +2306,8 @@
           <div class="p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 space-y-2">
             <div class="flex items-center justify-between">
               <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center gap-1">
-                <img src="logo.png" class="w-3 h-3 object-contain" alt="" /> Mayor Rendimiento Real
+                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                Mayor Rendimiento Real
               </span>
               <span class="text-xs font-mono font-bold text-emerald-500">${formatNumber(topV.views)} vistas • ER ${topV.er}%</span>
             </div>
@@ -1829,7 +2318,8 @@
           <div class="p-4 rounded-2xl border border-amber-500/30 bg-amber-500/5 space-y-2">
             <div class="flex items-center justify-between">
               <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-500 flex items-center gap-1">
-                <img src="logo.png" class="w-3 h-3 object-contain" alt="" /> Oportunidad de Optimización
+                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                Oportunidad de Optimización
               </span>
               <span class="text-xs font-mono font-bold text-amber-500">${formatNumber(lowV.views)} vistas • ER ${lowV.er}%</span>
             </div>
@@ -1842,17 +2332,20 @@
       }
     }
 
+    const checkIconSvg = `<svg class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+    const boltIconSvg = `<svg class="w-4 h-4 text-amber-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>`;
+
     if (strengthsEl) {
       const sList = [
         er >= 5
           ? `Tasa de interacción activa (${er}%) por encima de la media estándar del sector (3.8%).`
           : `Audiencia base de ${formatNumber(followers)} seguidores verificada mediante OAuth 2.0.`,
         vids[0]
-          ? `Capacidad demostrada de alcance con picos de ${formatNumber( Math.max(...vids.map(v => v.views)) )} reproducciones.`
+          ? `Capacidad demostrada de alcance con picos de ${formatNumber(Math.max(...vids.map(v => v.views)))} reproducciones.`
           : 'Conexión oficial verificada con actualización en tiempo real.',
-        `Galería de ${vids.length} publicaciones indexadas y listas para auditoría individual con NYX.`
+        `Galería de ${vids.length} publicaciones indexadas y listas para auditoría profunda con NYX.`
       ];
-      strengthsEl.innerHTML = sList.map(t => `<li class="flex items-start gap-2.5 text-xs"><img src="logo.png" class="w-4 h-4 object-contain mt-0.5 shrink-0" alt="" /><span>${escapeHtml(t)}</span></li>`).join('');
+      strengthsEl.innerHTML = sList.map(t => `<li class="flex items-start gap-2.5 text-xs">${checkIconSvg}<span>${escapeHtml(t)}</span></li>`).join('');
     }
 
     if (weaknessesEl) {
@@ -1862,7 +2355,7 @@
           : 'Aprovechar el alto ER% fijando un comentario que dirija tráfico hacia tu enlace rastreado con UTM.',
         'Sistematizar 3 a 4 entregas semanales en el Calendario Editorial para estabilizar el piso de vistas.'
       ];
-      weaknessesEl.innerHTML = wList.map(t => `<li class="flex items-start gap-2.5 text-xs"><img src="logo.png" class="w-4 h-4 object-contain mt-0.5 shrink-0" alt="" /><span>${escapeHtml(t)}</span></li>`).join('');
+      weaknessesEl.innerHTML = wList.map(t => `<li class="flex items-start gap-2.5 text-xs">${boltIconSvg}<span>${escapeHtml(t)}</span></li>`).join('');
     }
 
     ['item_hook', 'item_cta', 'item_schedule', 'item_crm', 'item_replicate'].forEach(k => {
@@ -1892,32 +2385,112 @@
     const origText = btn ? btn.innerHTML : '';
     if (btn) {
       btn.disabled = true;
-      btn.innerHTML = `<img src="logonyx.png" class="w-4 h-4 object-contain animate-spin inline-block mr-2" alt="" /> Ejecutando Auditoría Profunda NYX...`;
+      btn.innerHTML = `<img src="logonyx.png" class="w-4 h-4 object-contain animate-spin inline-block mr-2" alt="" /> Analizando métricas reales en el Cerebro NYX...`;
     }
 
     try {
-      const res = await fetch(`${crmState.workerUrl}/api/ai/diagnose`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ account: buildFullPanelContext() })
-      });
-      const data = await res.json();
-      if (data.ok && data.report) {
-        const rep = data.report;
-        const summaryEl = document.getElementById('auditScoreSummary');
-        if (summaryEl && rep.summary) summaryEl.textContent = rep.summary;
-        showToast({
-          type: 'success',
-          title: `Auditoría NYX Completada (Grado ${rep.grade || 'A'})`,
-          message: 'Se actualizaron los indicadores estratégicos con los datos en vivo de tu cuenta.',
-          iconImg: 'logonyx.png'
+      const fullContext = buildFullPanelContext();
+      let rep = null;
+
+      // 1. Llamado a /api/ai/diagnose
+      try {
+        const res = await fetch(`${crmState.workerUrl}/api/ai/diagnose`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ account: fullContext })
         });
+        const data = await res.json();
+        if (data && data.ok && data.report) {
+          // Si el Worker desplegado aún devuelve el texto estático antiguo, forzamos inferencia real vía /api/ai/chat
+          const isStaticOldWorker = String(data.report.summary || '').includes('Tu perfil presenta una curva de retención saludable');
+          if (!isStaticOldWorker) {
+            rep = data.report;
+          }
+        }
+      } catch (diagErr) {
+        console.warn('Intento /api/ai/diagnose:', diagErr);
       }
+
+      // 2. Si el Worker desplegado tenía la respuesta estática o no devolvió reporte dinámico, consultamos al Cerebro IA en /api/ai/chat
+      if (!rep) {
+        const auditPrompt = [
+          `Actúa como NYX, Auditor Algorítmico Senior de MyCRMStudio.`,
+          `Evalúa la cuenta activa ${current.name} (${current.handle}) en ${current.platform.toUpperCase()} con ${current.followers} seguidores, ER ${current.engagementRate}%, ${current.totalViews || 0} vistas acumuladas y ${(current.videos || []).length} videos cargados.`,
+          `Devuelve ÚNICAMENTE un objeto JSON válido (sin bloques markdown) con esta estructura exacta:`,
+          `{"score": 88, "grade": "A", "summary": "Diagnóstico ejecutivo de 2 oraciones citando métricas reales y videos específicos de la cuenta.", "strengths": ["Fortaleza real 1 con números", "Fortaleza real 2", "Fortaleza real 3"], "weaknesses": ["Cuello de botella 1 y cómo resolverlo", "Acción táctica 2 para el próximo video", "Acción táctica 3"]}`
+        ].join('\n');
+
+        const chatRes = await fetch(`${crmState.workerUrl}/api/ai/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: auditPrompt,
+            accountContext: fullContext
+          })
+        });
+        const chatData = await chatRes.json();
+        const rawText = String(chatData?.reply || chatData?.response || chatData?.text || '').trim();
+        if (rawText) {
+          const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            try {
+              rep = JSON.parse(jsonMatch[0]);
+            } catch (parseErr) {
+              rep = { summary: rawText.replace(/[#*`]/g, '').slice(0, 360) };
+            }
+          } else {
+            rep = { summary: rawText.replace(/[#*`]/g, '').slice(0, 360) };
+          }
+        }
+      }
+
+      if (!rep) {
+        throw new Error('El cerebro no devolvió un diagnóstico válido.');
+      }
+
+      const scoreNumEl = document.getElementById('auditScoreHeading');
+      const gradeEl = document.getElementById('auditGradeBadge');
+      const scoreRingEl = document.getElementById('auditSvgRingProgress');
+      const summaryEl = document.getElementById('auditScoreSummary');
+      const strengthsEl = document.getElementById('auditStrengthsList');
+      const weaknessesEl = document.getElementById('auditWeaknessesList');
+
+      if (rep.score && scoreNumEl) {
+        const numScore = Math.min(99, Math.max(50, Number(rep.score) || 85));
+        scoreNumEl.textContent = `${numScore}/100`;
+        if (scoreRingEl) {
+          const circumference = 326.7;
+          scoreRingEl.style.strokeDashoffset = String(circumference - (numScore / 100) * circumference);
+        }
+      }
+      if (rep.grade && gradeEl) {
+        gradeEl.textContent = `GRADO ${rep.grade}`;
+      }
+      if (rep.summary && summaryEl) {
+        summaryEl.textContent = rep.summary;
+      }
+
+      const checkIconSvg = `<svg class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+      const boltIconSvg = `<svg class="w-4 h-4 text-amber-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>`;
+
+      if (Array.isArray(rep.strengths) && rep.strengths.length > 0 && strengthsEl) {
+        strengthsEl.innerHTML = rep.strengths.map(t => `<li class="flex items-start gap-2.5 text-xs">${checkIconSvg}<span>${escapeHtml(t)}</span></li>`).join('');
+      }
+      if (Array.isArray(rep.weaknesses) && rep.weaknesses.length > 0 && weaknessesEl) {
+        weaknessesEl.innerHTML = rep.weaknesses.map(t => `<li class="flex items-start gap-2.5 text-xs">${boltIconSvg}<span>${escapeHtml(t)}</span></li>`).join('');
+      }
+
+      showToast({
+        type: 'success',
+        title: `Diagnóstico Neuronal NYX Completado`,
+        message: 'Métricas, fortalezas y plan de optimización actualizados por el Cerebro IA.',
+        iconImg: 'logonyx.png'
+      });
     } catch (e) {
       showToast({
-        type: 'info',
-        title: 'Auditoría Local Actualizada',
-        message: 'Se recalcularon las 6 dimensiones sobre tus métricas actuales.'
+        type: 'error',
+        title: 'Error en Diagnóstico Remoto',
+        message: e.message || 'Verifica la conexión con el Worker en Cloudflare.'
       });
     } finally {
       if (btn) {
@@ -2121,8 +2694,17 @@
   }
 
   // ==========================================================================
-  // 14. CHATBOT NYX IA (LOGONYX.PNG SIN CUADRO + ANIMACIÓN DE ESCRITURA + GEMINI/GROQ)
+  // 14. CHATBOT NYX IA (MOTOR NEURONAL PROPIO CON CONTEXTO TOTAL DEL PANEL)
   // ==========================================================================
+  const NYX_CLIENT_SYSTEM_PROMPT = [
+    'Eres NYX, el Director de Estrategia Digital, Auditor Algorítmico y Copiloto Neuronal exclusivo de MyCRMStudio.',
+    'REGLAS DE RESPUESTA OBLIGATORIAS:',
+    '1. NUNCA menciones que eres Gemini, Google, Groq, Qwen, Llama ni OpenAI. Preséntate únicamente como NYX, Motor Neuronal de MyCRMStudio.',
+    '2. Tienes acceso en tiempo real a toda la telemetría del panel del creador (cuenta activa, seguidores, ER%, vistas, galería de videos con títulos y métricas exactas, Calendario Editorial, Laboratorio de Guiones, Constructor UTM y competidores del Radar).',
+    '3. Cita SIEMPRE números reales, títulos específicos de sus publicaciones o competidores del radar en tu respuesta. Prohibido dar respuestas genéricas o predeterminadas.',
+    '4. Estructura tus respuestas en Markdown limpio con pasos accionables, ganchos de primeros 3 segundos (0-3s), retención y llamadas a la acción (CTA).'
+  ].join('\n');
+
   function setNyxAgentState(state) {
     const cores = document.querySelectorAll('.nyx-neural-agent');
     cores.forEach(core => {
@@ -2131,10 +2713,10 @@
     const statusText = document.getElementById('nyxAgentStatusText');
     if (statusText) {
       const map = {
-        idle: 'Gemini IA + Groq Cascade • Monitoreando métricas reales',
-        listening: 'Empaquetando telemetría de tu panel...',
-        thinking: 'Procesando en el Cerebro Edge (Gemini → Groq)...',
-        speaking: 'Estrategia redactada en tiempo real'
+        idle: 'Motor Neuronal NYX • Telemetría sincronizada en vivo',
+        listening: 'Empaquetando métricas del panel...',
+        thinking: 'Procesando estrategia en el Cerebro Neuronal NYX...',
+        speaking: 'Análisis táctico generado en tiempo real'
       };
       statusText.textContent = map[state] || map.idle;
     }
@@ -2142,7 +2724,29 @@
 
   function buildFullPanelContext() {
     const current = getActiveAccount();
-    const calc = calculateDynamicRates();
+
+    const calendarSummary = (crmState.calendarItems || []).slice(0, 8).map(it => ({
+      title: it.title,
+      platform: it.platform,
+      date: it.date,
+      time: it.time || '19:00',
+      format: it.format || 'Reel / TikTok 9:16',
+      status: it.status,
+      hook: it.hook || ''
+    }));
+
+    const scriptsSummary = (crmState.savedScripts || []).slice(0, 5).map(s => ({
+      title: s.title,
+      hook: String(s.hook || '').slice(0, 90)
+    }));
+
+    const radarSummary = (crmState.radarCompetitors || []).slice(0, 6).map(c => ({
+      handle: c.handle,
+      platform: c.platform,
+      followers: c.followers,
+      engagementRate: c.engagementRate,
+      avgViewsPerPost: c.avgViewsPerPost || 0
+    }));
 
     if (!current) {
       return {
@@ -2154,17 +2758,20 @@
         engagementRate: 0,
         mediaCount: 0,
         videos: [],
+        calendarItems: calendarSummary,
+        savedScripts: scriptsSummary,
+        radarCompetitors: radarSummary,
         studioSummary: {
           scheduledCount: (crmState.calendarItems || []).length,
           scriptsCount: (crmState.savedScripts || []).length,
           utmCount: (crmState.utmLinks || []).length,
-          suggestedRateSingle: calc.singleVideoRate
+          radarCount: (crmState.radarCompetitors || []).length
         }
       };
     }
 
-    const compactVideos = (current.videos || []).slice(0, 10).map(v => ({
-      title: String(v.title || '').slice(0, 80),
+    const compactVideos = (current.videos || []).slice(0, 12).map(v => ({
+      title: String(v.title || '').slice(0, 90),
       views: v.views || 0,
       likes: v.likes || 0,
       comments: v.comments || 0,
@@ -2182,11 +2789,14 @@
       engagementRate: current.engagementRate,
       mediaCount: current.mediaCount,
       videos: compactVideos,
+      calendarItems: calendarSummary,
+      savedScripts: scriptsSummary,
+      radarCompetitors: radarSummary,
       studioSummary: {
         scheduledCount: (crmState.calendarItems || []).length,
         scriptsCount: (crmState.savedScripts || []).length,
         utmCount: (crmState.utmLinks || []).length,
-        suggestedRateSingle: calc.singleVideoRate
+        radarCount: (crmState.radarCompetitors || []).length
       }
     };
   }
@@ -2228,8 +2838,8 @@
     if (thread) thread.innerHTML = '';
     appendChatMessage(
       'assistant',
-      'Historial reiniciado. Soy **NYX**, conectado a **Google Gemini IA** y **Groq LPU**. Pregúntame sobre tu galería de videos, tarifas de patrocinio, enlaces UTM o guiones.',
-      'NYX • Gemini + Groq',
+      'Memoria de sesión reiniciada. Soy **NYX**, tu **Motor Neuronal de Estrategia y Auditoría Algorítmica** en **MyCRMStudio**.Tengo sincronizados tus videos en galería, calendario editorial, guiones y competidores del radar. ¿Qué analizamos ahora?',
+      'NYX • Motor Neuronal',
       false
     );
   }
@@ -2257,7 +2867,7 @@
         <img src="logonyx.png" class="w-7 h-7 object-contain nyx-logo-pulse" alt="NYX" />
       </div>
       <div class="space-y-1">
-        <div class="font-extrabold text-indigo-500 text-[11px]">NYX consultando Gemini IA / Groq con tus métricas...</div>
+        <div class="font-extrabold text-indigo-500 text-[11px]">NYX procesando telemetría del panel en el Cerebro...</div>
         <div class="nyx-wave-bars"><span></span><span></span><span></span><span></span><span></span></div>
       </div>
     `;
@@ -2268,15 +2878,23 @@
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 22000);
+      const timeoutId = setTimeout(() => controller.abort(), 28000);
+
+      // Enriquecemos el prompt con el System Prompt de dominio y resumen vivo de la cuenta/calendario/radar para que incluso un Worker anterior tenga todo el contexto
+      const enrichedPrompt = [
+        `[INSTRUCCIÓN DE SISTEMA NYX]: ${NYX_CLIENT_SYSTEM_PROMPT}`,
+        `[TELEMETRÍA ADICIONAL DEL PANEL]: Calendario programado: ${JSON.stringify(accountContext.calendarItems || [])} | Competidores en Radar: ${JSON.stringify(accountContext.radarCompetitors || [])}`,
+        `[SOLICITUD DEL CREADOR]: ${userText}`
+      ].join('\n\n');
 
       const res = await fetch(`${crmState.workerUrl}/api/ai/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: userText.slice(0, 1400),
+          prompt: enrichedPrompt.slice(0, 3600),
+          systemPrompt: NYX_CLIENT_SYSTEM_PROMPT,
           accountContext,
-          history: (crmState.chatHistory || []).slice(-4)
+          history: (crmState.chatHistory || []).slice(-6)
         }),
         signal: controller.signal
       });
@@ -2285,31 +2903,25 @@
       const data = await res.json();
       if (typingEl) typingEl.remove();
 
-      const replyText = data.reply || data.text;
+      const replyText = data.reply || data.response || data.text;
       if (data.ok && replyText) {
         setNyxAgentState('speaking');
-        crmState.chatHistory.push({ role: 'user', text: userText.slice(0, 300) });
-        crmState.chatHistory.push({ role: 'assistant', text: replyText.slice(0, 600) });
+        crmState.chatHistory.push({ role: 'user', text: userText.slice(0, 400) });
+        crmState.chatHistory.push({ role: 'assistant', text: replyText.slice(0, 1200) });
         saveSpace();
-        appendChatMessage('assistant', replyText, data.model || 'NYX • Gemini IA', true);
+        appendChatMessage('assistant', replyText, 'NYX • Motor Neuronal', true);
         return;
       }
-      throw new Error(data.error || 'Respuesta incompleta');
+      throw new Error(data.error || data.detail || 'El cerebro remoto no devolvió respuesta.');
     } catch (e) {
       if (typingEl) typingEl.remove();
-      setNyxAgentState('speaking');
-      const acc = getActiveAccount();
-      const vids = acc && Array.isArray(acc.videos) ? acc.videos : [];
-      const topV = vids.length ? [...vids].sort((a, b) => (b.views || 0) - (a.views || 0))[0] : null;
-      const calc = calculateDynamicRates();
-      const fallbackReply = acc
-        ? `### Diagnóstico Táctico NYX para **${acc.name}** (${acc.handle})\n\n` +
-          `1. **Métricas Verificadas:** Cuentas con **${formatNumber(acc.followers)} seguidores**, **${formatNumber(acc.totalViews)} visualizaciones** y un ER de **${acc.engagementRate}%** en **${vids.length} publicaciones**.\n` +
-          (topV ? `2. **Publicación Líder:** Tu video *"${topV.title}"* lidera con **${formatNumber(topV.views)} vistas** y **${topV.er}% ER**. Te recomiendo crear una Parte 2 usando la plantilla *Mito vs. Realidad* del Estudio.\n` : '') +
-          `3. **Monetización Sugerida:** Según tu alcance actual, tu tarifa recomendada por 1 video dedicado es de **$${formatNumber(calc.singleVideoRate)} USD** (Pack de 3 videos: **$${formatNumber(calc.bundle3Rate)} USD**).`
-        : `### Copiloto Neuronal NYX Activo\n\nConecta tu cuenta oficial de **TikTok**, **Instagram (Meta)** o **YouTube (Google)** mediante OAuth 2.0 para que pueda leer tus publicaciones reales, calcular tu tarifario dinámico y redactar guiones a medida.`;
-
-      appendChatMessage('assistant', fallbackReply, 'NYX • Motor Local en Vivo', true);
+      setNyxAgentState('idle');
+      appendChatMessage(
+        'assistant',
+        `⚠️ **Aviso de Conexión con el Cerebro NYX:** No se pudo completar la inferencia en este instante (${escapeHtml(e.message || 'Tiempo de espera agotado')}). Verifica tu conexión o pulsa enviar nuevamente para procesar tu consulta en vivo.`,
+        'NYX • Estado de Red',
+        false
+      );
     }
   }
 
@@ -2348,8 +2960,9 @@
     const el = document.createElement('div');
     el.className = `flex flex-col ${role === 'user' ? 'items-end' : 'items-start'} my-2 animate-fade-in`;
 
-    const badge = modelBadge
-      ? `<span class="ml-2 text-[9px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-500">${escapeHtml(modelBadge)}</span>`
+    const cleanBadgeText = modelBadge ? 'NYX • Motor Neuronal' : '';
+    const badge = cleanBadgeText
+      ? `<span class="ml-2 text-[9px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-500">${escapeHtml(cleanBadgeText)}</span>`
       : '';
 
     if (role === 'user') {
@@ -2373,7 +2986,7 @@
       el.innerHTML = `
         <div class="flex items-start gap-3 max-w-[95%]">
           <div class="nyx-floating-avatar-sm shrink-0 mt-1">
-            <img src="logonyx.png" class="w-7 h-7 object-contain nyx-logo-float" alt="NYX" onerror="this.src='logo.png'" />
+            <img src="logonyx.png" class="w-7 h-7 object-contain nyx-logo-float" alt="NYX" onerror="this.src='logo3.png'" />
           </div>
           <div class="p-3.5 rounded-2xl rounded-tl-xs border text-xs surface-card leading-relaxed space-y-1.5 shadow-xs flex-1" style="border-color: var(--border-subtle);">
             <div class="flex items-center justify-between text-[10.5px] font-extrabold text-indigo-600 dark:text-indigo-400">
@@ -2467,7 +3080,7 @@
 
     const nextBtn = document.getElementById('guideNextBtn');
     if (nextBtn) {
-      nextBtn.textContent = activeGuideStep === TOTAL_GUIDE_STEPS - 1 ? '¡Comenzar en My CRM Studio! →' : 'Siguiente Módulo →';
+      nextBtn.textContent = activeGuideStep === TOTAL_GUIDE_STEPS - 1 ? '¡Comenzar en MyCRMStudio! →' : 'Siguiente Módulo →';
     }
   }
 
@@ -2565,12 +3178,12 @@
     const thread = document.getElementById('aiChatThread');
     if (thread && thread.children.length === 0) {
       if (Array.isArray(crmState.chatHistory) && crmState.chatHistory.length > 0) {
-        crmState.chatHistory.forEach(m => appendChatMessage(m.role, m.text, m.role === 'assistant' ? 'NYX • Gemini + Groq' : '', false));
+        crmState.chatHistory.forEach(m => appendChatMessage(m.role, m.text, m.role === 'assistant' ? 'NYX • Motor Neuronal' : '', false));
       } else {
         appendChatMessage(
           'assistant',
-          '¡Bienvenido a **My CRM Studio**! Soy **NYX**, tu agente neuronal impulsado por **Google Gemini IA** y **Groq**. Conecta tu cuenta oficial o pregúntame sobre tu galería de videos, tarifario de patrocinios o estructuras de guiones.',
-          'NYX • Gemini + Groq',
+          '¡Bienvenido a **MyCRMStudio**! Soy **NYX**, tu **Motor Neuronal de Estrategia y Auditoría Algorítmica**. Tengo sincronizadas las métricas de tu cuenta activa, tu galería de publicaciones, el Calendario Editorial y el Radar de Competencia. ¿Qué analizamos hoy?',
+          'NYX • Motor Neuronal',
           false
         );
       }
@@ -2612,6 +3225,9 @@
   window.connectInstagram = connectInstagram;
   window.connectTikTok = connectTikTok;
   window.searchCompetitor = searchCompetitor;
+  window.selectRadarCompetitor = selectRadarCompetitor;
+  window.removeRadarCompetitor = removeRadarCompetitor;
+  window.clearRadarCompetitors = clearRadarCompetitors;
   window.openAiDrawer = openAiDrawer;
   window.closeAiDrawer = closeAiDrawer;
   window.toggleAiDrawer = toggleAiDrawer;
@@ -2633,8 +3249,12 @@
   window.addCalendarItem = addCalendarItem;
   window.cycleCalendarStatus = cycleCalendarStatus;
   window.deleteCalendarItem = deleteCalendarItem;
-  window.updateStudioCalculator = updateStudioCalculator;
-  window.copyMediaKitQuote = copyMediaKitQuote;
+  window.setCalendarFilter = setCalendarFilter;
+  window.changeCalendarMonth = changeCalendarMonth;
+  window.selectCalendarDate = selectCalendarDate;
+  window.duplicateCalendarItem = duplicateCalendarItem;
+  window.autoGenerateWeekCalendar = autoGenerateWeekCalendar;
+  window.exportCalendarCSV = exportCalendarCSV;
   window.applyScriptTemplate = applyScriptTemplate;
   window.saveScriptToVault = saveScriptToVault;
   window.copySavedScript = copySavedScript;
@@ -2661,5 +3281,3 @@
   }
 
 })(window, document);
-
-

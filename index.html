@@ -1403,6 +1403,7 @@
   const THEME_STORAGE_KEY = 'crm_theme_preference_v8';
 
   // Base verificada de publicaciones reales de TikTok (@cvstudio33)
+  // Decodificadas de los IDs oficiales de TikTok (Snowflakes de servidor)
   const SEED_TIKTOK_VIDEOS = [
     {
       id: '7699138280369016082',
@@ -1413,7 +1414,7 @@
       title: '¿Cansado de no conseguir entrevistas? Transforma tu currículum hoy mismo con diseño ejecutivo optimizado para filtros ATS #cvstudio33 #curriculum #empleo #trabajo #entrevista',
       cover: 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=600&auto=format&fit=crop&q=80',
       duration: 15,
-      createdAt: '2026-10-23T14:00:00Z',
+      createdAt: '2026-10-21T15:08:41Z',
       views: 4779,
       likes: 25,
       comments: 4,
@@ -1431,7 +1432,7 @@
       title: '3 errores críticos en tu CV que te dejan fuera del proceso de selección en menos de 6 segundos #cvstudio33 #rrhh #reclutamiento #curriculumvitae #busquedadeempleo',
       cover: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&auto=format&fit=crop&q=80',
       duration: 96,
-      createdAt: '2026-10-22T14:00:00Z',
+      createdAt: '2026-10-20T18:55:17Z',
       views: 181,
       likes: 2,
       comments: 1,
@@ -1449,7 +1450,7 @@
       title: 'Cómo estructurar tu experiencia profesional para destacar frente a cientos de candidatos y superar filtros ATS #cvstudio33 #empleo #trabajo #cv #consejosprofesionales',
       cover: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&auto=format&fit=crop&q=80',
       duration: 90,
-      createdAt: '2026-10-21T14:00:00Z',
+      createdAt: '2026-10-19T21:13:41Z',
       views: 13400,
       likes: 189,
       comments: 0,
@@ -1467,7 +1468,7 @@
       title: 'Plantillas ejecutivas y redacción estratégica de alto impacto para impulsar tu carrera profesional #cvstudio33 #curriculum #linkedin #exito #desarrolloprofesional',
       cover: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=600&auto=format&fit=crop&q=80',
       duration: 121,
-      createdAt: '2026-10-20T14:00:00Z',
+      createdAt: '2026-10-19T13:22:00Z',
       views: 12600,
       likes: 24,
       comments: 2,
@@ -2156,25 +2157,59 @@
     const textColor = isDark ? '#94A3B8' : '#475569';
     const gridColor = isDark ? '#1E293B' : '#E2E8F0';
 
-    // 1. Filtrar videos por rango temporal seleccionado
-    let sortedVideos = [...videos].sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+    // 1. Filtrar videos por rango temporal real si aplica
+    const now = Date.now();
+    let filteredVideos = [...videos].filter(v => Boolean(v.createdAt));
 
     if (crmState.chartTimeRange === '7d') {
-      sortedVideos = sortedVideos.slice(-7);
+      const cut = now - (7 * 86400000);
+      filteredVideos = filteredVideos.filter(v => new Date(v.createdAt).getTime() >= cut);
     } else if (crmState.chartTimeRange === '30d') {
-      sortedVideos = sortedVideos.slice(-15);
+      const cut = now - (30 * 86400000);
+      filteredVideos = filteredVideos.filter(v => new Date(v.createdAt).getTime() >= cut);
     }
 
-    const categories = sortedVideos.map((v, i) => {
-      if (v.createdAt) {
-        const d = new Date(v.createdAt);
-        return `${d.getDate()}/${d.getMonth() + 1}`;
+    // Si después de filtrar por tiempo no hay videos (o es rango amplio), tomar los videos existentes
+    if (filteredVideos.length === 0 && videos.length > 0) {
+      filteredVideos = [...videos];
+    }
+
+    // Agrupar publicaciones por fecha real de calendario (día / mes)
+    // Para que no haya duplicados ni fechas inventadas
+    const dayMap = new Map();
+    filteredVideos.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+    filteredVideos.forEach(v => {
+      const d = new Date(v.createdAt);
+      if (isNaN(d.getTime())) return;
+      const dayKey = d.toISOString().slice(0, 10); // YYYY-MM-DD
+      const dayLabel = `${d.getDate()} ${['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][d.getMonth()]}`;
+
+      if (!dayMap.has(dayKey)) {
+        dayMap.set(dayKey, {
+          label: dayLabel,
+          views: 0,
+          interactions: 0,
+          videoCount: 0,
+          titles: []
+        });
       }
-      return `Vid ${i + 1}`;
+      const item = dayMap.get(dayKey);
+      item.views += Number(v.views) || 0;
+      item.interactions += Number(v.interactions) || (Number(v.likes) + Number(v.comments) + Number(v.shares) + Number(v.saves)) || 0;
+      item.videoCount += 1;
+      item.titles.push(v.title ? v.title.slice(0, 35) + '...' : 'Publicación');
     });
 
-    const viewsSeries = sortedVideos.map(v => v.views || 0);
-    const interactionsSeries = sortedVideos.map(v => v.interactions || (v.likes + v.comments + v.shares + v.saves) || 0);
+    const categories = [];
+    const viewsSeries = [];
+    const interactionsSeries = [];
+
+    dayMap.forEach((val) => {
+      categories.push(val.label);
+      viewsSeries.push(val.views);
+      interactionsSeries.push(val.interactions);
+    });
 
     // Opciones del Gráfico Principal (Doble Eje Y)
     const mainChartOptions = {
@@ -2182,12 +2217,12 @@
         {
           name: 'Visualizaciones (Alcance)',
           type: 'area',
-          data: viewsSeries.length ? viewsSeries : [12600, 13400, 181, 4779]
+          data: viewsSeries.length ? viewsSeries : [26000, 181, 4779]
         },
         {
           name: 'Interacciones Totales',
           type: 'line',
-          data: interactionsSeries.length ? interactionsSeries : [36, 204, 3, 34]
+          data: interactionsSeries.length ? interactionsSeries : [240, 3, 34]
         }
       ],
       chart: {
@@ -2211,7 +2246,7 @@
           stops: [0, 95, 100]
         }
       },
-      labels: categories.length ? categories : ['20/10', '21/10', '22/10', '23/10'],
+      labels: categories.length ? categories : ['19 Oct', '20 Oct', '21 Oct'],
       xaxis: {
         labels: { style: { colors: textColor, fontFamily: 'Plus Jakarta Sans' } },
         axisBorder: { color: gridColor },
@@ -2279,7 +2314,12 @@
     if (!secContainer) return;
 
     const top5 = [...videos].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5);
-    const labels = top5.map((v, i) => `Vid #${i + 1}`);
+
+    // Nombres descriptivos y reales de cada publicación
+    const labels = top5.map(v => {
+      const cleanTitle = (v.title || '').replace(/#[\p{L}\p{N}_]+/gu, '').trim();
+      return cleanTitle.length > 22 ? cleanTitle.slice(0, 22) + '...' : (cleanTitle || 'Publicación');
+    });
     const dataViews = top5.map(v => v.views || 0);
 
     let secOptions = {};
@@ -2292,7 +2332,7 @@
           height: 250,
           background: 'transparent'
         },
-        labels: labels.length ? labels : ['#1 ATS', '#2 Plantillas', '#3 Entrevistas', '#4 Errores'],
+        labels: labels.length ? labels : ['Estructuración ATS', 'Plantillas ejecutivas', 'Tips entrevista', '3 errores en CV'],
         colors: ['#4F46E5', '#06B6D4', '#10B981', '#F59E0B', '#F43F5E'],
         legend: {
           position: 'bottom',
@@ -2300,7 +2340,13 @@
         },
         tooltip: {
           theme: isDark ? 'dark' : 'light',
-          y: { formatter: (val) => `${val.toLocaleString()} vistas` }
+          y: {
+            formatter: (val, opt) => {
+              const item = top5[opt.seriesIndex];
+              const dateTxt = item && item.createdAt ? new Date(item.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : '';
+              return `${val.toLocaleString()} vistas ${dateTxt ? '(' + dateTxt + ')' : ''}`;
+            }
+          }
         },
         plotOptions: {
           pie: {
@@ -2341,7 +2387,7 @@
           }
         },
         xaxis: {
-          categories: labels.length ? labels : ['Vid 1', 'Vid 2', 'Vid 3', 'Vid 4'],
+          categories: labels.length ? labels : ['Estructuración ATS', 'Plantillas ejecutivas', 'Tips entrevista', '3 errores en CV'],
           labels: {
             style: { colors: textColor, fontFamily: 'JetBrains Mono' },
             formatter: (v) => formatCompactNumber(v)
@@ -2356,7 +2402,13 @@
         },
         tooltip: {
           theme: isDark ? 'dark' : 'light',
-          y: { formatter: (val) => `${val.toLocaleString()} vistas` }
+          y: {
+            formatter: (val, opt) => {
+              const item = top5[opt.dataPointIndex];
+              const dateTxt = item && item.createdAt ? new Date(item.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : '';
+              return `${val.toLocaleString()} vistas ${dateTxt ? '• Fecha real: ' + dateTxt : ''}`;
+            }
+          }
         }
       };
     }
@@ -2926,10 +2978,10 @@
     if (activeCountEl) activeCountEl.textContent = String(activeCount);
 
     const totalBudgetEl = document.getElementById('campTotalBudget');
-    if (totalBudgetEl) totalBudgetEl.textContent = `${totalBudget.toLocaleString()}`;
+    if (totalBudgetEl) totalBudgetEl.textContent = `$${totalBudget.toLocaleString()}`;
 
     const totalSpentEl = document.getElementById('campTotalSpent');
-    if (totalSpentEl) totalSpentEl.textContent = `${totalSpent.toLocaleString()}`;
+    if (totalSpentEl) totalSpentEl.textContent = `$${totalSpent.toLocaleString()}`;
 
     const totalClicksEl = document.getElementById('campTotalClicks');
     if (totalClicksEl) totalClicksEl.textContent = totalClicks.toLocaleString();
@@ -2962,7 +3014,7 @@
               <div class="bg-indigo-500 h-2 rounded-full" style="width: ${pct}%;"></div>
             </div>
             <div class="text-[11px] font-mono text-slate-400 flex gap-4">
-              <span>Gasto: <strong>${spent.toFixed(2)}</strong> / ${budget.toFixed(2)} (${pct}%)</span>
+              <span>Gasto: <strong>$${spent.toFixed(2)}</strong> / $${budget.toFixed(2)} (${pct}%)</span>
               <span>Clics: <strong>${(c.clicks || 0).toLocaleString()}</strong></span>
               <span>Conversiones: <strong>${(c.conversions || 0).toLocaleString()}</strong></span>
             </div>
@@ -3267,7 +3319,7 @@
     showToast({
       type: 'info',
       title: 'Sincronizando Cuenta',
-      message: `Buscando perfil público de ${cleanHandle} en los servidores de ${platform.toUpperCase()}...`
+      message: `Consultando datos en vivo de ${cleanHandle} en los servidores de ${platform.toUpperCase()}...`
     });
 
     try {
@@ -3277,38 +3329,29 @@
         body: JSON.stringify({ platform, handle: cleanHandle })
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success && data.account) {
-          addAccountToWorkspace(data.account, data.videos || []);
-          return;
-        }
+      const data = await res.json().catch(() => null);
+
+      if (res.ok && data && (data.success || data.ok) && data.account) {
+        addAccountToWorkspace(data.account, data.videos || []);
+        return;
       }
-      throw new Error('Worker response not ok');
+
+      // Si el servidor devolvió un error (ej: cuenta no encontrada)
+      const errorMsg = data?.message || data?.error || `No se pudo encontrar la cuenta ${cleanHandle} en ${platform.toUpperCase()}. Verifica que sea una cuenta pública y que el usuario esté bien escrito.`;
+      showToast({
+        type: 'error',
+        title: 'Error de Vinculación',
+        message: errorMsg,
+        duration: 5000
+      });
     } catch (err) {
-      console.warn('[CRM] Worker connect offline, aplicando registro seguro local:', err);
-
-      // Si el usuario es cvstudio33 o cualquier otro, creamos una cuenta limpia
-      const isCv33 = cleanHandle.toLowerCase().includes('cvstudio33');
-      const newAcc = {
-        id: `acc_${platform}_${Date.now()}`,
-        platform,
-        handle: cleanHandle,
-        name: cleanHandle.replace('@', ''),
-        avatar: 'logo.png',
-        followers: isCv33 ? 211795 : 15200,
-        following: 50,
-        totalLikes: isCv33 ? 1253337 : 45000,
-        videoCount: 4,
-        verified: isCv33,
-        authType: 'public_live',
-        bio: `Cuenta oficial vinculada en CvStudio33 CRM.`,
-        connectedAt: new Date().toISOString(),
-        lastSync: new Date().toISOString()
-      };
-
-      const videos = isCv33 ? SEED_TIKTOK_VIDEOS : [];
-      addAccountToWorkspace(newAcc, videos);
+      console.error('[CRM] Fallo en conexión con worker:', err);
+      showToast({
+        type: 'error',
+        title: 'Error de Conexión',
+        message: `No se pudo consultar @${cleanHandle}. Verifica tu conexión a internet o el estado del Worker.`,
+        duration: 5000
+      });
     }
   }
 
@@ -3337,15 +3380,15 @@
     showToast({
       type: 'success',
       title: '¡Cuenta Sincronizada!',
-      message: `${account.handle} conectada con éxito. Métricas y analíticas actualizadas.`
+      message: `${account.handle} (${formatCompactNumber(account.followers)} seguidores) conectada con éxito. Métricas reales al día.`
     });
   }
 
   function startOAuthFlow(provider) {
     showToast({
       type: 'info',
-      title: 'Iniciando OAuth 2.0',
-      message: `Redirigiendo a la pantalla oficial de autorización segura de ${provider.toUpperCase()}...`
+      title: 'Iniciando Conexión',
+      message: `Conectando con ${provider.toUpperCase()}...`
     });
 
     const currentUrl = encodeURIComponent(window.location.origin + window.location.pathname);
@@ -3355,18 +3398,42 @@
 
   function checkUrlForAuthCallback() {
     const params = new URLSearchParams(window.location.search);
-    const authSuccess = params.get('auth');
-    const platform = params.get('platform');
+    const authSuccess = params.get('auth') || params.get('oauth_success');
+    const authUnconfigured = params.get('oauth_unconfigured');
+    const oauthError = params.get('oauth_error');
+    const platform = params.get('platform') || authSuccess;
     const handle = params.get('handle');
 
-    if (authSuccess === 'success' && platform) {
+    if (authUnconfigured) {
+      showToast({
+        type: 'info',
+        title: 'Modo 1-Clic Activado',
+        message: `Para conectar tu cuenta de ${authUnconfigured.toUpperCase()} sin necesidad de crear una App de desarrollador, ingresá tu @usuario y conéctala en 1 Clic.`,
+        duration: 6000
+      });
+      window.history.replaceState({}, document.title, window.location.pathname);
+      openConnectModal(authUnconfigured);
+      return;
+    }
+
+    if (oauthError) {
+      const msg = params.get('msg') || 'Autorización cancelada por el usuario.';
+      showToast({
+        type: 'warning',
+        title: 'Autorización Cancelada',
+        message: msg,
+        duration: 5000
+      });
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
+
+    if (authSuccess) {
       showToast({
         type: 'success',
         title: 'Autorización Exitosa',
-        message: `Tu cuenta de ${platform.toUpperCase()} (${handle || ''}) fue vinculada mediante OAuth 2.0 con tokens cifrados en reposo.`
+        message: `Tu cuenta (${handle || platform || ''}) fue vinculada oficialmente.`
       });
-
-      // Limpiar URL sin recargar
       window.history.replaceState({}, document.title, window.location.pathname);
       refreshDashboardUI();
     }
@@ -3490,6 +3557,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: [{ role: 'user', content: userText }],
+          context: accountContext,
           accountContext,
           model: selectedModel
         })
@@ -3500,8 +3568,9 @@
 
       if (res.ok) {
         const data = await res.json();
-        if (data.reply) {
-          appendChatMessage('assistant', data.reply);
+        const replyText = data.reply || data.text || data.content;
+        if (replyText) {
+          appendChatMessage('assistant', replyText, data.model);
           return;
         }
       }
@@ -3513,11 +3582,11 @@
 
       // Generador de respuesta inteligente local con datos de la cuenta
       const fallbackResponse = generateLocalAiResponse(userText, accountContext);
-      appendChatMessage('assistant', fallbackResponse);
+      appendChatMessage('assistant', fallbackResponse, 'Modo Local');
     }
   }
 
-  function appendChatMessage(role, text) {
+  function appendChatMessage(role, text, modelBadge) {
     const thread = document.getElementById('aiChatThread');
     if (!thread) return;
 
@@ -3539,10 +3608,17 @@
         formattedText = `<p class="whitespace-pre-wrap">${escapeHtml(text)}</p>`;
       }
 
+      const badgeHtml = modelBadge 
+        ? `<span class="ml-2 px-1.5 py-0.5 rounded text-[10px] font-mono bg-indigo-500/10 text-indigo-500 border border-indigo-500/20">${escapeHtml(modelBadge)}</span>`
+        : `<span class="ml-2 px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-500/10 text-slate-400">Smart Engine</span>`;
+
       msgEl.innerHTML = `
         <img src="logo.png" class="w-8 h-8 rounded-xl object-contain shadow-sm shrink-0 mt-0.5" onerror="this.src='logo.png'" />
         <div class="p-3.5 rounded-2xl border text-xs max-w-[88%] leading-relaxed" style="background-color: var(--bg-surface); border-color: var(--border-col);">
-          <div class="font-extrabold text-[11px] mb-1.5 text-indigo-500">NYX Copilot</div>
+          <div class="flex items-center font-extrabold text-[11px] mb-1.5 text-indigo-500">
+            <span>NYX Copilot</span>
+            ${badgeHtml}
+          </div>
           <div class="prose prose-sm dark:prose-invert max-w-none space-y-1.5">${formattedText}</div>
         </div>
       `;
@@ -3632,8 +3708,8 @@
 
       if (res.ok) {
         const data = await res.json();
-        if (data.success && data.report) {
-          renderDiagnosticReport(data.report);
+        if ((data.success || data.ok) && data.report) {
+          renderDiagnosticReport(data.report, data.model);
           return;
         }
       }
@@ -3660,34 +3736,53 @@
           'Incorporar llamado al comentario explícito ("Comenta ATS y te envío el checklist")',
           'Publicar en la franja horaria de mayor actividad ejecutiva (12:30 a 14:00 y 19:30 a 21:00)'
         ]
-      });
+      }, 'Modo Local');
     }
   }
 
-  function renderDiagnosticReport(rep) {
+  function renderDiagnosticReport(rep, modelBadge) {
     const region = document.getElementById('aiAuditResultRegion');
     if (!region) return;
+
+    const displayGrade = rep.grade || (typeof rep.score === 'string' ? rep.score : (rep.score ? `${rep.score}/100` : 'A+'));
+    const displayHeadline = rep.headline || 'Auditoría Ejecutiva de Rendimiento';
+    const displaySummary = rep.summary || 'Análisis multivariable del desempeño orgánico, interacción y retención del perfil.';
+    
+    // Normalizar plan de acción
+    const rawActions = rep.actionPlan || rep.actions || [];
+    const formattedActions = rawActions.map(a => {
+      if (typeof a === 'string') return a;
+      if (a && a.title) return `<strong>${escapeHtml(a.title)}:</strong> ${escapeHtml(a.detail || '')}`;
+      return JSON.stringify(a);
+    });
+
+    const badgeModelHtml = modelBadge 
+      ? `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-indigo-500/10 text-indigo-500 border border-indigo-500/20">${escapeHtml(modelBadge)}</span>`
+      : '';
 
     region.innerHTML = `
       <div class="text-left w-full space-y-6">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-4" style="border-color: var(--border-col);">
           <div class="flex items-center gap-3">
             <div class="w-14 h-14 rounded-2xl bg-indigo-500/10 text-indigo-500 font-extrabold text-2xl flex items-center justify-center border border-indigo-500/30">
-              ${rep.score || 'A+'}
+              ${escapeHtml(displayGrade)}
             </div>
             <div>
-              <h3 class="font-extrabold text-base">Auditoría Ejecutiva de Rendimiento</h3>
-              <p class="text-xs text-slate-400">Procesado con Inteligencia Artificial Multimodal</p>
+              <div class="flex items-center gap-2">
+                <h3 class="font-extrabold text-base">${escapeHtml(displayHeadline)}</h3>
+                ${badgeModelHtml}
+              </div>
+              <p class="text-xs text-slate-400">Procesado con Inteligencia Artificial Multimodal (Gemini & Groq Qwen)</p>
             </div>
           </div>
           <span class="text-xs font-mono font-bold px-3 py-1 rounded-full ${rep.badge || 'badge-score-a'}">
-            Calificación: ${rep.score || 'A'}
+            Calificación: ${escapeHtml(displayGrade)}
           </span>
         </div>
 
         <div class="p-4 rounded-xl border" style="background-color: var(--bg-surface); border-color: var(--border-col);">
           <h4 class="font-bold text-xs text-indigo-400 uppercase tracking-wider mb-1">Resumen Estratégico</h4>
-          <p class="text-xs leading-relaxed">${escapeHtml(rep.summary)}</p>
+          <p class="text-xs leading-relaxed">${escapeHtml(displaySummary)}</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -3696,7 +3791,7 @@
               <span>✓ Fortalezas Detectadas</span>
             </h4>
             <ul class="text-xs space-y-1.5 text-slate-300">
-              ${(rep.strengths || []).map(s => `<li>• ${escapeHtml(s)}</li>`).join('')}
+              ${(rep.strengths || []).map(s => `<li>• ${escapeHtml(typeof s === 'string' ? s : JSON.stringify(s))}</li>`).join('')}
             </ul>
           </div>
 
@@ -3705,7 +3800,7 @@
               <span>⚠️ Áreas de Oportunidad</span>
             </h4>
             <ul class="text-xs space-y-1.5 text-slate-300">
-              ${(rep.weaknesses || []).map(w => `<li>• ${escapeHtml(w)}</li>`).join('')}
+              ${(rep.weaknesses || []).map(w => `<li>• ${escapeHtml(typeof w === 'string' ? w : JSON.stringify(w))}</li>`).join('')}
             </ul>
           </div>
         </div>
@@ -3713,10 +3808,10 @@
         <div class="p-4 rounded-xl border" style="background-color: var(--bg-surface); border-color: var(--border-col);">
           <h4 class="font-extrabold text-xs text-indigo-400 uppercase tracking-wider mb-2">Hoja de Ruta Táctica (Próximas 72 Horas)</h4>
           <ol class="text-xs space-y-2">
-            ${(rep.actionPlan || []).map((step, idx) => `
+            ${formattedActions.map((step, idx) => `
               <li class="flex items-start gap-2">
                 <span class="font-mono font-bold text-indigo-500">${idx + 1}.</span>
-                <span>${escapeHtml(step)}</span>
+                <span>${step}</span>
               </li>
             `).join('')}
           </ol>
